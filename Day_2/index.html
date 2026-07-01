@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Management System</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <section class="container">
+        <h1>Student Management System</h1>
+        <!-- Student Form -->
+        <form id="studentForm" class="form-container">
+            <input type="text" id="name" placeholder="Enter Student Name">
+            <input type="number" id="age" placeholder="Enter Age">
+            <input type="text" id="department" placeholder="Enter Department">
+            <button type="submit" id="addBtn">Add Student</button>
+        </form>
+
+        <!-- Search -->
+        <div class="search-container">
+            
+            <select id="filterDepartment">
+                <option value="All">Select Department</option>
+                <option value="BCA">BCA</option>
+                <option value="MCA">MCA</option>
+                <option value="B.Sc">B.Sc</option>
+                <option value="M.Sc">M.Sc</option>
+            </select>
+            <input type="text" id="search" placeholder="Search Student">
+            <button type="button" id="sortBtn">Sort A-Z</button>
+            <button type="button" id="resetBtn">Reset</button>
+        </div>
+
+        
+        <!-- Statistics -->
+        <div class="stats">
+            <p>Total Students : <span id="totalStudents">0</span></p>
+            <p>Average Age :<span id="averageAge">0</span></p>
+        </div>
+
+        <!-- Student Table -->
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Age</th>
+                        <th>Department</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="studentTable">
+                </tbody>
+            </table>
+        </div>
+    </section>
+    <script src="script.js"></script>
+</body>
+
+</html>
