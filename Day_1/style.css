@@ -60,6 +60,7 @@ header{
         #FF6A88 50%,
         #FF3D68 100%
     );
+    border-radius: 0 0 0 80px;
 }
 
 
@@ -95,7 +96,7 @@ header{
 /* Landing */
 
 .landing{
-    height: calc(100vh - 40px);
+    height: calc(100vh - 54px);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -143,6 +144,48 @@ main{
     width: 100%;
 }
 
+/* Footer */
+footer{
+    padding: 50px;
+    background-color: #24242C;
+    border-radius: 0 80px 0 0;
+}
+
+/* | Element                             | Color     |
+| ----------------------------------- | --------- |
+| Footer Background                   | `#24242C` |
+| Logo ("Blogr")                      | `#FFFFFF` |
+| Heading (Product, Company, Connect) | `#FFFFFF` |
+| Footer Links                        | `#C8C8CB` |
+| Footer Links Hover                  | `#FFFFFF` | */
+
+
+.foot-container{
+    display: flex;
+}
+
+.foot-container div{
+    flex-basis: 25%;
+}
+
+.foot-container .foot-brand h1{
+    font-size: 2rem;
+    color: #FFF;
+}
+
+.foot-nav-container h4{
+    color: white;
+    margin-bottom: 8px;
+}
+
+.foot-nav-list{
+    list-style-type: none;
+    color: #c8c8cb;
+}
+
+.foot-nav-list li{
+    margin-bottom: 4px;
+}
 /* 576px 768px 992px 1200px 1400px */
 
 @media (max-width:768px) {
@@ -160,24 +203,25 @@ main{
         display: none;
     }
 
-.nav-content.active{
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 25px;
-
-    position: absolute;
-    top: 100%;
-    left: 0;
-    width: 100%;
-
-    background: #fff;
-    padding: 25px;
-    box-sizing: border-box;
-    z-index: 1000;
-
-    border-radius: 20px;
-}
+    .nav-content.active{
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 25px;
+        
+        position: absolute;
+        top: 100%;
+        left: 0;
+        width: 100%;
+        
+        background: #292121c1;
+        color: white;
+        padding: 25px;
+        box-sizing: border-box;
+        z-index: 1000;
+        
+        border-radius: 20px;
+    }
     .nav-list{
         flex-direction: column;
         gap: 20px;
@@ -190,18 +234,23 @@ main{
         border-top: 1px solid #ddd;
         padding-top: 20px;
     }
-
+    
     .humberger{
         display: flex;
         flex-direction: column;
         gap: 5px;
         cursor: pointer;
     }
-
+    
     .humberger span{
         width: 24px;
         height: 3px;
         background: #fff;
         border-radius: 5px;
+    }
+}
+@media (max-width:768px) {
+    .foot-container div{
+        flex-basis: 50%;
     }
 }
