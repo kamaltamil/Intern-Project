@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <div class="page-content">
     <header>
         <nav class="navbar">
             <h2 class="brand-name">Blogr</h2>
@@ -37,43 +38,107 @@
                 </div>
             </div>
         </section>
-        <section class="singup-form">
+    </header>
+    </div>
+
+    <section class="singup-form">
             <div class="form-container">
-                <button type="button" class="close-btn" aria-label="Close signup form">&times;</button>
-                <h1>Sign Up</h1>
-                <form action="">
-                    <div class="name">
-                        <label for="name">Name</label>
-                        <input type="text" id="name" placeholder="First Name" required>
+                <button type="button" class="close-btn" aria-label="Close Signup Form">&times;</button>
+                <h2>Contact Us</h2>
+                <form id="contactForm">
+                    <!-- First & Last Name -->
+                    <div class="row name-row">
+                        <div class="form-group">
+                            <label for="firstName">
+                                First Name <span>*</span>
+                            </label>
+
+                            <input
+                                type="text"
+                                id="firstName"
+                                placeholder="Enter First Name">
+
+                            <small class="error" id="firstNameError"></small>
+                        </div>
+                        <div class="form-group">
+                            <label for="lastName">
+                                Last Name <span>*</span>
+                            </label>
+
+                            <input
+                                type="text"
+                                id="lastName"
+                                placeholder="Enter Last Name">
+
+                            <small class="error" id="lastNameError"></small>
+                        </div>
                     </div>
-                    <div>
-                        <label for="last-name">Last Name</label>
-                        <input type="text" id="last-name" placeholder="Last Name" required>
+                    <!-- Email -->
+                    <div class="form-group">
+                        <label for="email">
+                            Email Address <span>*</span>
+                        </label>
+
+                        <input
+                            type="email"
+                            id="email"
+                            placeholder="Enter Email">
+
+                        <small class="error" id="emailError"></small>
                     </div>
-                    <div>
-                        <label for="email">Email</label>
-                        <input type="email" id="email" placeholder="Email" required>
+                    <!-- Query Type -->
+                    <div class="form-group">
+                        <label>
+                            Query Type <span>*</span>
+                        </label>
+                        <div class="radio-group">
+                            <label class="radio-card">
+                                <input
+                                    type="radio"
+                                    name="query"
+                                    value="general"
+                                    required>
+                                <span>General Enquiry</span>
+                            </label>
+                            <label class="radio-card">
+                                <input
+                                    type="radio"
+                                    name="query"
+                                    value="support">
+                                <span>Support Request</span>
+                            </label>
+                            <small class="error" id="queryError"></small>
+                        </div>
                     </div>
-                    <div>
-                        <label for="password">Query Type</label>
-                        <input type="radio" id="query-type" name="query-type" value="general" required>
-                        <label for="query-type">General Query</label>
-                        <input type="radio" id="query-type" name="query-type" value="support" required>
-                        <label for="query-type">Support Request</label>
+                    <!-- Message -->
+                    <div class="form-group">
+                        <label for="message">
+                            Message <span>*</span>
+                        </label>
+                        <textarea
+                            id="message"
+                            rows="6"
+                            required>
+                        </textarea>
+                        <small class="error" id="messageError"></small>
                     </div>
-                    <div>
-                        <label for="message">Message</label>
-                        <textarea id="message" placeholder="Enter your message" required></textarea>
+                    <!-- Checkbox -->
+                    <div class="checkbox-group">
+                        <input
+                            type="checkbox"
+                            id="terms"
+                            required>
+                        <label for="terms">
+                            I consent to being contacted by the team
+                            <span>*</span>
+                        </label>
+                        <small class="error" id="termsError"></small>
                     </div>
-                    <div>
-                        <input type="checkbox" id="terms" required>
-                        <label for="terms">I consent to being contacted by the team</label>
-                    </div>
-                    <button type="submit" class="btn btn-prime">Submit</button>
+                    <!-- Button -->
+                    <button type="submit" class="submit-btn">Submit</button>
                 </form>
             </div>
         </section>
-    </header>
     <main>
         <section class="page-component future">
             <h1 class="page-component-head">Designed for the future</h1>
