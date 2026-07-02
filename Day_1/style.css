@@ -110,6 +110,87 @@ header{
     margin: 30px;
 }
 
+/* Signup Form */
+.singup-form{
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: rgba(36, 36, 44, 0.75);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: all 0.3s ease;
+    z-index: 2000;
+}
+
+.singup-form.active{
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+}
+
+.form-container{
+    position: relative;
+    width: min(100%, 480px);
+    background: #fff;
+    border-radius: 20px;
+    padding: 30px;
+    box-shadow: 0 18px 45px rgba(0, 0, 0, 0.25);
+}
+
+.close-btn{
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    border: none;
+    background: transparent;
+    font-size: 28px;
+    color: #ff525d;
+    cursor: pointer;
+}
+
+.form-container h1{
+    text-align: center;
+    color: #ff525d;
+    margin-bottom: 20px;
+}
+
+.form-container form{
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.form-container label{
+    font-weight: 600;
+    color: #24242c;
+}
+
+.form-container input[type="text"],
+.form-container input[type="email"],
+.form-container textarea{
+    width: 100%;
+    padding: 10px 12px;
+    margin-top: 6px;
+    border: 1px solid #e0e0e0;
+    border-radius: 10px;
+}
+
+.form-container textarea{
+    min-height: 110px;
+    resize: vertical;
+}
+
+.form-container .btn-prime{
+    width: 100%;
+    margin-top: 8px;
+    padding: 12px 16px;
+    border-radius: 12px;
+}
+
 /* page-component  */
 main{
     margin: 50px;
@@ -151,14 +232,6 @@ footer{
     border-radius: 0 80px 0 0;
 }
 
-/* | Element                             | Color     |
-| ----------------------------------- | --------- |
-| Footer Background                   | `#24242C` |
-| Logo ("Blogr")                      | `#FFFFFF` |
-| Heading (Product, Company, Connect) | `#FFFFFF` |
-| Footer Links                        | `#C8C8CB` |
-| Footer Links Hover                  | `#FFFFFF` | */
-
 
 .foot-container{
     display: flex;
@@ -187,6 +260,7 @@ footer{
     margin-bottom: 4px;
 }
 /* 576px 768px 992px 1200px 1400px */
+
 
 @media (max-width:768px) {
     .component-content{
@@ -248,9 +322,14 @@ footer{
         background: #fff;
         border-radius: 5px;
     }
-}
-@media (max-width:768px) {
+
+    .foot-container{
+        flex-direction: column;
+        gap: 24px;
+        text-align: center;
+    }
+
     .foot-container div{
-        flex-basis: 50%;
+        flex-basis: 100%;
     }
 }

@@ -24,6 +24,12 @@ const filterDepartment = document.getElementById("filterDepartment");
 const sortBtn = document.getElementById("sortBtn");
 const addBtn = document.getElementById("addBtn");
 
+const nameError = document.getElementById("nameError");
+const ageError = document.getElementById("ageError");
+const departmentError = document.getElementById("departmentError");
+const formError = document.getElementById("formError");
+
+
 
 // Event Listeners
 
@@ -34,20 +40,26 @@ filterDepartment.addEventListener("change", applyFilters);
 sortBtn.addEventListener("click", sortStudents);
 document.addEventListener("DOMContentLoaded", initializeApp);
 
-nameInput.addEventListener("keydown", checkEnter);
-ageInput.addEventListener("keydown", checkEnter);
-departmentInput.addEventListener("keydown", checkEnter);
+// nameInput.addEventListener("keydown", checkEnter);
+// ageInput.addEventListener("keydown", checkEnter);
+// departmentInput.addEventListener("keydown", checkEnter);
+
+nameInput.addEventListener("input", nameValidate);
+ageInput.addEventListener("input", ageValidation);
+departmentInput.addEventListener("change", departmentValidation);
+// addBtn.addEventListener("click", formvalidation);
 
 
-function checkEnter(event){
 
-    if(event.key==="Enter"){
+// function checkEnter(event){
 
-        studentForm.requestSubmit();
+//     if(event.key==="Enter"){
 
-    }
+//         studentForm.requestSubmit();
 
-}
+//     }
+
+// }
 
 // -------------------------
 // Reset Form
@@ -60,9 +72,16 @@ function resetForm() {
     editId = null;
 
     addBtn.textContent = "Add Student";
-    studentForm.reset();
 
     searchInput.value = "";
+
+    nameError.textContent = "";
+
+    ageError.textContent = "";
+
+    departmentError.textContent = "";
+
+    formError.textContent = "";
 
     filterDepartment.value = "All";
 
@@ -71,44 +90,111 @@ function resetForm() {
     updateStatistics();
 }
 
+
+// -------------------------
+// Validate Student Data
+// -------------------------
+
+function nameValidate(){
+    const namePattern = /^[A-Za-z ]+$/;
+    const name = nameInput.value.trim();
+    
+    if (name && !namePattern.test(name)) {
+        nameError.textContent = "Enter a valid name";
+        nameError.style.color = "red";
+    } else {
+        nameError.textContent = "";
+    }
+}
+
+function ageValidation(){
+    const age = Number(ageInput.value);
+    
+    if (ageInput.value && (age < 1 || age > 100)) {
+        ageError.textContent = "Age must be between 1 and 100";
+        ageError.style.color = "red";
+    } else {
+        ageError.textContent = "";
+    }
+}
+
+function departmentValidation(){
+    const department = departmentInput.value;
+    if (!department) {
+        departmentError.textContent = "Please select a department";
+        departmentError.style.color = "red";
+    } else {
+        departmentError.textContent = "";
+    }
+    
+}
+
+// function formvalidation(){
+
+//     const name = nameInput.value.trim();
+    
+//     const age = Number(ageInput.value);
+    
+//     const department = departmentInput.value;
+    
+//     if (!department) {
+//         departmentError.textContent = "Please select a department";
+//         departmentError.style.color = "red";
+//     } else {
+//         departmentError.style.color = "";
+//     }
+    
+//     if (!name || !department || !ageInput.value) {
+//         formError.textContent = "Please fill all fields";
+//         formError.style.color = "red";
+//     } else {
+//         formError.style.color = "";
+//     }
+// }
+
 // -------------------------
 // Save Student
 // -------------------------
 
 function saveStudent(event) {
-
+    
     event.preventDefault();
-
+    
     const name = nameInput.value.trim();
-
+    
     const age = Number(ageInput.value);
-
+    
     const department = departmentInput.value;
-
+    
     // Validation
-
+    
     const namePattern = /^[A-Za-z ]+$/;
-
-    if (!name || !department || !age) {
-        alert("Please fill all fields");
+    
+    if (!name || !department || !ageInput.value) {
+        formError.textContent = "Please fill all fields";
+        formError.style.color = "red";
         return;
     }
 
-    if(!namePattern.test(name)){
-        alert("Enter valid name");
+    if (name && !namePattern.test(name)) {
+        nameError.textContent = "Enter a valid name";
+        nameError.style.color = "red";
         return;
     }
-
-    if(age < 1 || age > 100){
-        alert("Age must be between 1 and 100");
+    
+    if (ageInput.value && (age < 1 || age > 100)) {
+        ageError.textContent = "Age must be between 1 and 100";
+        ageError.style.color = "red";
         return;
-    }
+    } 
 
     if (!department) {
-        alert("Please Select Department");
+        departmentError.textContent = "Please select a department";
+        departmentError.style.color = "red";
         return;
     }
-
+    
+    
     // Duplicate Name Check
 
     const duplicate = students.some(student =>
@@ -176,6 +262,13 @@ function saveStudent(event) {
 
     studentForm.reset();
 
+    nameError.textContent = "";
+
+    ageError.textContent = "";
+
+    departmentError.textContent = "";
+
+    formError.textContent = "";
 
 }
 
@@ -217,11 +310,11 @@ function displayStudents(studentList = students) {
 
             <td>
 
-                <button onclick="editStudent(${student.id})">
+                <button type="button" onclick="editStudent(${student.id})">
                     Edit
                 </button>
 
-                <button onclick="deleteStudent(${student.id})">
+                <button type="button" onclick="deleteStudent(${student.id})">
                     Delete
                 </button>
 
@@ -263,6 +356,11 @@ function editStudent(id) {
 
     addBtn.textContent = "Update Student";
 
+    nameError.textContent="";
+    ageError.textContent="";
+    departmentError.textContent="";
+    formError.textContent="";
+
 }
 
 // -------------------------
@@ -277,9 +375,9 @@ function deleteStudent(id) {
 
     students = students.filter(student => student.id !== id);
 
-    editId = null;
-
     studentForm.reset();
+    
+    editId = null;
 
     addBtn.textContent="Add Student";
 
@@ -425,4 +523,3 @@ function initializeApp(){
     updateStatistics();
 
 }
-initializeApp();

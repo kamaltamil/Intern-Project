@@ -10,39 +10,54 @@
     <section class="container">
         <h1>Student Management System</h1>
         <!-- Student Form -->
+        <h3 class="form-title">Add New Student</h3>
         <form id="studentForm" class="form-container">
-            <input type="text" id="name" placeholder="Enter Student Name">
-            <input type="number" id="age" placeholder="Enter Age">
-            <select id="department">
-                <option value="">Select Department</option>
-                <option value="BCA">BCA</option>
-                <option value="MCA">MCA</option>
-                <option value="B.Sc">B.Sc</option>
-                <option value="M.Sc">M.Sc</option>
-            </select>
-            <button type="submit" id="addBtn">Add Student</button>
+            <div>
+                <input type="text" id="name" placeholder="Enter Student Name">
+                <p id="nameError" class="error"></p>
+            </div>
+            <div>
+                <input type="number" id="age" placeholder="Enter Age">
+                <p id="ageError" class="error"></p>
+            </div>
+            <div>
+                <select id="department">
+                    <option value="">Select Department</option>
+                    <option value="BCA">BCA</option>
+                    <option value="MCA">MCA</option>
+                    <option value="B.Sc">B.Sc</option>
+                    <option value="M.Sc">M.Sc</option>
+                </select>
+                <p id="departmentError" class="error"></p>
+            </div>
+            <div>
+                <button type="submit" id="addBtn">Add Student</button>
+                <p id="formError" class="error"></p>
+            </div>
         </form>
 
-        <!-- Search -->
-        <div class="search-container">
-            
-            <select id="filterDepartment">
-                <option value="All">Select Department</option>
-                <option value="BCA">BCA</option>
-                <option value="MCA">MCA</option>
-                <option value="B.Sc">B.Sc</option>
-                <option value="M.Sc">M.Sc</option>
-            </select>
-            <input type="text" id="search" placeholder="Search Student">
-            <button type="button" id="sortBtn">Sort A-Z</button>
-            <button type="button" id="resetBtn">Reset</button>
-        </div>
+        <div class="filter-sort-container">
+            <h3 class="form-title">Search and Filter</h3>
 
-        
-        <!-- Statistics -->
-        <div class="stats">
-            <p>Total Students : <span id="totalStudents">0</span></p>
-            <p>Average Age :<span id="averageAge">0</span></p>
+            <!-- Search -->
+            <div class="search-container">
+                <select id="filterDepartment">
+                    <option value="All">All Department</option>
+                    <option value="BCA">BCA</option>
+                    <option value="MCA">MCA</option>
+                    <option value="B.Sc">B.Sc</option>
+                    <option value="M.Sc">M.Sc</option>
+                </select>
+                <input type="text" id="search" placeholder="Search Student">
+                <button type="button" id="sortBtn">Sort A-Z</button>
+                <button type="button" id="resetBtn">Reset</button>
+            </div>
+            
+            <!-- Statistics -->
+            <div class="stats">
+                <p>Total Students : <span id="totalStudents">0</span></p>
+                <p>Average Age :<span id="averageAge">0</span></p>
+            </div>
         </div>
 
         <!-- Student Table -->

@@ -40,10 +40,26 @@ h1{
     margin-bottom:20px;
 }
 
-/* Search */
+.error{
+    color:red;
+    font-size:14px;
+    margin-top:5px;
+    min-height:18px;
+}
 
+/* Filter and Sort */
+.filter-sort-container{
+    margin-top:30px;
+}
+
+.form-title{
+    margin-bottom:20px;
+}
+
+/* Search */
 .search-container{
-    display:flex;
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
     gap:10px;
     margin-bottom:20px;
 }
@@ -55,10 +71,13 @@ input, select{
     border:1px solid #ccc;
     border-radius:5px;
     font-size:16px;
+    width:100%;
+    height:40px;
 }
 
 select option{
     font-size: 12px;
+    width: 100%;
 }
 /* Button */
 
@@ -77,6 +96,7 @@ button:hover{
 
 .form-container button{
     width:100%;
+    height:40px;
 }
 /* Statistics */
 
@@ -131,22 +151,28 @@ transition:.3s;
     .form-container{
         grid-template-columns: repeat(2, 2fr);
     }
+    .search-container{
+        grid-template-columns:repeat(2,1fr);
+    }
 }
 
 
 @media(max-width:768px){
+    
+    .form-container{
+        grid-template-columns:1fr;
+    }
+    
+    .search-container{
+        grid-template-columns:1fr;
+    }
 
-.form-container{
-    grid-template-columns:1fr;
 }
 
-.search-container{
-    flex-direction:column;
-}
 
-.stats{
-    flex-direction:column;
-    gap:10px;
-}
-
+@media(max-width:768px){
+    .stats{
+        flex-direction:column;
+        gap:10px;
+    }
 }

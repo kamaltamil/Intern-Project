@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Async Programming</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <section class="container">
+        <div>
+            <h1 class="app-name">Blog App</h1>
+            <div class="new-post-container">
+                <div class="new-post-header">
+                    <h2>Create New Post</h2>
+                </div>
+                <form>
+                    <div class="form-group">
+                        <div>
+                            <label for="user-id">UserId</label>
+                            <input type="number" id="user-id" placeholder="Enter the user ID" required>
+                        </div>
+                        <div>
+                            <label for="post-title">Title</label>
+                            <input type="text" id="post-title" placeholder="Enter the post title" required>
+                        </div>
+                        <div>
+                            <label for="post-body">Post</label>
+                            <textarea id="post-body" placeholder="Enter the post content" required></textarea>
+                        </div>
+                    </div>
+                    <button type="button" class="btn" id="create-post">Create</button>
+                </form>
+            </div>
+            <div class="post-list">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>UserId</th>
+                            <th>Id</th>
+                            <th>Title</th>
+                            <th>Body</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="post-table-body">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+    <script src="script.js"></script>
+</body>
+</html>
