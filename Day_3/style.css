@@ -84,6 +84,12 @@ form .form-group div input, form .form-group div textarea{
     border-radius:10px;
     border:1px solid #ddd;
 }
+.input-error {
+    margin-top: 6px;
+    color: #ff3b30;
+    font-size: 0.85rem;
+    min-height: 18px;
+}
 .post-list{
     background:#fff;
     color:#333;

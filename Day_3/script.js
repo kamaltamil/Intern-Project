@@ -1,248 +1,221 @@
 document.addEventListener("DOMContentLoaded", startApp);
 
-// API URLs
 const API_URL = "https://jsonplaceholder.typicode.com/posts";
-
+const API_STORAGE_KEY = "apiPosts";
+const SESSION_STORAGE_KEY = "sessionPosts";
 let editingPostId = null;
+let currentSort = "asc";
 
+const getApiPosts = () => JSON.parse(localStorage.getItem(API_STORAGE_KEY)) || [];
+const saveApiPosts = (posts) => localStorage.setItem(API_STORAGE_KEY, JSON.stringify(posts));
+const getSessionPosts = () => JSON.parse(sessionStorage.getItem(SESSION_STORAGE_KEY)) || [];
+const saveSessionPosts = (posts) => sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(posts));
 
-const STORAGE_KEY = "localPosts";
+const getFormFields = () => ({
+    userIdEl: document.getElementById('user-id'),
+    titleEl: document.getElementById('post-title'),
+    bodyEl: document.getElementById('post-body'),
+    userIdError: document.getElementById('user-id-error'),
+    titleError: document.getElementById('post-title-error'),
+    bodyError: document.getElementById('post-body-error'),
+    createBtn: document.getElementById('create-post'),
+    postTableBody: document.getElementById('post-table-body'),
+    sortAsc: document.getElementById('sort-asc'),
+    sortDesc: document.getElementById('sort-desc')
+});
 
-const getLocalPosts = () => {
-    return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+const clearErrors = () => {
+    const { userIdError, titleError, bodyError } = getFormFields();
+    userIdError.textContent = '';
+    titleError.textContent = '';
+    bodyError.textContent = '';
 };
 
-const saveLocalPosts = (posts) => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(posts));
+const showError = (field, message) => {
+    field.textContent = message;
 };
 
-// Fetch all data from API
+const validateForm = () => {
+    const { userIdEl, titleEl, bodyEl } = getFormFields();
+    clearErrors();
+
+    const userId = Number(userIdEl.value.trim());
+    const title = titleEl.value.trim();
+    const body = bodyEl.value.trim();
+    let valid = true;
+
+    if (!Number.isInteger(userId) || userId <= 0) {
+        showError(getFormFields().userIdError, 'UserId must be a positive integer');
+        valid = false;
+    }
+    if (title.length <= 10) {
+        showError(getFormFields().titleError, 'Title must be more than 10 characters');
+        valid = false;
+    }
+    if (body.length < 25) {
+        showError(getFormFields().bodyError, 'Post must be at least 25 characters');
+        valid = false;
+    }
+
+    return {
+        valid,
+        payload: { userId, title, body }
+    };
+};
+
 const fetchData = async () => {
     try {
-
         const response = await fetch(API_URL);
         const apiPosts = await response.json();
-
-        const localPosts = getLocalPosts();
-
-        const allPosts = [...localPosts, ...apiPosts];
-
-        listAllProducts(allPosts);
-
+        saveApiPosts(apiPosts);
     } catch (error) {
-        console.error(error);
+        console.warn('Unable to fetch API posts, using stored data', error);
     }
-}
 
-// Fetch a specific product by ID
+    const apiStored = getApiPosts();
+    const sessionStored = getSessionPosts();
+    const merged = [...apiStored, ...sessionStored];
+
+    const sorted = merged.sort((a, b) => {
+        const ai = Number(a.id);
+        const bi = Number(b.id);
+        return currentSort === 'asc' ? ai - bi : bi - ai;
+    });
+
+    listAllProducts(sorted);
+};
+
 const getProduct = async (id) => {
+    const sessionPosts = getSessionPosts();
+    const sessionPost = sessionPosts.find(p => p.id == id);
+    if (sessionPost) return sessionPost;
+
+    const apiPosts = getApiPosts();
+    const apiPost = apiPosts.find(p => p.id == id);
+    if (apiPost) return apiPost;
+
     try {
-        if (id > 100) {
-            const localPosts = getLocalPosts();
-            return localPosts.find(post => post.id == id);
-        }
-
-        const response = await fetch(API_URL + "/" + id);
-        const data = await response.json();
-        console.log(data);
-        return data;
-    } catch (error){
-        console.error("Error fetching product:", error);
-    }
-}
-
-// Add a new product to the API
-
-
-const addProduct = async () => {
-    try {
-
-        const userId = document.getElementById("user-id");
-        const newPostTitle = document.getElementById("post-title");
-        const newPostBody = document.getElementById("post-body");
-
-        const newProduct = {
-            userId: userId.value,
-            title: newPostTitle.value,
-            body: newPostBody.value
-        };
-
-        const localPosts = getLocalPosts();
-
-        const nextId =
-                localPosts.length > 0
-                    ? Math.max(...localPosts.map(post => post.id)) + 1
-                    : 101;
-
-            newProduct.id = nextId;
-
-        localPosts.push(newProduct);
-
-        saveLocalPosts(localPosts);
-
-        console.log(newProduct);
-
-        userId.value = "";
-        newPostTitle.value = "";
-        newPostBody.value = "";
-
-        fetchData();
-
-
+        const response = await fetch(`${API_URL}/${id}`);
+        return await response.json();
     } catch (error) {
-        console.error("Error adding product:", error);
+        console.error('Unable to load product', error);
+        return null;
     }
 };
 
+const addProduct = () => {
+    const { userIdEl, titleEl, bodyEl } = getFormFields();
+    const apiPosts = getApiPosts();
+    const sessionPosts = getSessionPosts();
+    const nextId = Math.max(100, ...apiPosts.map(p => Number(p.id) || 0), ...sessionPosts.map(p => Number(p.id) || 0)) + 1;
 
-// Update a product completely 
-const fullUpdateProduct = async (id, updateData) => {
-    try {
-        if (id > 100) {
-            let posts = getLocalPosts();
-            posts = posts.map(post =>
-                post.id == id ? { ...post, ...updateData } : post
-            );
-            saveLocalPosts(posts);
-            fetchData();
-            return;
-        }
-
-        const response = await fetch(API_URL + "/" + id, {
-            method: "PUT",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(updateData)
-        });
-        const data = await response.json();
-        console.log(data);
-    } catch (error) {
-        console.error("Error updating product:", error);
-    }
-}
-
-// Update a product partially
-const partialUpdateProduct = async (id, updateData) => {
-    try {
-        const response = await fetch(API_URL +"/"+id, {
-            method: "PATCH",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(updateData)
-        });
-        const data = await response.json();
-        console.log(data);
-    } catch (error) {
-        console.error("Error partially updating product:", error);
-    }
-}
-
-// Delete a product by ID
-const deleteProduct = async (id) => {
-    try {
-        if (id > 100) {
-            let posts = getLocalPosts();
-            posts = posts.filter(post => post.id != id);
-            saveLocalPosts(posts);
-            fetchData();
-            return;
-        }
-        const reponse = await fetch(API_URL + "/" + id, {
-            method: "DELETE",
-            headers: {
-                "Content-Type": "application/json"
-            }
-        });
-        if (reponse.ok){
-            console.log(`Product with ID ${id} deleted successfullly`);
-        } else {
-            console.error(`Failed to delete product with ID ${id}`);
-        }
-    } catch (error) {
-        console.error("Error deleting product:", error);
-    }
-}
-
-// List all products from the API
-const postTableBody = document.getElementById("post-table-body");
-
-const listAllProducts = async (data) => {
-    postTableBody.innerHTML = "";
-    data.forEach((post) => {
-        const row = document.createElement("tr");
-        row.innerHTML = `
-        <td>${post.userId}</td>
-        <td>${post.id}</td>
-        <td>${post.title}</td>
-        <td>${post.body}</td>
-        <td>
-            <button class="btn" onclick="editProduct(${post.id})">Edit</button>
-            <button class="btn" onclick="deleteProduct(${post.id})">Delete</button>
-         </td>
-        `;
-        postTableBody.appendChild(row);
-    })
-}
-    
-const editProduct = (id) => {
-
-    getProduct(id)
-        .then((product) => {
-
-            document.getElementById("user-id").value = product.userId;
-            document.getElementById("post-title").value = product.title;
-            document.getElementById("post-body").value = product.body;
-
-            editingPostId = id;
-
-            document.getElementById("create-post").innerText = "Update";
-
-        })
-        .catch((error) => {
-            console.error("Error editing product:", error);
-        });
-}
-
-document.getElementById("create-post").addEventListener("click", async () => {
-
-    const product = {
-        userId: document.getElementById("user-id").value.trim(),
-        title: document.getElementById("post-title").value.trim(),
-        body: document.getElementById("post-body").value.trim()
+    const newPost = {
+        userId: Number(userIdEl.value.trim()),
+        id: nextId,
+        title: titleEl.value.trim(),
+        body: bodyEl.value.trim()
     };
 
-    if (!product.userId || !product.title || !product.body) {
-        alert("Please fill all fields");
+    sessionPosts.push(newPost);
+    saveSessionPosts(sessionPosts);
+    resetForm();
+    fetchData();
+};
+
+const fullUpdateProduct = (id, updateData) => {
+    let sessionPosts = getSessionPosts();
+    if (sessionPosts.some(p => p.id == id)) {
+        sessionPosts = sessionPosts.map(p => p.id == id ? { ...p, ...updateData } : p);
+        saveSessionPosts(sessionPosts);
+        fetchData();
         return;
     }
 
-    if (editingPostId === null) {
-
-        await addProduct();
-
-    } else {
-
-        await fullUpdateProduct(editingPostId, product);
-
-        editingPostId = null;
-
-        document.getElementById("create-post").innerText = "Create";
-
-        document.getElementById("user-id").value = "";
-        document.getElementById("post-title").value = "";
-        document.getElementById("post-body").value = "";
-
+    let apiPosts = getApiPosts();
+    if (apiPosts.some(p => p.id == id)) {
+        apiPosts = apiPosts.map(p => p.id == id ? { ...p, ...updateData } : p);
+        saveApiPosts(apiPosts);
         fetchData();
+        return;
+    }
+};
+
+const deleteProduct = (id) => {
+    let sessionPosts = getSessionPosts();
+    if (sessionPosts.some(p => p.id == id)) {
+        saveSessionPosts(sessionPosts.filter(p => p.id != id));
+        fetchData();
+        return;
     }
 
-});
+    let apiPosts = getApiPosts();
+    if (apiPosts.some(p => p.id == id)) {
+        saveApiPosts(apiPosts.filter(p => p.id != id));
+        fetchData();
+        return;
+    }
+};
 
-// Initialize the app
+const postTableBody = document.getElementById('post-table-body');
+const listAllProducts = (data) => {
+    postTableBody.innerHTML = '';
+    data.forEach(post => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${post.userId}</td>
+            <td>${post.id}</td>
+            <td>${post.title}</td>
+            <td>${post.body}</td>
+            <td>
+                <button class="btn" onclick="editProduct(${post.id})">Edit</button>
+                <button class="btn" onclick="deleteProduct(${post.id})">Delete</button>
+            </td>
+        `;
+        postTableBody.appendChild(row);
+    });
+};
+
+const editProduct = (id) => {
+    getProduct(id).then(post => {
+        if (!post) return;
+        const { userIdEl, titleEl, bodyEl } = getFormFields();
+        userIdEl.value = post.userId;
+        titleEl.value = post.title;
+        bodyEl.value = post.body;
+        editingPostId = id;
+        document.getElementById('create-post').innerText = 'Update';
+    });
+};
+
+const resetForm = () => {
+    const { userIdEl, titleEl, bodyEl } = getFormFields();
+    userIdEl.value = '';
+    titleEl.value = '';
+    bodyEl.value = '';
+    editingPostId = null;
+    document.getElementById('create-post').innerText = 'Create';
+    clearErrors();
+};
+
+const handleSubmit = () => {
+    const validation = validateForm();
+    if (!validation.valid) return;
+
+    if (editingPostId === null) {
+        addProduct();
+    } else {
+        fullUpdateProduct(editingPostId, validation.payload);
+        resetForm();
+    }
+};
+
+document.getElementById('create-post').addEventListener('click', handleSubmit);
+
 function startApp() {
-    console.log("App started");
+    const { sortAsc, sortDesc } = getFormFields();
+
+    if (sortAsc) sortAsc.addEventListener('click', () => { currentSort = 'asc'; fetchData(); });
+    if (sortDesc) sortDesc.addEventListener('click', () => { currentSort = 'desc'; fetchData(); });
 
     fetchData();
-
 }
