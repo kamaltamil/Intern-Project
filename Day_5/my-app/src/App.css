@@ -1,0 +1,17 @@
+
+:root{
+    --primary-color: #0D5D56;
+}
+
+.primary-table .ant-table-container,
+.primary-table .ant-table-thead > tr > th,
+.primary-table .ant-table-tbody > tr > td,
+.primary-table .ant-table-bordered {
+  border-color: var(--primary-color);
+}
+
+.primary-table .ant-table-thead > tr > th,
+.primary-table .ant-table-tbody > tr > td {
+  border-inline-color: var(--primary-color);
+  border-block-color: var(--primary-color);
+}
