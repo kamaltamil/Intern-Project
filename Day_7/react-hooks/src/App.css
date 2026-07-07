@@ -1,0 +1,97 @@
+
+:root{
+
+    /* ===== Brand Colors ===== */
+    --primary: #E50914;
+    --primary-hover: #F40612;
+    --secondary: #FFFFFF;
+
+    /* ===== Background Colors ===== */
+    --background: #141414;
+    --background-secondary: #181818;
+    --card: #1F1F1F;
+    --card-hover: #2A2A2A;
+
+    /* ===== Text Colors ===== */
+    --text: #FFFFFF;
+    --text-light: #B3B3B3;
+    --text-muted: #8C8C8C;
+    --dark: #000000;
+
+    /* ===== Border ===== */
+    --border: #333333;
+
+    /* ===== Status Colors ===== */
+    --success: #22C55E;
+    --warning: #FACC15;
+    --error: #EF4444;
+    --info: #3B82F6;
+
+    /* ===== Rating ===== */
+    --rating: #FFD700;
+
+    /* ===== Shadows ===== */
+    --shadow-sm: 0 2px 5px rgba(0,0,0,0.2);
+    --shadow-md: 0 4px 10px rgba(0,0,0,0.3);
+    --shadow-lg: 0 8px 20px rgba(0,0,0,0.5);
+
+    /* ===== Border Radius ===== */
+    --radius-sm: 5px;
+    --radius-md: 10px;
+    --radius-lg: 16px;
+    --radius-round: 50%;
+
+    /* ===== Spacing ===== */
+    --space-xs: 5px;
+    --space-sm: 10px;
+    --space-md: 20px;
+    --space-lg: 30px;
+    --space-xl: 40px;
+
+    /* ===== Font Sizes ===== */
+    --fs-sm: 14px;
+    --fs-md: 16px;
+    --fs-lg: 20px;
+    --fs-xl: 28px;
+    --fs-xxl: 40px;
+
+    /* ===== Font Weight ===== */
+    --fw-normal: 400;
+    --fw-medium: 500;
+    --fw-semibold: 600;
+    --fw-bold: 700;
+
+    /* ===== Transition ===== */
+    --transition: all 0.3s ease;
+}
+
+.navbar-container{
+    /* background-color: var(--secondary); */
+    padding: var(--space-sm) var(--space-md);
+}
+
+.home-container{
+    min-height: 100vh;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    /* background-color: aqua; */
+    background-image: url('images/Avatar_The_Last_Airbender.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+.home-content{
+    flex: 1;
+    padding: var(--space-lg);
+    text-align: center;
+    color: var(--secondary);
+    gap: var(--space-sm);
+}
+
+.home-content-text{
+    text-align: left;
+    color: var(--dark);
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+}
