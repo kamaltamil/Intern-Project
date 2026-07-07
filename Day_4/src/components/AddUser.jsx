@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react'
+import dayjs from 'dayjs'
 import { Button, Form, Input, DatePicker, Row, Col, Modal } from 'antd'
 
 const defaultValues = {
@@ -7,19 +8,33 @@ const defaultValues = {
   email: '',
   mobile: '',
   location: '',
-  dateofbirth: null
+  dateofbirth: ''
 }
 
 const AddUser = ({ open, onCancel, onSubmit, editingUser = null }) => {
   const [form] = Form.useForm()
 
+  const parseDobValue = (value) => {
+    if (!value) return null
+    if (dayjs.isDayjs(value)) return value
+
+    if (typeof value === 'string') {
+      const parsed = dayjs(value, ['DD-MM-YYYY', 'YYYY-MM-DD', 'YYYY/MM/DD'], true)
+      return parsed.isValid() ? parsed : null
+    }
+
+    return null
+  }
+
   useEffect(() => {
     if (open) {
-      form.setFieldsValue({
+      const values = {
         ...defaultValues,
         ...(editingUser || {}),
-        dateofbirth: null
-      })
+      }
+
+      values.dateofbirth = parseDobValue(editingUser?.dob || editingUser?.dateofbirth)
+      form.setFieldsValue(values)
     }
   }, [open, editingUser, form])
 
