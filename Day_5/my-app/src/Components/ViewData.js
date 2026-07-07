@@ -58,7 +58,7 @@ const ViewData = ({ editingStudent, setEditingStudent, setOpen, onEdit }) => {
     )
     localStorage.setItem('students', JSON.stringify(updatedData))
     if (onEdit) onEdit()
-    message.success(`Student marked as ${!currentStatus ? 'Present' : 'Absent'}`)
+    message.success(`${updatedData.find(s => s.id === id)?.name} marked as ${!currentStatus ? 'Present' : 'Absent'}`)
   }
 
   const handleDelete = (id) => {
@@ -66,7 +66,7 @@ const ViewData = ({ editingStudent, setEditingStudent, setOpen, onEdit }) => {
     localStorage.setItem('students', JSON.stringify(updatedData))
     setData(updatedData)
     if (onEdit) onEdit()
-    message.success('Student deleted successfully!')
+    message.success(`${updatedData.find(s => s.id === id)?.name} Student deleted successfully!`)
   }
 
   const handleEdit = (record) => {
