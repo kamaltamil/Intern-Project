@@ -30,28 +30,10 @@
   ],
   "sessions": [
     {
-      "id": "U2-457C6v0s",
-      "userId": "user_01"
-    },
-    {
-      "id": "4dxfsbkyzpY",
-      "userId": "user_01"
-    },
-    {
-      "id": "g1gU5eLzvQM",
-      "userId": "user_01"
-    },
-    {
-      "id": "zatdiuGlVdE",
-      "userId": "user_01"
-    },
-    {
-      "id": "UAZBo373FiU",
-      "userId": "user_01"
-    },
-    {
-      "id": "CNpL1p1YOuw",
-      "userId": "user_01"
+      "token": "session_qmw8v3vmq",
+      "userId": "user_01",
+      "createdAt": "2026-07-08T11:57:32.920Z",
+      "id": "aoJi8oh1MuU"
     }
   ],
   "$schema": ["./node_modules/json-server/schema.json"]

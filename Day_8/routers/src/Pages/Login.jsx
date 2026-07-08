@@ -9,42 +9,46 @@ const { Title, Text } = Typography;
 export const Login = () => {
   const [form] = Form.useForm();
 
-  const handleLoginSubmit = async (values) => {
-    try {
-      const response = await api.get('/users', {
-        params: {
-          email: values.email,
-          password: values.password
-        }
+const handleLoginSubmit = async (values) => {
+  try {
+    const response = await api.get('/users', {
+      params: {
+        email: values.email,
+        password: values.password
+      }
+    });
+
+    const matchedUsers = response.data;
+
+    if (matchedUsers.length > 0) {
+      const user = matchedUsers[0];
+      
+      // This creates your custom session string: e.g., "session_5b7x2z9q1"
+      const mockToken = 'session_' + Math.random().toString(36).substring(2, 11);
+
+      // FIX: Pass the token as its own property so json-server doesn't touch it
+      await api.post('/sessions', {
+        token: mockToken, 
+        userId: user.id,
+        createdAt: new Date().toISOString() // Good practice for session tracking
       });
 
-      const matchedUsers = response.data;
+      // Keep saving your session reference locally for route-guards
+      localStorage.setItem('sessionToken', mockToken);
+      localStorage.setItem('userId', user.id);
+      localStorage.setItem('userName', user.name);
 
-      if (matchedUsers.length > 0) {
-        const user = matchedUsers[0];
-        
-        const mockToken = 'session_' + Math.random().toString(36).substring(2, 11);
-
-        await api.post('/sessions', {
-          id: mockToken,
-          userId: user.id
-        });
-
-        localStorage.setItem('sessionToken', mockToken);
-        localStorage.setItem('userId', user.id);
-        localStorage.setItem('userName', user.name);
-
-        message.success(`Welcome back, ${user.name}!`);
-
-        window.location.href = '/dashboard/tasks'; 
-      } else {
-        message.error('Invalid email structure or incorrect account password.');
-      }
-    } catch (error) {
-      console.error('Authentication process failed:', error);
-      message.error('Database connectivity error. Check if json-server is up.');
+      message.success(`Welcome back, ${user.name}!`);
+      window.location.href = '/dashboard/tasks'; 
+    } else {
+      message.error('Invalid email structure or incorrect account password.');
     }
-  };
+  } catch (error) {
+    console.error('Authentication process failed:', error);
+    message.error('Database connectivity error. Check if json-server is up.');
+  }
+};
+
 
   return (
     <Flex justify="center" align="center" style={{ minHeight: '85vh', width: '100%' }}>
