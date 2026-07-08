@@ -1,0 +1,58 @@
+{
+  "users": [
+    {
+      "id": "user_01",
+      "email": "kamal@example.com",
+      "password": "password123",
+      "name": "Kamal"
+    },
+    {
+      "id": "user_02",
+      "email": "sam@example.com",
+      "password": "password123",
+      "name": "Sam"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "task_101",
+      "userId": "user_01",
+      "title": "Complete React button component",
+      "completed": false,
+      "status": "Completed"
+    },
+    {
+      "userId": "user_01",
+      "title": "router",
+      "status": "In Progress",
+      "id": "0g82WNdHM28"
+    }
+  ],
+  "sessions": [
+    {
+      "id": "U2-457C6v0s",
+      "userId": "user_01"
+    },
+    {
+      "id": "4dxfsbkyzpY",
+      "userId": "user_01"
+    },
+    {
+      "id": "g1gU5eLzvQM",
+      "userId": "user_01"
+    },
+    {
+      "id": "zatdiuGlVdE",
+      "userId": "user_01"
+    },
+    {
+      "id": "UAZBo373FiU",
+      "userId": "user_01"
+    },
+    {
+      "id": "CNpL1p1YOuw",
+      "userId": "user_01"
+    }
+  ],
+  "$schema": ["./node_modules/json-server/schema.json"]
+}

@@ -1,0 +1,74 @@
+/* Accent Button */
+
+.accent-btn{
+
+background:#C9A66B !important;
+
+color:#002147 !important;
+
+border:none !important;
+
+}
+
+
+.accent-btn:hover{
+
+background:#DDB982 !important;
+
+color:#002147 !important;
+
+}
+
+
+
+.accent-btn:active{
+
+background:#B58D4A !important;
+
+}
+
+
+
+/* Secondary Button */
+
+
+.secondary-btn{
+
+
+background:transparent !important;
+
+color:#002147 !important;
+
+border:1px solid #D2B48C !important;
+
+
+}
+
+
+.secondary-btn:hover{
+
+
+background:#F4EBDD !important;
+
+border-color:#002147 !important;
+
+
+}
+
+.accent-btn:focus-visible{
+
+outline:3px solid #D2B48C;
+
+outline-offset:3px;
+
+}
+
+
+
+.secondary-btn:focus-visible{
+
+outline:3px solid #002147;
+
+outline-offset:3px;
+
+}
