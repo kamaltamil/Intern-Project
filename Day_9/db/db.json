@@ -18,14 +18,14 @@
       "userId": "user_01",
       "priority": "Normal",
       "title": "Routing & Forms",
-      "status": "Completed",
+      "status": "In Progress",
       "id": "0g82WNdHM28"
     },
     {
       "userId": "user_01",
       "priority": "Normal",
       "title": "Complete todo manager",
-      "status": "Completed",
+      "status": "In Progress",
       "id": "Qtiyr5MN-oY"
     },
     {
@@ -78,6 +78,18 @@
       "userId": "user_01",
       "createdAt": "2026-07-09T11:30:26.245Z",
       "id": "sHNFL4yP1_k"
+    },
+    {
+      "token": "session_khwh1ddth",
+      "userId": "user_01",
+      "createdAt": "2026-07-09T11:57:51.550Z",
+      "id": "WvcB9pc1xvA"
+    },
+    {
+      "token": "session_abh9v6mal",
+      "userId": "user_01",
+      "createdAt": "2026-07-09T11:59:03.329Z",
+      "id": "gCw0FKsMUaw"
     }
   ],
   "$schema": "./node_modules/json-server/schema.json"

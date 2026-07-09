@@ -8,6 +8,7 @@ import DashboardLayout from './layouts/DashboardLayout';
 import Tasks from './pages/Tasks';
 import Profile from './pages/Profile';
 import { logout, restoreSession } from './store/authSlice';
+import NotFound from './pages/NotFound';
 
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated } = useSelector((state) => state.auth);
@@ -48,12 +49,7 @@ const App = () => {
             <Route path='tasks' element={<Tasks />} />
             <Route path='profile' element={<Profile />} />
           </Route>
-          <Route path='*' element={
-            <div style={{ padding: 24, textAlign: 'center' }}>
-              <h2>404 - Page Not Found</h2>
-              <a href='/dashboard'>Return to Dashboard</a>
-            </div>
-          } />
+          <Route path='*' element={<NotFound />} />
         </Routes>
       </BrowserRouter>
     </ConfigProvider>
