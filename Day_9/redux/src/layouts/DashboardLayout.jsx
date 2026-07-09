@@ -39,7 +39,7 @@ const DashboardLayout = ({ onLogout }) => {
         style={{ background: '#002147' }} 
       >
         <div style={{ height: 64, margin: '16px 24px', display: 'flex', alignItems: 'center' }}>
-          <Title level={4} style={{ color: '#C9A66B', margin: 0, letterSpacing: 1 }}>TASKMATE</Title>
+          <Title level={4} style={{ color: '#C9A66B', margin: 0, letterSpacing: 1 }}>Redux TASKMATE</Title>
         </div>
         <Menu 
           theme='dark' 
