@@ -14,9 +14,11 @@
     }
   ],
   "tasks": [
+    {
+      "title": "kamal",
+      "id": "uI8dydX9W1Q"
+    }
   ],
-  "sessions": [
-    
-  ],
+  "sessions": [],
   "$schema": ["./node_modules/json-server/schema.json"]
 }
