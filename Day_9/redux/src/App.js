@@ -6,6 +6,7 @@ import { customTheme } from './theme/theme';
 import Login from './pages/Login';
 import DashboardLayout from './layouts/DashboardLayout';
 import Tasks from './pages/Tasks';
+import Profile from './pages/Profile'; // <-- IMPORT ADDED HERE
 import { logout } from './store/authSlice'; 
 
 const ProtectedRoute = ({ children }) => {
@@ -34,7 +35,8 @@ const App = () => {
           }>
             <Route index element={<Navigate to='tasks' replace />} />
             <Route path='tasks' element={<Tasks />} />
-            <Route path='profile' element={<div><h2>Profile Page</h2></div>} />
+            {/* <-- ROUTE UPDATED HERE --> */}
+            <Route path='profile' element={<Profile />} /> 
           </Route>
           
           <Route path='*' element={

@@ -5,7 +5,8 @@ import { customTheme } from './theme/theme';
 import Login from './pages/Login';
 import DashboardLayout from './layouts/DashboardLayout';
 import Tasks from './pages/Tasks';
-import { useAuthStore } from './stores/useAuthStore'; 
+import Profile from './pages/Profile';
+import { useAuthStore } from './stores/useAuthStore';
 
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated } = useAuthStore();
@@ -13,7 +14,7 @@ const ProtectedRoute = ({ children }) => {
 };
 
 const App = () => {
-  const { logout } = useAuthStore(); // Or Redux dispatch(logout())
+  const { logout } = useAuthStore();
 
   return (
     <ConfigProvider theme={customTheme}>
@@ -29,7 +30,7 @@ const App = () => {
           }>
             <Route index element={<Navigate to='tasks' replace />} />
             <Route path='tasks' element={<Tasks />} />
-            <Route path='profile' element={<div><h2>Profile Page</h2></div>} />
+            <Route path='profile' element={<Profile />} />
           </Route>
           
           <Route path='*' element={
