@@ -82,7 +82,7 @@ const handleLoginSubmit = async (values) => {
           >
             <Input 
               prefix={<MailOutlined style={{ color: '#bfbfbf' }} />} 
-              placeholder="alex@example.com" 
+              placeholder="kamal@example.com" 
               allowClear
             />
           </Form.Item>

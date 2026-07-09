@@ -4,6 +4,7 @@ import "./CustomButton.css";
 
 const CustomButton = ({
         children, 
+        color='default',
         variant='dafault', 
         size='middle',
         icon,
@@ -14,7 +15,8 @@ const CustomButton = ({
 
     return (
         <Button
-            type={variant}
+            color={color}
+            variant={variant}
             size={size}
             icon={icon}
             loading={loading}

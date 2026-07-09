@@ -27,8 +27,6 @@ const NavBar = () => {
         
         <nav>
           <Flex vertical gap="medium">
-            {token && (
-              <>
                 <Link to="/dashboard/tasks" style={{ textDecoration: 'none' }}>
                   <CustomButton variant="primary" icon={<ScheduleOutlined />} style={{ width: '100%', textAlign: 'left' }}>
                     Tasks
@@ -39,8 +37,6 @@ const NavBar = () => {
                     Profile
                   </CustomButton>
                 </Link>
-              </>
-            )}
           </Flex>
         </nav>
       </div>
