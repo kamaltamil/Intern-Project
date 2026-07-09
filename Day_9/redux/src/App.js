@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ConfigProvider } from 'antd';
 import { useSelector, useDispatch } from 'react-redux';
@@ -8,10 +8,16 @@ import DashboardLayout from './layouts/DashboardLayout';
 import Tasks from './pages/Tasks';
 import Profile from './pages/Profile'; // <-- IMPORT ADDED HERE
 import { logout } from './store/authSlice'; 
+import API from './services/api';
 
 const ProtectedRoute = ({ children }) => {
-  const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
-  return isAuthenticated ? children : <Navigate to='/login' replace />;
+  const { isAuthenticated } = useSelector((state) => state.auth);
+  
+  // Use a simple boolean check
+  if (!isAuthenticated) {
+    return <Navigate to='/login' replace />;
+  }
+  return children;
 };
 
 const App = () => {

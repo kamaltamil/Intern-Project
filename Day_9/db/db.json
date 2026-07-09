@@ -15,20 +15,38 @@
   ],
   "tasks": [
     {
-      "title": "kjfdsksjflkaj",
-      "priority": "Normal",
-      "status": "Completed",
+      "id": "task_101",
       "userId": "user_01",
-      "id": "hO-_G-3vWcU"
+      "title": "Complete React button component",
+      "completed": false,
+      "status": "In Progress"
     },
     {
-      "title": "sdlkjfkjlk",
-      "priority": "Normal",
-      "status": "In Progress",
       "userId": "user_01",
-      "id": "2nAZmiRbmNg"
+      "title": "Routing & Forms",
+      "status": "In Progress",
+      "id": "0g82WNdHM28"
+    },
+    {
+      "userId": "user_01",
+      "title": "Complete todo manager",
+      "status": "In Progress",
+      "id": "Qtiyr5MN-oY"
     }
   ],
-  "sessions": [],
+  "sessions": [
+    {
+      "token": "session_nqyo4sdvi",
+      "userId": "user_01",
+      "createdAt": "2026-07-09T10:40:41.906Z",
+      "id": "xmBRR5ZhJvg"
+    },
+    {
+      "token": "session_6dz0ek9e8",
+      "userId": "user_01",
+      "createdAt": "2026-07-09T10:41:13.638Z",
+      "id": "DUGPVtueq84"
+    }
+  ],
   "$schema": "./node_modules/json-server/schema.json"
 }
