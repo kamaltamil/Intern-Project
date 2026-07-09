@@ -1,0 +1,22 @@
+{
+  "users": [
+    {
+      "id": "user_01",
+      "email": "kamal@zybisys.com",
+      "password": "password123",
+      "name": "Kamal"
+    },
+    {
+      "id": "user_02",
+      "email": "sam@zybisys.com",
+      "password": "password123",
+      "name": "Sam"
+    }
+  ],
+  "tasks": [
+  ],
+  "sessions": [
+    
+  ],
+  "$schema": ["./node_modules/json-server/schema.json"]
+}
