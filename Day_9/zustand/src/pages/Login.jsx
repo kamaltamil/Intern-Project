@@ -1,7 +1,7 @@
 import React from 'react';
 import { Form, Input, Button, Alert, Card } from 'antd';
 import { Navigate } from 'react-router-dom';
-import { useAuthStore } from '../stores/useAuthStore'; // Or Redux hooks
+import { useAuthStore } from '../stores/useAuthStore';
 
 const Login = () => {
   const { isAuthenticated, loading, error, login } = useAuthStore();
@@ -11,7 +11,7 @@ const Login = () => {
   }
 
   const onFinish = (values) => {
-    login(values);
+    login(values); // store's login expects { email, password } — matches the form values
   };
 
   return (

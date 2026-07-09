@@ -7,27 +7,17 @@ import DashboardLayout from './layouts/DashboardLayout';
 import Tasks from './pages/Tasks';
 import Profile from './pages/Profile';
 import { useAuthStore } from './stores/useAuthStore';
-import API from './services/api';
 
 const ProtectedRoute = ({ children }) => {
   const [loading, setLoading] = useState(true);
-  const [valid, setValid] = useState(false);
+  const { isAuthenticated, restoreSession } = useAuthStore();
 
   useEffect(() => {
-    const checkSession = async () => {
-      const token = localStorage.getItem('sessionToken');
-      if (!token) { setLoading(false); return; }
-      try {
-        const res = await API.get(`/sessions?token=${token}`);
-        setValid(res.data.length > 0);
-      } catch { setValid(false); }
-      setLoading(false);
-    };
-    checkSession();
-  }, []);
+    restoreSession().finally(() => setLoading(false));
+  }, [restoreSession]);
 
   if (loading) return <div>Loading...</div>;
-  return valid ? children : <Navigate to='/login' replace />;
+  return isAuthenticated ? children : <Navigate to='/login' replace />;
 };
 
 const App = () => {
@@ -39,7 +29,6 @@ const App = () => {
         <Routes>
           <Route path='/' element={<Navigate to='/dashboard/tasks' replace />} />
           <Route path='/login' element={<Login />} />
-          
           <Route path='/dashboard' element={
             <ProtectedRoute>
               <DashboardLayout onLogout={logout} />
@@ -49,7 +38,6 @@ const App = () => {
             <Route path='tasks' element={<Tasks />} />
             <Route path='profile' element={<Profile />} />
           </Route>
-          
           <Route path='*' element={
             <div style={{ padding: 24, textAlign: 'center' }}>
               <h2>404 - Page Not Found</h2>

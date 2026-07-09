@@ -20,7 +20,7 @@ const Profile = () => {
         style={{ borderRadius: 12, boxShadow: '0 4px 16px rgba(0,0,0,0.04)', overflow: 'hidden' }}
         styles={{ body: { padding: 32 } }}
       >
-        <Space direction="vertical" size="large" style={{ width: '100%' }}>
+        <Space orientation="vertical" size="large" style={{ width: '100%' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 24, borderBottom: '1px solid #f0f0f0', paddingBottom: 24 }}>
             <Avatar size={80} icon={<UserOutlined />} style={{ backgroundColor: '#1890ff', boxShadow: '0 4px 10px rgba(0,0,0,0.1)' }} />
             <div>

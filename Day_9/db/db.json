@@ -15,23 +15,25 @@
   ],
   "tasks": [
     {
-      "id": "task_101",
       "userId": "user_01",
-      "title": "Complete React button component",
-      "completed": false,
-      "status": "In Progress"
-    },
-    {
-      "userId": "user_01",
+      "priority": "Normal",
       "title": "Routing & Forms",
-      "status": "In Progress",
+      "status": "Completed",
       "id": "0g82WNdHM28"
     },
     {
       "userId": "user_01",
+      "priority": "Normal",
       "title": "Complete todo manager",
-      "status": "In Progress",
+      "status": "Completed",
       "id": "Qtiyr5MN-oY"
+    },
+    {
+      "title": "fhsfkjk",
+      "priority": "Normal",
+      "status": "In Progress",
+      "userId": "user_01",
+      "id": "Otwth_lmb94"
     }
   ],
   "sessions": [
@@ -46,6 +48,36 @@
       "userId": "user_01",
       "createdAt": "2026-07-09T10:41:13.638Z",
       "id": "DUGPVtueq84"
+    },
+    {
+      "token": "session_eiicv0c36",
+      "userId": "user_01",
+      "createdAt": "2026-07-09T10:54:23.969Z",
+      "id": "y3qebSiwfQY"
+    },
+    {
+      "token": "session_r3mhekqoy",
+      "userId": "user_01",
+      "createdAt": "2026-07-09T11:06:29.116Z",
+      "id": "mZ-b85tHXXQ"
+    },
+    {
+      "token": "session_wlyamzyoy",
+      "userId": "user_01",
+      "createdAt": "2026-07-09T11:25:55.782Z",
+      "id": "vKZfq2f8v2s"
+    },
+    {
+      "token": "session_1wwzhz0wx",
+      "userId": "user_01",
+      "createdAt": "2026-07-09T11:30:01.358Z",
+      "id": "ZOthT5HfjZo"
+    },
+    {
+      "token": "session_txhj7dyi2",
+      "userId": "user_01",
+      "createdAt": "2026-07-09T11:30:26.245Z",
+      "id": "sHNFL4yP1_k"
     }
   ],
   "$schema": "./node_modules/json-server/schema.json"
