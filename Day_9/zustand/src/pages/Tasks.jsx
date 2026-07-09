@@ -1,13 +1,19 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Form, Input, Button, Select, Alert, List } from 'antd';
-import { useTaskStore } from '../stores/useTaskStore'; // Or Redux hooks
+import { useTaskStore } from '../stores/useTaskStore';
 
 const { Option } = Select;
 const ENABLE_PRIORITY = process.env.REACT_APP_ENABLE_TASK_PRIORITY === 'true';
 
 const Tasks = () => {
-  const { items, loading, error, addTask } = useTaskStore();
+  // Extract state and actions from the Zustand store
+  const { items, loading, error, addTask, fetchTasks } = useTaskStore();
   const [form] = Form.useForm();
+
+  // Fetch tasks from db.json when the component mounts
+  useEffect(() => {
+    fetchTasks();
+  }, [fetchTasks]);
 
   const onFinish = async (values) => {
     await addTask(values);
@@ -41,6 +47,7 @@ const Tasks = () => {
 
       <List
         bordered
+        loading={loading && items.length === 0}
         dataSource={items}
         renderItem={(item) => (
           <List.Item>

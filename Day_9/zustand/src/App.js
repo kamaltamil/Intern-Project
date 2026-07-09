@@ -5,7 +5,7 @@ import { customTheme } from './theme/theme';
 import Login from './pages/Login';
 import DashboardLayout from './layouts/DashboardLayout';
 import Tasks from './pages/Tasks';
-import { useAuthStore } from './stores/useAuthStore'; // Or Redux hooks
+import { useAuthStore } from './stores/useAuthStore'; 
 
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated } = useAuthStore();
