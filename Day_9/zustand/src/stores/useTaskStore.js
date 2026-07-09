@@ -6,10 +6,10 @@ export const useTaskStore = create((set) => ({
   loading: false,
   error: null,
 
-  fetchTasks: async () => {
+  fetchTasks: async (userId) => {
     set({ loading: true, error: null });
     try {
-      const response = await API.get('/tasks');
+      const response = await API.get(`/tasks?userId=${userId}`);
       set({ items: response.data, loading: false });
     } catch (error) {
       set({ error: error.message, loading: false });
@@ -23,6 +23,18 @@ export const useTaskStore = create((set) => ({
       set((state) => ({ items: [...state.items, response.data], loading: false }));
     } catch (error) {
       set({ error: error.message, loading: false });
+      throw error;
+    }
+  },
+
+  updateTaskStatus: async (id, status) => {
+    try {
+      const response = await API.patch(`/tasks/${id}`, { status });
+      set((state) => ({
+        items: state.items.map(t => t.id === id ? response.data : t)
+      }));
+    } catch (error) {
+      throw error;
     }
   }
 }));

@@ -17,8 +17,21 @@
     {
       "title": "kamal",
       "id": "uI8dydX9W1Q"
+    },
+    {
+      "title": "sdlkfsldkflk",
+      "status": "Completed",
+      "userId": "user_01",
+      "id": "SHHk5WXUBzQ"
+    },
+    {
+      "title": "kjfdsksjflkaj",
+      "priority": "Normal",
+      "status": "Completed",
+      "userId": "user_01",
+      "id": "hO-_G-3vWcU"
     }
   ],
   "sessions": [],
-  "$schema": ["./node_modules/json-server/schema.json"]
+  "$schema": "./node_modules/json-server/schema.json"
 }
