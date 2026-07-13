@@ -1,0 +1,108 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+/* ══════════════════════════════════════
+   CSS VARIABLES — DARK (default)
+══════════════════════════════════════ */
+:root,
+[data-theme='dark'] {
+  --bg-primary:    #20212C;
+  --bg-secondary:  #2B2C37;
+  --accent:        #635FC7;
+  --accent-hover:  #A8A4FF;
+  --text-primary:  #FFFFFF;
+  --text-secondary:#828FA3;
+  --border:        #3E3F4E;
+  --todo:   #49C4E5;
+  --doing:  #8471F2;
+  --done:   #67E2AE;
+  --shadow: 0 4px 20px rgba(0,0,0,0.28);
+  --sidebar-w: 260px;
+  --header-h:   70px;
+  --radius:      8px;
+  --t: all 0.2s ease;
+}
+
+/* ══════════════════════════════════════
+   CSS VARIABLES — LIGHT
+══════════════════════════════════════ */
+[data-theme='light'] {
+  --bg-primary:    #F4F7FD;
+  --bg-secondary:  #FFFFFF;
+  --accent:        #635FC7;
+  --accent-hover:  #A8A4FF;
+  --text-primary:  #000112;
+  --text-secondary:#828FA3;
+  --border:        #E4EBFA;
+  --todo:   #49C4E5;
+  --doing:  #8471F2;
+  --done:   #67E2AE;
+  --shadow: 0 4px 20px rgba(54,78,126,0.1);
+  --sidebar-w: 260px;
+  --header-h:   70px;
+  --radius:      8px;
+  --t: all 0.2s ease;
+}
+
+/* ══════════════════════════════════════
+   RESET
+══════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body, #root {
+  height: 100%;
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  overflow: hidden;
+}
+
+/* ══════════════════════════════════════
+   SCROLLBAR
+══════════════════════════════════════ */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-secondary); }
+
+/* ══════════════════════════════════════
+   ANT DESIGN GLOBAL OVERRIDES
+   (only things ConfigProvider can't reach)
+══════════════════════════════════════ */
+
+/* Spin dot colour */
+.ant-spin-dot-item { background-color: var(--accent) !important; }
+
+/* Message toast */
+.ant-message-notice-content {
+  font-family: 'Plus Jakarta Sans', sans-serif !important;
+  font-weight: 600 !important;
+  border-radius: 8px !important;
+}
+
+/* Menu items font */
+.ant-menu-item, .ant-menu-item-selected {
+  font-family: 'Plus Jakarta Sans', sans-serif !important;
+  font-weight: 700 !important;
+  font-size: 14px !important;
+  border-radius: 0 50px 50px 0 !important;
+}
+
+/* Sidebar menu selected state */
+.ant-menu-light .ant-menu-item-selected,
+.ant-menu-dark .ant-menu-item-selected {
+  background-color: var(--accent) !important;
+  color: #ffffff !important;
+}
+
+.ant-menu-light .ant-menu-item-selected *,
+.ant-menu-dark .ant-menu-item-selected * {
+  color: #ffffff !important;
+}
+
+/* Drawer no header */
+.kanban-drawer .ant-drawer-header { display: none !important; }
+.kanban-drawer .ant-drawer-body   { padding: 0 !important; }

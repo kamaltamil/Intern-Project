@@ -1,0 +1,38 @@
+.board-scroll {
+  display: flex;
+  align-items: flex-start;
+  gap: 24px;
+  padding: 24px;
+  height: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.board-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 40px;
+}
+
+/* Add column card */
+.board-add-col {
+  width: 280px;
+  flex-shrink: 0;
+  margin-top: 36px;
+  align-self: stretch;
+}
+
+.board-add-col-btn {
+  height: 100% !important;
+  min-height: 200px !important;
+  font-size: 16px !important;
+  font-weight: 700 !important;
+  border-style: dashed !important;
+  color: var(--text-secondary) !important;
+}
+.board-add-col-btn:hover {
+  color: var(--accent) !important;
+  border-color: var(--accent) !important;
+}

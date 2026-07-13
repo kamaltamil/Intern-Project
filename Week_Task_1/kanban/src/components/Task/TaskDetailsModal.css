@@ -1,0 +1,39 @@
+.task-details-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding-right: 36px; /* Leave space for Ant Design Modal Close (X) button */
+}
+
+.subtask-item {
+  display: flex;
+  align-items: center;
+  background-color: var(--bg-primary);
+  border-radius: 6px;
+  padding: 12px 14px;
+  cursor: pointer;
+  transition: var(--t);
+  width: 100%;
+}
+
+.subtask-item:hover {
+  background-color: rgba(99, 95, 199, 0.1);
+}
+
+.subtask-item .ant-checkbox-wrapper {
+  width: 100%;
+}
+
+.subtask-item span {
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--text-primary);
+  transition: var(--t);
+}
+
+.subtask-done {
+  color: var(--text-secondary) !important;
+  text-decoration: line-through;
+}

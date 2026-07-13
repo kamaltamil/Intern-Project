@@ -1,0 +1,50 @@
+.kol {
+  width: 280px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.kol-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+  padding-right: 4px;
+}
+
+.kol-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.kol-title {
+  font-size: 12px !important;
+  letter-spacing: 2.4px;
+  color: var(--text-secondary) !important;
+  flex: 1;
+}
+
+.kol-del-btn {
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+.kol:hover .kol-del-btn { opacity: 1; }
+
+.kol-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  overflow-y: auto;
+  flex: 1;
+  padding-bottom: 16px;
+}
+
+.kol-empty {
+  height: 480px;
+  border-radius: 8px;
+  border: 2px dashed;
+  opacity: 0.25;
+}

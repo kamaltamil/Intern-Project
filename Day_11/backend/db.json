@@ -1,0 +1,129 @@
+{
+  "users": [
+    {
+      "id": "user_01",
+      "email": "kamal@zybisys.com",
+      "password": "password123",
+      "name": "Kamal"
+    },
+    {
+      "id": "user_02",
+      "email": "sam@zybisys.com",
+      "password": "password123",
+      "name": "Sam"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "task_101",
+      "userId": "user_01",
+      "title": "Complete React button component",
+      "completed": true,
+      "status": "Completed"
+    },
+    {
+      "userId": "user_01",
+      "title": "Routing & Forms",
+      "status": "Completed",
+      "id": "0g82WNdHM28",
+      "completed": true
+    },
+    {
+      "userId": "user_01",
+      "title": "Complete todo manager",
+      "status": "In Progress",
+      "id": "Qtiyr5MN-oY",
+      "completed": false
+    },
+    {
+      "id": "uvbe394z3",
+      "userId": "user_01",
+      "title": "Node.js Fundamentals",
+      "completed": false,
+      "status": "In Progress"
+    }
+  ],
+  "sessions": [
+    {
+      "token": "session_qmw8v3vmq",
+      "userId": "user_01",
+      "createdAt": "2026-07-08T11:57:32.920Z",
+      "id": "aoJi8oh1MuU"
+    },
+    {
+      "token": "session_hv1kh7fvo",
+      "userId": "user_01",
+      "createdAt": "2026-07-08T12:17:49.753Z",
+      "id": "nI9AKFtbPfE"
+    },
+    {
+      "token": "session_9tn8tqc2z",
+      "userId": "user_01",
+      "createdAt": "2026-07-08T12:20:04.508Z",
+      "id": "a8QnpX5Zt9I"
+    },
+    {
+      "token": "session_5x2k7v247",
+      "userId": "user_01",
+      "createdAt": "2026-07-08T12:25:42.265Z",
+      "id": "pGh4O8DODsc"
+    },
+    {
+      "token": "session_6yk6pjczh",
+      "userId": "user_01",
+      "createdAt": "2026-07-08T12:28:25.673Z",
+      "id": "XXMrauamot0"
+    },
+    {
+      "token": "session_k5msn4vda",
+      "userId": "user_01",
+      "createdAt": "2026-07-08T12:40:52.544Z",
+      "id": "ZsRgF2Lrm2U"
+    },
+    {
+      "token": "session_9kk9t0fgy",
+      "userId": "user_01",
+      "createdAt": "2026-07-08T12:50:48.625Z",
+      "id": "KZomuyVE05E"
+    },
+    {
+      "id": "9towfwx8kdg",
+      "token": "session_3bcbnj326",
+      "userId": "user_01",
+      "createdAt": "2026-07-13T11:24:04.329Z"
+    },
+    {
+      "id": "71aoxcxt8zj",
+      "token": "session_7x1yamk1o",
+      "userId": "user_01",
+      "createdAt": "2026-07-13T11:26:57.037Z"
+    },
+    {
+      "id": "t2oyfeto1x",
+      "token": "session_tfk701xtx",
+      "userId": "user_01",
+      "createdAt": "2026-07-13T11:51:42.868Z"
+    },
+    {
+      "id": "1h3vg22mlz1",
+      "token": "session_1mlr0y84t",
+      "userId": "user_01",
+      "createdAt": "2026-07-13T11:53:13.243Z"
+    },
+    {
+      "id": "cxgpnhwhggd",
+      "token": "session_qit01uuoc",
+      "userId": "user_01",
+      "createdAt": "2026-07-13T11:53:54.264Z"
+    },
+    {
+      "id": "0jov71uerrf",
+      "token": "session_novt6pm4z",
+      "userId": "user_01",
+      "createdAt": "2026-07-13T12:08:14.285Z"
+    }
+  ],
+  "$schema": [
+    "./node_modules/json-server/schema.json"
+  ]
+}

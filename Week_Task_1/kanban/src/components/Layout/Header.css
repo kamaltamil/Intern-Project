@@ -1,0 +1,35 @@
+.hdr {
+  height: var(--header-h);
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+.hdr-left  { display: flex; align-items: center; gap: 12px; }
+.hdr-right { display: flex; align-items: center; gap: 8px; }
+
+.hdr-board-name { font-size: 20px !important; font-weight: 800 !important; }
+
+.hdr-add-btn { font-weight: 700 !important; }
+
+/* Mobile logo — hidden on desktop */
+.hdr-logo-m { display: none; align-items: center; gap: 10px; }
+.hm-dots    { display: flex; flex-direction: column; gap: 3px; }
+.hm-dots span { display: block; background: var(--accent); border-radius: 2px; }
+.hmd1 { width: 16px; height: 5px; }
+.hmd2 { width: 12px; height: 5px; opacity: .7; }
+.hmd3 { width:  9px; height: 5px; opacity: .4; }
+
+.hdr-hamburger { display: none !important; }
+
+@media (max-width: 768px) {
+  .hdr-logo-m   { display: flex; }
+  .hdr-board-name { display: none !important; }
+  .hdr-hamburger  { display: inline-flex !important; }
+}

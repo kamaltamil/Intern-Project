@@ -1,0 +1,477 @@
+{
+  "boards": [
+    {
+      "id": "board-1",
+      "name": "Platform Launch",
+      "userId": "user-1"
+    },
+    {
+      "id": "board-2",
+      "name": "Marketing Plan",
+      "userId": "user-1"
+    },
+    {
+      "id": "board-3",
+      "name": "Roadmap",
+      "userId": "user-1"
+    },
+    {
+      "id": "board-4",
+      "name": "Design System",
+      "userId": "user-2"
+    }
+  ],
+  "columns": [
+    {
+      "id": "c1",
+      "boardId": "board-1",
+      "name": "Todo",
+      "color": "#49C4E5",
+      "order": 0
+    },
+    {
+      "id": "c2",
+      "boardId": "board-1",
+      "name": "Doing",
+      "color": "#8471F2",
+      "order": 1
+    },
+    {
+      "id": "c3",
+      "boardId": "board-1",
+      "name": "Done",
+      "color": "#67E2AE",
+      "order": 2
+    },
+    {
+      "id": "c4",
+      "boardId": "board-2",
+      "name": "Todo",
+      "color": "#49C4E5",
+      "order": 0
+    },
+    {
+      "id": "c5",
+      "boardId": "board-2",
+      "name": "Doing",
+      "color": "#8471F2",
+      "order": 1
+    },
+    {
+      "id": "c6",
+      "boardId": "board-2",
+      "name": "Done",
+      "color": "#67E2AE",
+      "order": 2
+    },
+    {
+      "id": "c7",
+      "boardId": "board-3",
+      "name": "Todo",
+      "color": "#49C4E5",
+      "order": 0
+    },
+    {
+      "id": "c8",
+      "boardId": "board-3",
+      "name": "Doing",
+      "color": "#8471F2",
+      "order": 1
+    },
+    {
+      "id": "c9",
+      "boardId": "board-3",
+      "name": "Done",
+      "color": "#67E2AE",
+      "order": 2
+    },
+    {
+      "id": "c10",
+      "boardId": "board-4",
+      "name": "Todo",
+      "color": "#49C4E5",
+      "order": 0
+    },
+    {
+      "id": "c11",
+      "boardId": "board-4",
+      "name": "In Progress",
+      "color": "#8471F2",
+      "order": 1
+    },
+    {
+      "id": "c12",
+      "boardId": "board-4",
+      "name": "Done",
+      "color": "#67E2AE",
+      "order": 2
+    },
+    {
+      "boardId": null,
+      "name": "Todo",
+      "color": "#49C4E5",
+      "order": 0,
+      "id": "mIS94qe5e-0"
+    },
+    {
+      "boardId": null,
+      "name": "Doing",
+      "color": "#8471F2",
+      "order": 1,
+      "id": "8S1XMpTLWEk"
+    },
+    {
+      "boardId": null,
+      "name": "Done",
+      "color": "#67E2AE",
+      "order": 2,
+      "id": "LLcGQ9-U5Hs"
+    },
+    {
+      "boardId": null,
+      "name": "ON-HOLD",
+      "color": "#EB5757",
+      "order": 3,
+      "id": "aQ6Msjvv6zM"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "1",
+      "boardId": "board-1",
+      "title": "Build UI onboarding flow",
+      "description": "Create the onboarding screens for new users to guide them through the product features.",
+      "status": "Todo",
+      "subtasks": [
+        {
+          "id": "s1",
+          "title": "Create wireframes",
+          "completed": true
+        },
+        {
+          "id": "s2",
+          "title": "Design high-fidelity mockups",
+          "completed": false
+        },
+        {
+          "id": "s3",
+          "title": "Implement in React",
+          "completed": false
+        }
+      ]
+    },
+    {
+      "id": "2",
+      "boardId": "board-1",
+      "title": "Design settings and privacy page",
+      "description": "Design a settings page that allows users to manage their account and privacy preferences.",
+      "status": "Todo",
+      "subtasks": [
+        {
+          "id": "s4",
+          "title": "Design privacy section",
+          "completed": false
+        },
+        {
+          "id": "s5",
+          "title": "Design account section",
+          "completed": false
+        }
+      ]
+    },
+    {
+      "id": "3",
+      "boardId": "board-1",
+      "title": "Add account management endpoints",
+      "description": "Build out REST API endpoints for account management including profile update and deletion.",
+      "status": "Todo",
+      "subtasks": [
+        {
+          "id": "s6",
+          "title": "Define API contract",
+          "completed": true
+        },
+        {
+          "id": "s7",
+          "title": "Implement endpoints",
+          "completed": false
+        },
+        {
+          "id": "s8",
+          "title": "Write unit tests",
+          "completed": false
+        }
+      ]
+    },
+    {
+      "id": "4",
+      "boardId": "board-1",
+      "title": "Conduct user testing",
+      "description": "Run usability testing sessions with 5 target users and gather feedback.",
+      "status": "Todo",
+      "subtasks": [
+        {
+          "id": "s9",
+          "title": "Recruit participants",
+          "completed": false
+        },
+        {
+          "id": "s10",
+          "title": "Prepare test script",
+          "completed": false
+        }
+      ]
+    },
+    {
+      "id": "5",
+      "boardId": "board-1",
+      "title": "Research competitors",
+      "description": "Analyse top 5 competitors and document key differentiators and feature gaps.",
+      "status": "Doing",
+      "subtasks": [
+        {
+          "id": "s11",
+          "title": "Identify top competitors",
+          "completed": true
+        },
+        {
+          "id": "s12",
+          "title": "Analyse feature sets",
+          "completed": true
+        },
+        {
+          "id": "s13",
+          "title": "Document findings",
+          "completed": false
+        }
+      ]
+    },
+    {
+      "id": "6",
+      "boardId": "board-1",
+      "title": "Design onboarding flow",
+      "description": "Create the complete user journey for first-time users.",
+      "status": "Doing",
+      "subtasks": [
+        {
+          "id": "s14",
+          "title": "Map user journey",
+          "completed": true
+        },
+        {
+          "id": "s15",
+          "title": "Create flow diagram",
+          "completed": false
+        }
+      ]
+    },
+    {
+      "id": "7",
+      "boardId": "board-1",
+      "title": "Set up CI/CD pipeline",
+      "description": "Configure automated build, test, and deployment pipeline using GitHub Actions.",
+      "status": "Doing",
+      "subtasks": [
+        {
+          "id": "s16",
+          "title": "Set up GitHub Actions",
+          "completed": true
+        },
+        {
+          "id": "s17",
+          "title": "Configure staging deploy",
+          "completed": true
+        },
+        {
+          "id": "s18",
+          "title": "Configure production deploy",
+          "completed": false
+        }
+      ]
+    },
+    {
+      "id": "8",
+      "boardId": "board-1",
+      "title": "Launch version one",
+      "description": "Coordinate the public launch of v1.0 with all teams and stakeholders.",
+      "status": "Done",
+      "subtasks": [
+        {
+          "id": "s19",
+          "title": "Finalise release notes",
+          "completed": true
+        },
+        {
+          "id": "s20",
+          "title": "Notify stakeholders",
+          "completed": true
+        },
+        {
+          "id": "s21",
+          "title": "Deploy to production",
+          "completed": true
+        }
+      ]
+    },
+    {
+      "id": "9",
+      "boardId": "board-1",
+      "title": "Review and retrospective",
+      "description": "Hold team retrospective to discuss what went well and areas for improvement.",
+      "status": "Done",
+      "subtasks": [
+        {
+          "id": "s22",
+          "title": "Prepare retrospective doc",
+          "completed": true
+        },
+        {
+          "id": "s23",
+          "title": "Facilitate session",
+          "completed": true
+        }
+      ]
+    },
+    {
+      "id": "10",
+      "boardId": "board-2",
+      "title": "Define Q3 marketing goals",
+      "description": "Set measurable OKRs for the marketing team for Q3.",
+      "status": "Todo",
+      "subtasks": [
+        {
+          "id": "s24",
+          "title": "Draft OKRs",
+          "completed": false
+        },
+        {
+          "id": "s25",
+          "title": "Review with leadership",
+          "completed": false
+        }
+      ]
+    },
+    {
+      "id": "11",
+      "boardId": "board-2",
+      "title": "Launch email campaign",
+      "description": "Design and send targeted email campaign to re-engage dormant users.",
+      "status": "Doing",
+      "subtasks": [
+        {
+          "id": "s26",
+          "title": "Write copy",
+          "completed": true
+        },
+        {
+          "id": "s27",
+          "title": "Design template",
+          "completed": false
+        }
+      ]
+    },
+    {
+      "id": "12",
+      "boardId": "board-3",
+      "title": "Q4 product roadmap",
+      "description": "Plan and prioritise the product roadmap for Q4.",
+      "status": "Done",
+      "subtasks": [
+        {
+          "id": "s28",
+          "title": "Gather stakeholder input",
+          "completed": true
+        },
+        {
+          "id": "s29",
+          "title": "Prioritise features",
+          "completed": true
+        }
+      ]
+    },
+    {
+      "id": "13",
+      "boardId": "board-4",
+      "title": "Design token library",
+      "description": "Create a comprehensive design token library for the design system.",
+      "status": "Todo",
+      "subtasks": [
+        {
+          "id": "s30",
+          "title": "Define colour tokens",
+          "completed": true
+        },
+        {
+          "id": "s31",
+          "title": "Define spacing tokens",
+          "completed": false
+        }
+      ]
+    },
+    {
+      "id": "14",
+      "boardId": "board-4",
+      "title": "Build component docs",
+      "description": "Document all components with usage guidelines and code examples.",
+      "status": "In Progress",
+      "subtasks": [
+        {
+          "id": "s32",
+          "title": "Button docs",
+          "completed": true
+        },
+        {
+          "id": "s33",
+          "title": "Input docs",
+          "completed": false
+        }
+      ]
+    },
+    {
+      "boardId": null,
+      "title": "Kanban Ui",
+      "description": "",
+      "status": "Done",
+      "subtasks": [
+        {
+          "id": "s-1783920736013-0",
+          "title": "unit test",
+          "completed": false
+        },
+        {
+          "id": "s-1783920766646-1",
+          "title": "testing",
+          "completed": false
+        }
+      ],
+      "id": "mpJEsnx0Z9M"
+    }
+  ],
+  "users": [
+    {
+      "id": "user-1",
+      "name": "John Doe",
+      "email": "john@kanban.com",
+      "password": "password123",
+      "avatar": "JD",
+      "role": "User"
+    },
+    {
+      "id": "user-2",
+      "name": "Jane Smith",
+      "email": "jane@kanban.com",
+      "password": "password123",
+      "avatar": "JS",
+      "role": "User"
+    },
+    {
+      "id": "user-3",
+      "name": "Demo User",
+      "email": "demo@kanban.com",
+      "password": "demo1234",
+      "avatar": "DU",
+      "role": "User"
+    }
+  ],
+  "$schema": ["./node_modules/json-server/schema.json"]
+}
