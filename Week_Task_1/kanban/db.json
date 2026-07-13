@@ -19,6 +19,11 @@
       "id": "board-4",
       "name": "Design System",
       "userId": "user-2"
+    },
+    {
+      "name": "Intern",
+      "userId": "user-3",
+      "id": "fQxdlpLwKnU"
     }
   ],
   "columns": [
@@ -133,6 +138,34 @@
       "color": "#EB5757",
       "order": 3,
       "id": "aQ6Msjvv6zM"
+    },
+    {
+      "boardId": "fQxdlpLwKnU",
+      "name": "Todo",
+      "color": "#49C4E5",
+      "order": 0,
+      "id": "LuSjf21wQCs"
+    },
+    {
+      "boardId": "fQxdlpLwKnU",
+      "name": "Doing",
+      "color": "#8471F2",
+      "order": 1,
+      "id": "khSiUvnj2Jg"
+    },
+    {
+      "boardId": "fQxdlpLwKnU",
+      "name": "Done",
+      "color": "#67E2AE",
+      "order": 2,
+      "id": "H4dILsrOwj8"
+    },
+    {
+      "boardId": "fQxdlpLwKnU",
+      "name": "ON-HOLD",
+      "color": "#49C4E5",
+      "order": 3,
+      "id": "UAfXk2JhYgI"
     }
   ],
   "tasks": [
@@ -445,6 +478,22 @@
         }
       ],
       "id": "mpJEsnx0Z9M"
+    },
+    {
+      "boardId": "fQxdlpLwKnU",
+      "title": "Frontend-Mentor",
+      "description": "Design task manager",
+      "status": "ON-HOLD",
+      "subtasks": [],
+      "id": "BD9kKzPnjZY"
+    },
+    {
+      "boardId": "fQxdlpLwKnU",
+      "title": "EDERFRF",
+      "description": "",
+      "status": "ON-HOLD",
+      "subtasks": [],
+      "id": "yOgb9ljntJE"
     }
   ],
   "users": [
@@ -473,5 +522,5 @@
       "role": "User"
     }
   ],
-  "$schema": ["./node_modules/json-server/schema.json"]
+  "$schema": "./node_modules/json-server/schema.json"
 }
