@@ -1,73 +1,24 @@
-import "dotenv/config";
-import "colors";
-process.on("uncaughtException", (err) => {
-  console.log(err.name.red.underline, err.message.red.underline);
-  console.log("Uncaught Exception occured! Shutting down...".magenta);
-  process.exit(1);
-});
-import cors from "cors";
-import express from "express";
-import swaggerUi from 'swagger-ui-express';
-import { swaggerDocument } from "./config/swagger/swagger-config.js";
-import connectDB from "./config/DatabaseConfig.js";
-import CustomError from "./config/CustomError.js";
-import globalErrorHandler from "./api/helpers/globalErrorHandler.js";
-import userRouter from "./api/routes/userRoute.js"
+const express = require('express');
+const mongoose = require('mongoose');
+const cors = require('cors');
+const studentRoutes = require('./routes/studentRoutes');
+const markRoutes = require('./routes/markRoutes');
 
-
-//creating express server
 const app = express();
 
-//connecting to db
-// connectDB();
-
-app.use(
-  cors({
-    origin: "*",
-  })
-); //every origin allowed
-
-// parse requests of content-type - application/json
+app.use(cors());
 app.use(express.json());
-// parse requests of content-type - application/x-www-form-urlencoded
-app.use(express.urlencoded({ extended: false }));
 
+mongoose.connect('mongodb://127.0.0.1:27017/student_db', {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+}).then(() => console.log('MongoDB Connected'))
+  .catch(err => console.log(err));
 
-app.get("/", (req, res) => {
-  res.send("Hello World!");
-});
+app.use('/api/students', studentRoutes);
+app.use('/api/marks', markRoutes);
 
-//example route
-app.use("/api/v1/user",userRouter);
-
-
-//middleware for swagger
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
-
-
-//fallback route
-app.all("*", (req, res, next) => {
-  const err = new CustomError(
-    `Can't find ${req.originalUrl} on the server`,
-    404
-  );
-  //pass it to global error handler
-  next(err);
-});
-
-//global error handler
-app.use(globalErrorHandler);
-
-const port = process.env.PORT || 8080;
-
-const server = app.listen(port, () => {
-  console.log(`App listening on port ${port}`.yellow.underline);
-});
-
-process.on("unhandledRejection", (err) => {
-  console.log(err.name.magenta, err.message.magenta);
-  console.log("Unhandled rejection occured! Shutting down...".red);
-  server.close(() => {
-    process.exit(1);
-  });
+const PORT = process.env.PORT || 8080;
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });
