@@ -31,19 +31,22 @@ export default function PostsTable() {
   if (sortOrder === 'asc') displayPosts = displayPosts.sort((a, b) => a.title.localeCompare(b.title));
   if (sortOrder === 'desc') displayPosts = displayPosts.sort((a, b) => b.title.localeCompare(a.title));
 
-  const handleSubmit = (values) => {
+const handleSubmit = async (values) => {
+  try {
     if (editingPost) {
-      // Backend figures out which API to call based on the ID!
-      dispatch(updatePost({ id: editingPost.id, data: values }));
+      await dispatch(updatePost({ id: editingPost.id, data: values })).unwrap();
       message.success('Post updated!');
     } else {
-      dispatch(createPost(values));
+      await dispatch(createPost(values)).unwrap();
       message.success('Post created successfully!');
     }
     setIsModalOpen(false);
     form.resetFields();
     setEditingPost(null);
-  };
+  } catch (err) {
+    message.error(err.message || 'Something went wrong');
+  }
+};
 
   const columns = [
     { title: 'Title', dataIndex: 'title', key: 'title', width: '25%' },
@@ -67,15 +70,19 @@ export default function PostsTable() {
           }}>
             Edit
           </Button>
-          <Popconfirm 
-            title="Delete this post?" 
-            onConfirm={() => {
-              dispatch(deletePost(record.id));
-              message.success('Post deleted!');
-            }} 
-          >
-            <Button size="small" danger>Delete</Button>
-          </Popconfirm>
+            <Popconfirm
+              title="Delete this post?"
+              onConfirm={async () => {
+                try {
+                  await dispatch(deletePost(record.id)).unwrap();
+                  message.success('Post deleted!');
+                } catch (err) {
+                  message.error(err.message || 'Could not delete this post');
+                }
+              }}
+            >
+              <Button size="small" danger>Delete</Button>
+            </Popconfirm>
         </Space>
       )
     }
