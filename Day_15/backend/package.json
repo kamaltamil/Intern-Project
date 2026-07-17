@@ -1,0 +1,20 @@
+{
+  "name": "backend",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "nodemon src/index.js",
+    "seed": "node seed.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.6",
+    "express": "^4.22.2",
+    "mongoose": "^7.8.11",
+    "swagger-ui-express": "^5.0.0",
+    "yaml": "^2.3.2"
+  },
+  "devDependencies": {
+    "colors": "^1.4.0",
+    "dotenv": "^16.3.1",
+    "nodemon": "^3.1.14"
+  }
+}
