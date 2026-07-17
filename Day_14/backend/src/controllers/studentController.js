@@ -51,8 +51,11 @@ exports.getStudents = async (req, res) => {
       {
         $lookup: {
           from: 'marks',
-          localField: '_id',
-          foreignField: 'student',
+          let: { studentId: '$_id' },
+          pipeline: [
+            { $match: { $expr: { $eq: ['$student', '$$studentId'] } } },
+            { $sort: { createdAt: -1 } }
+          ],
           as: 'academicMarks'
         }
       },
@@ -127,9 +130,21 @@ exports.addMark = async (req, res) => {
     }
 
     const grade = normalizedCgpa >= 8.5 ? 'A' : normalizedCgpa >= 7.0 ? 'B' : normalizedCgpa >= 5.5 ? 'C' : normalizedCgpa >= 4.0 ? 'D' : 'F';
-    const mark = new Mark({ student, course, cgpa: normalizedCgpa, grade });
-    await mark.save();
-    res.status(201).json(mark);
+
+    const existingMark = await Mark.findOne({ student }).sort({ createdAt: -1 });
+
+    let mark;
+    if (existingMark) {
+      mark = await Mark.findByIdAndUpdate(
+        existingMark._id,
+        { course, cgpa: normalizedCgpa, grade },
+        { new: true }
+      );
+    } else {
+      mark = await Mark.create({ student, course, cgpa: normalizedCgpa, grade });
+    }
+
+    res.status(existingMark ? 200 : 201).json(mark);
   } catch (error) {
     res.status(400).json({ message: error.message });
   }

@@ -10,6 +10,16 @@ const { Title } = Typography;
 const { Search } = Input;
 const courseOptions = ['MSC', 'BSC', 'CSE', 'IT', 'MCA', 'BCA', 'Other'];
 
+const getLatestMark = (marks = []) => {
+  if (!Array.isArray(marks) || marks.length === 0) return null;
+
+  return [...marks].sort((a, b) => {
+    const aTime = new Date(a?.createdAt || 0).getTime();
+    const bTime = new Date(b?.createdAt || 0).getTime();
+    return bTime - aTime;
+  })[0];
+};
+
 const StudentManager = () => {
   const dispatch = useDispatch();
   const queryClient = useQueryClient();
@@ -40,7 +50,7 @@ const StudentManager = () => {
   }, {
     onSuccess: () => {
       queryClient.invalidateQueries('students');
-      message.success(editingStudent?._id ? 'Updated!' : 'Added!');
+      message.success(editingStudent?._id ? `${editingStudent.name} Data Updated!` : 'Student Added!');
       profileForm.resetFields();
       dispatch(closeModal());
     },
@@ -51,9 +61,8 @@ const StudentManager = () => {
   });
 
   const saveAcademicMutation = useMutation((data) => api.post('/marks', data), {
-    onSuccess: () => {
-      queryClient.invalidateQueries('students');
-      message.success('CGPA saved!');
+    onSuccess: async () => {
+      await queryClient.invalidateQueries(['students']);
       markForm.resetFields();
     },
     onError: (error) => {
@@ -73,7 +82,7 @@ const StudentManager = () => {
         age: editingStudent.age ?? undefined,
       });
 
-      const latestMark = editingStudent.academicMarks?.[0];
+      const latestMark = getLatestMark(editingStudent?.academicMarks);
       if (latestMark) {
         markForm.setFieldsValue({
           course: latestMark.course,
@@ -88,29 +97,39 @@ const StudentManager = () => {
     }
   }, [editingStudent, profileForm, markForm]);
 
-  const handleProfileSubmit = (vals) => {
+  const handleProfileSubmit = async () => {
+    const formValues = profileForm.getFieldsValue(true) || {};
+    const academicValues = markForm.getFieldsValue(true) || {};
+
     const payload = {
-      ...vals,
-      name: vals.name?.trim(),
-      mail: vals.mail?.trim(),
-      age: Number(vals.age),
+      ...formValues,
+      _id: editingStudent?._id,
+      name: formValues.name?.trim(),
+      mail: formValues.mail?.trim(),
+      age: Number(formValues.age),
     };
 
-    const handleSuccess = () => {
-      const academicValues = markForm.getFieldsValue();
-      if (editingStudent?._id && academicValues.course && academicValues.cgpa !== undefined) {
-        saveAcademicMutation.mutate({
-          student: editingStudent._id,
+    const studentId = editingStudent?._id || payload._id;
+
+    try {
+      if (studentId) {
+        await saveStudentMutation.mutateAsync(payload);
+      } else {
+        await saveStudentMutation.mutateAsync(payload);
+      }
+
+      if (studentId && academicValues.course && academicValues.cgpa !== undefined) {
+        await saveAcademicMutation.mutateAsync({
+          student: studentId,
           course: academicValues.course,
           cgpa: Number(academicValues.cgpa),
         });
       }
-      dispatch(closeModal());
-    };
 
-    saveStudentMutation.mutate(payload, {
-      onSuccess: handleSuccess,
-    });
+      dispatch(closeModal());
+    } catch (error) {
+      console.error('Failed to save student or mark', error);
+    }
   };
 
   const tabsItems = [
@@ -127,14 +146,14 @@ const StudentManager = () => {
     {
       key: 'academic', label: 'Assign CGPA', children: (
         <Form form={markForm} layout="vertical">
-          <Form.Item name="course" label="Course" rules={[{ required: true, message: 'Please select a course' }]}>
+          <Form.Item name="course" label="Course">
             <Select placeholder="Select a course">
               {courseOptions.map((course) => (
                 <Select.Option key={course} value={course}>{course}</Select.Option>
               ))}
             </Select>
           </Form.Item>
-          <Form.Item name="cgpa" label="CGPA" rules={[{ required: true, message: 'Please enter CGPA' }, { type: 'number', min: 0, max: 10, message: 'CGPA must be between 0 and 10' }]}><InputNumber style={{width:'100%'}} step={0.1}/></Form.Item>
+          <Form.Item name="cgpa" label="CGPA" rules={[{ type: 'number', min: 0, max: 10, message: 'CGPA must be between 0 and 10' }]}><InputNumber style={{width:'100%'}} step={0.1}/></Form.Item>
         </Form>
       )
     }
@@ -157,9 +176,9 @@ const StudentManager = () => {
             columns={[
               { title: 'Name', dataIndex: 'name' },
               { title: 'Email', dataIndex: 'mail' },
-              { title: 'Course', dataIndex: 'academicMarks', render: (marks) => marks?.[0]?.course ?? '—' },
-              { title: 'CGPA', dataIndex: 'academicMarks', render: (marks) => marks?.[0]?.cgpa ?? '—' },
-              { title: 'Grade', dataIndex: 'academicMarks', render: (marks) => marks?.[0]?.grade ?? '—' },
+              { title: 'Course', dataIndex: 'academicMarks', render: (marks) => getLatestMark(marks)?.course ?? '—' },
+              { title: 'CGPA', dataIndex: 'academicMarks', render: (marks) => getLatestMark(marks)?.cgpa ?? '—' },
+              { title: 'Grade', dataIndex: 'academicMarks', render: (marks) => getLatestMark(marks)?.grade ?? '—' },
               { title: 'Action', render: (r) => (
                 <Space>
                   <Button onClick={() => dispatch(openModal(r))}>Update</Button>
