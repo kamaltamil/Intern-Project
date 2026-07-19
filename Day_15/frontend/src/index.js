@@ -7,17 +7,21 @@ import "./index.css";
 import { BrowserRouter } from "react-router-dom";
 
 import App from "./App";
-import { AuthProvider } from "./context/AuthContext";
+import { Provider } from "react-redux";
+import { store, persistor } from "./store";
+import { PersistGate } from "redux-persist/integration/react";
 import appTheme from "./theme";
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 
 root.render(
   <BrowserRouter>
-    <AuthProvider>
-      <ConfigProvider theme={appTheme}>
-        <App />
-      </ConfigProvider>
-    </AuthProvider>
+    <Provider store={store}>
+      <PersistGate loading={null} persistor={persistor}>
+        <ConfigProvider theme={appTheme}>
+          <App />
+        </ConfigProvider>
+      </PersistGate>
+    </Provider>
   </BrowserRouter>
 );

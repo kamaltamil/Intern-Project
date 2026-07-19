@@ -1,16 +1,18 @@
 import "./Login.css";
-import { useContext, useState } from "react";
+import { useState } from "react";
 import { Navigate, useNavigate, Link } from "react-router-dom";
 import { Button, Card, Form, Input, Typography, Alert } from "antd";
+import { useSelector, useDispatch } from "react-redux";
+import { login } from "../store/authSlice";
 
-import { AuthContext } from "../context/AuthContext";
 import { loginUser } from "../api/authApi";
 
 const { Title } = Typography;
 
 const Login = () => {
   const navigate = useNavigate();
-  const { user, login } = useContext(AuthContext);
+  const dispatch = useDispatch();
+  const user = useSelector((state) => state.auth.user);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -26,11 +28,11 @@ const Login = () => {
     try {
       const loggedInUser = await loginUser(values.email, values.password);
 
-      login(loggedInUser);
+      dispatch(login(loggedInUser));
 
       navigate("/dashboard/tasks");
     } catch (err) {
-      setError(err.message);
+      setError(err.response?.data?.message || err.message);
     } finally {
       setLoading(false);
     }

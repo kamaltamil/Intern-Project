@@ -1,4 +1,6 @@
 import axios from "axios";
+import { store } from "../store";
+import { logout, setNewToken } from "../store/authSlice";
 
 const api = axios.create({
   baseURL: process.env.REACT_APP_API_URL || "http://localhost:8080/api",
@@ -27,29 +29,31 @@ api.interceptors.response.use(
       if (!isRefreshing) {
         isRefreshing = true;
         refreshPromise = (async () => {
-          const refreshToken = localStorage.getItem("refreshToken");
+          const refreshToken = store.getState().auth.refreshToken;
 
           if (!refreshToken) {
-            localStorage.removeItem("token");
-            localStorage.removeItem("refreshToken");
+            store.dispatch(logout());
             window.location.href = "/login";
             return null;
           }
 
-          const response = await axios.post(
-            `${process.env.REACT_APP_API_URL || "http://localhost:8080/api"}/auth/refresh`,
-            { refreshToken }
-          );
+          try {
+            const response = await axios.post(
+              `${process.env.REACT_APP_API_URL || "http://localhost:8080/api"}/auth/refresh`,
+              { refreshToken }
+            );
 
-          const payload = response.data?.data || response.data;
-          const newToken = payload?.token || response.data?.token;
-          if (newToken) {
-            localStorage.setItem("token", newToken);
-            return newToken;
+            const payload = response.data?.data || response.data;
+            const newToken = payload?.token || response.data?.token;
+            if (newToken) {
+              store.dispatch(setNewToken(newToken));
+              return newToken;
+            }
+          } catch (e) {
+            // If the refresh token request fails, clean up and redirect
           }
 
-          localStorage.removeItem("token");
-          localStorage.removeItem("refreshToken");
+          store.dispatch(logout());
           window.location.href = "/login";
           return null;
         })();

@@ -1,9 +1,10 @@
 import api from "./axios";
+import { store } from "../store";
 
 const API_URL = process.env.REACT_APP_API_BASE_URL || "http://localhost:8080/api";
 
 const getAuthHeaders = () => {
-  const token = localStorage.getItem("token");
+  const token = store.getState().auth.token;
   return token ? { Authorization: `Bearer ${token}` } : {};
 };
 
@@ -60,7 +61,7 @@ export const deleteUser = async (id) => {
 };
 
 export const refreshToken = async () => {
-  const refresh = localStorage.getItem("refreshToken");
+  const refresh = store.getState().auth.refreshToken;
   const response = await api.post(`${API_URL}/auth/refresh`, { refreshToken: refresh });
   return response.data;
 };

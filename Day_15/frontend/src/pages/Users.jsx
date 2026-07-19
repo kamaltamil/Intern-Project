@@ -1,12 +1,15 @@
-import { useContext, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
+import { useSelector, useDispatch } from "react-redux";
 import { Alert, Button, Card, Input, Modal, Popconfirm, Space, Spin, Table, Tag } from "antd";
 import { DeleteOutlined, EditOutlined } from "@ant-design/icons";
-import { AuthContext } from "../context/AuthContext";
 import { deleteUser, getUsers, updateUser } from "../api/authApi";
+import { setUsersData } from "../store/userSlice";
 
 const Users = () => {
-  const { user, token } = useContext(AuthContext);
-  const [users, setUsers] = useState([]);
+  const dispatch = useDispatch();
+  const user = useSelector((state) => state.auth.user);
+  const token = useSelector((state) => state.auth.token);
+  const users = useSelector((state) => state.users.users);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -17,7 +20,7 @@ const Users = () => {
     try {
       setLoading(true);
       const response = await getUsers();
-      setUsers(response.data || []);
+      dispatch(setUsersData(response.data || []));
     } catch (err) {
       setError("Unable to load users");
     } finally {

@@ -1,9 +1,8 @@
-import { useContext } from "react";
+import { useSelector } from "react-redux";
 import { Navigate, useLocation } from "react-router-dom";
-import { AuthContext } from "../context/AuthContext";
 
 const ProtectedRoute = ({ children, allowedRoles = [] }) => {
-  const { user } = useContext(AuthContext);
+  const user = useSelector((state) => state.auth.user);
   const location = useLocation();
 
   if (!user) {

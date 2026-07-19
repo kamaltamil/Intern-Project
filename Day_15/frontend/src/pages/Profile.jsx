@@ -1,14 +1,12 @@
 import "./Profile.css";
-import { useContext } from "react";
+import { useSelector } from "react-redux";
 import { Card, Descriptions, Avatar, Typography } from "antd";
 import { UserOutlined } from "@ant-design/icons";
-
-import { AuthContext } from "../context/AuthContext";
 
 const { Title } = Typography;
 
 const Profile = () => {
-  const { user } = useContext(AuthContext);
+  const user = useSelector((state) => state.auth.user);
 
   return (
     <Card>

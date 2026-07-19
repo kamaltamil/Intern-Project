@@ -9,18 +9,16 @@ import {
 } from "@ant-design/icons";
 
 import { NavLink, useNavigate } from "react-router-dom";
-
-import { useContext } from "react";
-
-import { AuthContext } from "../context/AuthContext";
+import { useSelector, useDispatch } from "react-redux";
+import { logout } from "../store/authSlice";
 
 const Sidebar = ({ collapsed }) => {
   const navigate = useNavigate();
-
-  const { logout, user } = useContext(AuthContext);
+  const dispatch = useDispatch();
+  const user = useSelector((state) => state.auth.user);
 
   const handleLogout = () => {
-    logout();
+    dispatch(logout());
 
     navigate("/login");
   };

@@ -1,5 +1,6 @@
 import "./Tasks.css";
-import { useContext, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
+import { useSelector, useDispatch } from "react-redux";
 import {
   Alert,
   Button,
@@ -8,7 +9,6 @@ import {
   Modal,
   Popconfirm,
   Space,
-  Spin,
   Table,
   Tag,
   notification,
@@ -20,7 +20,7 @@ import {
 } from "@ant-design/icons";
 
 import TaskForm from "../components/TaskForm";
-import { AuthContext } from "../context/AuthContext";
+import { setTasksData } from "../store/taskSlice";
 
 import {
   addTask,
@@ -32,9 +32,11 @@ import {
 const { Search } = Input;
 
 const Tasks = () => {
-  const { user } = useContext(AuthContext);
+  const dispatch = useDispatch();
+  const user = useSelector((state) => state.auth.user);
+  const tasks = useSelector((state) => state.tasks.tasks);
+  const total = useSelector((state) => state.tasks.total);
 
-  const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -44,10 +46,10 @@ const Tasks = () => {
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
-  const [total, setTotal] = useState(0);
 
   // Search
   const [search, setSearch] = useState("");
+  const [searchInput, setSearchInput] = useState("");
 
   const fetchTasks = async () => {
     try {
@@ -59,14 +61,27 @@ const Tasks = () => {
         search
       );
 
-      setTasks(response.data);
-      setTotal(response.total);
+      dispatch(
+        setTasksData({
+          tasks: response.data || [],
+          total: response.total || 0,
+        })
+      );
     } catch (err) {
       setError("Unable to fetch tasks.");
     } finally {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      setSearch(searchInput);
+      setCurrentPage(1);
+    }, 300);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchInput]);
 
   useEffect(() => {
     fetchTasks();
@@ -219,9 +234,6 @@ const Tasks = () => {
       ),
     },
   ];
-    if (loading) {
-    return <Spin size="large" />;
-  }
 
   return (
     <>
@@ -249,9 +261,12 @@ const Tasks = () => {
             allowClear
             enterButton={<SearchOutlined />}
             style={{ width: 300 }}
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
             onSearch={(value) => {
-              setCurrentPage(1);
+              setSearchInput(value);
               setSearch(value);
+              setCurrentPage(1);
             }}
           />
         }

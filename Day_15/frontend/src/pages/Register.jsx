@@ -1,14 +1,16 @@
-import { useContext, useState } from "react";
+import { useState } from "react";
 import { Navigate, useNavigate, Link } from "react-router-dom";
 import { Alert, Button, Card, Form, Input, Typography } from "antd";
-import { AuthContext } from "../context/AuthContext";
+import { useSelector, useDispatch } from "react-redux";
+import { login } from "../store/authSlice";
 import { registerUser } from "../api/authApi";
 
 const { Title } = Typography;
 
 const Register = () => {
   const navigate = useNavigate();
-  const { user, login } = useContext(AuthContext);
+  const dispatch = useDispatch();
+  const user = useSelector((state) => state.auth.user);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -22,10 +24,10 @@ const Register = () => {
 
     try {
       const response = await registerUser(values.name, values.email, values.password);
-      login(response);
+      dispatch(login(response));
       navigate("/dashboard/tasks");
     } catch (err) {
-      setError(err.message);
+      setError(err.response?.data?.message || err.message);
     } finally {
       setLoading(false);
     }
