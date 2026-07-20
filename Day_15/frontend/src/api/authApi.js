@@ -45,9 +45,11 @@ export const getUsers = async () => {
 };
 
 export const updateUser = async (id, payload) => {
-  const response = await api.put(`${API_URL}/auth/users/${id}`, payload, {
-    headers: getAuthHeaders(),
-  });
+  const response = await api.put(
+    `${API_URL}/auth/users/${id}/role`,
+    { role: payload?.role || "Member" },
+    { headers: getAuthHeaders() }
+  );
 
   return response.data;
 };

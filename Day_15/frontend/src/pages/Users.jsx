@@ -34,13 +34,16 @@ const Users = () => {
 
   const openEditModal = (userRecord) => {
     setEditingUser(userRecord);
-    setFormValues({ name: userRecord.name, email: userRecord.email });
+    setFormValues({ name: userRecord.name, email: userRecord.email, role: userRecord.role  });
     setIsModalOpen(true);
   };
 
   const handleEditSubmit = async () => {
     try {
-      await updateUser(editingUser._id, formValues);
+      await updateUser(editingUser._id,{
+        ...formValues,
+        role: editingUser.role,
+      });
       setIsModalOpen(false);
       setEditingUser(null);
       fetchUsers();
@@ -85,12 +88,7 @@ const Users = () => {
           )}
         </Space>
       ),
-    },
-    {
-      title: "Status",
-      dataIndex: "role",
-      render: (role) => <Tag color={role === "Admin" ? "red" : role === "Member" ? "blue" : "green"}>{role}</Tag>,
-    },
+    }
   ];
 
   if (loading) return <Spin size="large" />;
@@ -117,11 +115,17 @@ const Users = () => {
           value={formValues.name}
           onChange={(e) => setFormValues({ ...formValues, name: e.target.value })}
           style={{ marginBottom: 12 }}
-        />
+          />
         <Input
           placeholder="Email"
           value={formValues.email}
           onChange={(e) => setFormValues({ ...formValues, email: e.target.value })}
+          style={{ marginBottom: 12 }}
+        />
+        <Input
+          placeholder="Role"
+          value={formValues.role}
+          onChange={(e) => setFormValues({ ...formValues, role: e.target.value })}
         />
       </Modal>
     </>

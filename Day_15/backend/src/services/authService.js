@@ -4,7 +4,7 @@ const User = require("../models/user");
 
 const createAccessToken = (userId, role) => {
   return jwt.sign({ sub: userId, userId, role }, process.env.JWT_ACCESS_SECRET, {
-    expiresIn: "1h",
+    expiresIn: "1m",
   });
 };
 
@@ -127,6 +127,10 @@ const updateUserRole = async (id, role) => {
   return User.findByIdAndUpdate(id, { role }, { new: true }).select("-password");
 };
 
+const deleteUserProfile = async (id) => {
+  return User.findOneAndDelete(id)
+}
+
 const refreshAccessToken = async ({ refreshToken }) => {
   if (!refreshToken) {
     throw new Error("Refresh token is required");
@@ -158,6 +162,7 @@ module.exports = {
   registerUser,
   getUserProfile,
   getAllUsers,
+  deleteUserProfile,
   updateUserRole,
   refreshAccessToken,
   buildLoginQuery,

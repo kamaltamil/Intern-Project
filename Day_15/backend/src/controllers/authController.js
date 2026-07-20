@@ -3,6 +3,7 @@ const {
   registerUser,
   getUserProfile,
   getAllUsers,
+  deleteUserProfile,
   updateUserRole,
   refreshAccessToken,
 } = require("../services/authService");
@@ -80,9 +81,44 @@ const listUsers = async (req, res) => {
   }
 };
 
+const deleteUser = async (req, res) => {
+  try{
+    const deletedUser = await deleteUserProfile(req.params._id);
+   
+    if (!deletedUser) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+    const users = await getAllUsers();
+
+    res.status(200).json({
+      success: true,
+      message: "User deleted successfully",
+      data: users,
+    })
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    })
+  }
+}
+
+
 const changeUserRole = async (req, res) => {
   try {
-    const user = await updateUserRole(req.params.id, req.body.role);
+    const { role } = req.body;
+
+    if (!role) {
+      return res.status(400).json({
+        success: false,
+        message: "Role is required",
+      });
+    }
+
+    const user = await updateUserRole(req.params.id, role);
 
     if (!user) {
       return res.status(404).json({
@@ -128,4 +164,5 @@ module.exports = {
   listUsers,
   changeUserRole,
   refresh,
+  deleteUser
 };

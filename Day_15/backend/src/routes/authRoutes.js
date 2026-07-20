@@ -8,6 +8,7 @@ const {
   getProfile,
   listUsers,
   changeUserRole,
+  deleteUser,
   refresh,
 } = require("../controllers/authController");
 const { userManagementMiddleware } = require("../utils/rbac");
@@ -15,8 +16,16 @@ const { userManagementMiddleware } = require("../utils/rbac");
 router.post("/register", register);
 router.post("/login", login);
 router.post("/refresh", refresh);
-router.get("/profile", authMiddleware, getProfile);
-router.get("/users", authMiddleware, userManagementMiddleware, listUsers);
-router.put("/users/:id/role", authMiddleware, userManagementMiddleware, changeUserRole);
+
+router.use(authMiddleware)
+
+router.get("/profile", getProfile);
+
+router.use(userManagementMiddleware)
+
+router.get("/users", listUsers);
+router.put("/users/:id", changeUserRole);
+router.put("/users/:id/role", changeUserRole);
+router.delete("/users/:id", deleteUser);
 
 module.exports = router;
