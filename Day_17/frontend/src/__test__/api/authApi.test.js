@@ -6,12 +6,12 @@ import {
   updateUser,
   deleteUser,
   refreshToken,
-} from "../api/authApi";
+} from "../../api/authApi";
 
-import api from "../api/axios";
-import { store } from "../store";
+import api from "../../api/axios";
+import { store } from "../../store";
 
-jest.mock("../api/axios", () => ({
+jest.mock("../../api/axios", () => ({
   __esModule: true,
   default: {
     post: jest.fn(),
@@ -21,7 +21,7 @@ jest.mock("../api/axios", () => ({
   },
 }));
 
-jest.mock("../store", () => ({
+jest.mock("../../store", () => ({
   store: {
     getState: jest.fn(),
   },

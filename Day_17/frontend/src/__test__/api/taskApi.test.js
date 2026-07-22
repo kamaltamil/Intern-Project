@@ -4,12 +4,12 @@ import {
   addTask,
   updateTask,
   deleteTask,
-} from "../api/taskApi";
+} from "../../api/taskApi";
 
-import api from "../api/axios";
-import { store } from "../store";
+import api from "../../api/axios";
+import { store } from "../../store";
 
-jest.mock("../api/axios", () => ({
+jest.mock("../../api/axios", () => ({
   __esModule: true,
   default: {
     get: jest.fn(),
@@ -19,7 +19,7 @@ jest.mock("../api/axios", () => ({
   },
 }));
 
-jest.mock("../store", () => ({
+jest.mock("../../store", () => ({
   store: {
     getState: jest.fn(),
   },

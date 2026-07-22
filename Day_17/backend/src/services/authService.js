@@ -146,7 +146,7 @@ const refreshAccessToken = async ({ refreshToken }) => {
   const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
   const user = await User.findById(decoded.userId);
 
-  if (!user || !user.refreshToken) {
+  if (!user) {
     throw new Error("Invalid refresh token");
   }
 

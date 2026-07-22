@@ -16,14 +16,14 @@ jest.doMock("axios", () => {
   };
 });
 
-jest.mock("../store", () => ({
+jest.mock("../../store", () => ({
   store: {
     getState: jest.fn(),
     dispatch: jest.fn(),
   },
 }));
 
-jest.mock("../store/authSlice", () => ({
+jest.mock("../../store/authSlice", () => ({
   logout: jest.fn(() => ({
     type: "auth/logout",
   })),
@@ -45,14 +45,14 @@ beforeAll(() => {
   const axiosMod = require("axios");
   axios = axiosMod.default || axiosMod;
 
-  const storeMod = require("../store");
+  const storeMod = require("../../store");
   store = storeMod.store;
 
-  const authMod = require("../store/authSlice");
+  const authMod = require("../../store/authSlice");
   logout = authMod.logout;
   setNewToken = authMod.setNewToken;
 
-  api = require("../api/axios").default;
+  api = require("../../api/axios").default;
   successHandler = mockUse.mock.calls[0][0];
   errorHandler = mockUse.mock.calls[0][1];
 });
