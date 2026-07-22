@@ -1,0 +1,38 @@
+.dashboard-header {
+  background: #ffffff;
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.header-title {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 600;
+}
+
+.dashboard-content {
+  margin: 24px;
+  padding: 24px;
+  background: #ffffff;
+  border-radius: 10px;
+  min-height: calc(100vh - 112px);
+}
+
+@media (max-width: 768px) {
+  .dashboard-content {
+    margin: 12px;
+    padding: 16px;
+  }
+
+  .header-title {
+    font-size: 18px;
+  }
+}
