@@ -113,14 +113,16 @@ describe("TaskForm Component", () => {
     const titleInput = await screen.findByLabelText(/Task Title/i);
     fireEvent.change(titleInput, { target: { value: "Task to be cleared" } });
 
-    await clickButton(screen.getByRole("button", { name: /Add Task/i }));
+    const formElement = screen.getByRole("button", { name: /Add Task/i }).closest("form");
+    fireEvent.submit(formElement);
 
     await waitFor(() => {
       expect(mockOnAddTask).toHaveBeenCalledTimes(1);
     });
 
     await waitFor(() => {
-      expect(titleInput).toHaveValue("");
+      const freshInput = screen.getByLabelText(/Task Title/i);
+      expect(freshInput.value).toBe("");
     });
   });
 
