@@ -1,9 +1,9 @@
 import "./Profile.css";
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Card, Descriptions, Avatar, Typography, message, Spin } from "antd";
 import { UserOutlined, CameraOutlined } from "@ant-design/icons";
-import { uploadProfileImage } from "../api/authApi";
+import { uploadProfileImage, getProfile } from "../api/authApi";
 import { normalizeUserData, setUser } from "../store/authSlice";
 
 const { Title, Text } = Typography;
@@ -11,12 +11,44 @@ const { Title, Text } = Typography;
 /**
  * Profile page — displays user info and allows uploading a profile image.
  * The avatar acts as the upload trigger: hover reveals a camera icon overlay.
+ *
+ * On mount the component fetches fresh profile data from the backend so that
+ * the profile image is always loaded from the server, not from a potentially
+ * stale Redux / localStorage cache.
  */
 const Profile = React.memo(() => {
   const dispatch = useDispatch();
   const user = useSelector((state) => state.auth.user);
   const fileInputRef = useRef(null);
   const [uploading, setUploading] = useState(false);
+  const [loadingProfile, setLoadingProfile] = useState(true);
+
+  // Fetch fresh profile (including profileImage URL) every time this page opens
+  useEffect(() => {
+    let cancelled = false;
+
+    const fetchProfile = async () => {
+      try {
+        setLoadingProfile(true);
+        const response = await getProfile();
+        if (!cancelled) {
+          const freshUser = normalizeUserData(response);
+          dispatch(setUser(freshUser));
+        }
+      } catch (err) {
+        // Non-critical: we still show cached data if the fetch fails
+        console.error("Failed to refresh profile:", err?.message);
+      } finally {
+        if (!cancelled) setLoadingProfile(false);
+      }
+    };
+
+    fetchProfile();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [dispatch]);
 
   const handleAvatarClick = () => fileInputRef.current?.click();
 
@@ -51,58 +83,60 @@ const Profile = React.memo(() => {
   };
 
   return (
-    <Card className="profile-card">
-      <div className="profile-header">
-        {/* Clickable avatar with camera overlay */}
-        <div
-          className="avatar-wrapper"
-          onClick={handleAvatarClick}
-          title="Click to change profile photo"
-        >
-          <Spin spinning={uploading}>
-            {user?.profileImage ? (
-              <Avatar
-                size={90}
-                src={user.profileImage}
-                className="profile-avatar"
-              />
-            ) : (
-              <Avatar
-                size={90}
-                icon={<UserOutlined />}
-                className="profile-avatar"
-              />
-            )}
-          </Spin>
-          <div className="avatar-overlay">
-            <CameraOutlined className="camera-icon" />
+    <Spin spinning={loadingProfile} tip="Loading profile…">
+      <Card className="profile-card">
+        <div className="profile-header">
+          {/* Clickable avatar with camera overlay */}
+          <div
+            className="avatar-wrapper"
+            onClick={handleAvatarClick}
+            title="Click to change profile photo"
+          >
+            <Spin spinning={uploading}>
+              {user?.profileImage ? (
+                <Avatar
+                  size={90}
+                  src={user.profileImage}
+                  className="profile-avatar"
+                />
+              ) : (
+                <Avatar
+                  size={90}
+                  icon={<UserOutlined />}
+                  className="profile-avatar"
+                />
+              )}
+            </Spin>
+            <div className="avatar-overlay">
+              <CameraOutlined className="camera-icon" />
+            </div>
+          </div>
+
+          <div className="profile-info">
+            <Title level={3} style={{ margin: 0 }}>
+              {user?.name}
+            </Title>
+            <Text type="secondary">@{user?.username}</Text>
           </div>
         </div>
 
-        <div className="profile-info">
-          <Title level={3} style={{ margin: 0 }}>
-            {user?.name}
-          </Title>
-          <Text type="secondary">@{user?.username}</Text>
-        </div>
-      </div>
+        {/* Hidden file input */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          style={{ display: "none" }}
+          onChange={handleFileChange}
+        />
 
-      {/* Hidden file input */}
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="image/jpeg,image/png,image/webp"
-        style={{ display: "none" }}
-        onChange={handleFileChange}
-      />
-
-      <Descriptions bordered column={1}>
-        <Descriptions.Item label="Name">{user?.name}</Descriptions.Item>
-        <Descriptions.Item label="Username">@{user?.username}</Descriptions.Item>
-        <Descriptions.Item label="Email">{user?.email}</Descriptions.Item>
-        <Descriptions.Item label="Role">{user?.role}</Descriptions.Item>
-      </Descriptions>
-    </Card>
+        <Descriptions bordered column={1}>
+          <Descriptions.Item label="Name">{user?.name}</Descriptions.Item>
+          <Descriptions.Item label="Username">@{user?.username}</Descriptions.Item>
+          <Descriptions.Item label="Email">{user?.email}</Descriptions.Item>
+          <Descriptions.Item label="Role">{user?.role}</Descriptions.Item>
+        </Descriptions>
+      </Card>
+    </Spin>
   );
 });
 

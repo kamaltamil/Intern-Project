@@ -3,6 +3,17 @@ const jwt = require("jsonwebtoken");
 const User = require("../models/user");
 
 // ---------------------------------------------------------------------------
+// Image URL helper — ensures profileImage is always an absolute URL
+// ---------------------------------------------------------------------------
+
+const resolveProfileImageUrl = (relativePath) => {
+  if (!relativePath) return null;
+  // Already absolute (e.g. stored full URL) — return as-is
+  if (relativePath.startsWith("http")) return relativePath;
+  return `${process.env.BASE_URL}${relativePath}`;
+};
+
+// ---------------------------------------------------------------------------
 // Token helpers
 // ---------------------------------------------------------------------------
 
@@ -101,8 +112,11 @@ const loginUser = async ({ email, password, username }) => {
 
   const { token, refreshToken } = await generateAndStoreTokens(user);
 
+  const freshUser = await User.findById(user._id).select("-password").lean();
+  freshUser.profileImage = resolveProfileImageUrl(freshUser.profileImage);
+
   return {
-    user: await User.findById(user._id).select("-password"),
+    user: freshUser,
     token,
     refreshToken,
   };
@@ -166,9 +180,12 @@ const refreshAccessToken = async ({ refreshToken }) => {
 
   const accessToken = createAccessToken(user._id, user.role);
 
+  const freshUser = await User.findById(user._id).select("-password").lean();
+  freshUser.profileImage = resolveProfileImageUrl(freshUser.profileImage);
+
   return {
     token: accessToken,
-    user: await User.findById(user._id).select("-password"),
+    user: freshUser,
   };
 };
 
