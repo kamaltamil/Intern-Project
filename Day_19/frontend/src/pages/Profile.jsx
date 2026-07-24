@@ -6,6 +6,7 @@ import { UserOutlined } from "@ant-design/icons";
 
 const { Title } = Typography;
 
+console.log("Profile component loaded"); // Debugging log to check re-renders
 // React.memo — pure display component that only reads Redux state.
 // Skips re-renders when DashboardLayout re-renders from sidebar toggle.
 const Profile = React.memo(() => {

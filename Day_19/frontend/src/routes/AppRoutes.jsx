@@ -4,6 +4,8 @@ import { Spin } from "antd";
 
 import DashboardLayout from "../layouts/DashboardLayout";
 import ProtectedRoute from "../components/ProtectedRoute";
+// import Profile from "../pages/Profile"; // Import Profile directly since it's not lazy-loaded
+const Profile = React.lazy(() => import("../pages/Profile"));
 
 // Lazy-loaded pages — each page is split into a separate JS chunk
 // and downloaded only when the user navigates to that route.
@@ -11,7 +13,6 @@ const Login = React.lazy(() => import("../pages/Login"));
 const Register = React.lazy(() => import("../pages/Register"));
 const TasksPage = React.lazy(() => import("../pages/Tasks"));
 const Users = React.lazy(() => import("../pages/Users"));
-const Profile = React.lazy(() => import("../pages/Profile"));
 const NotFound = React.lazy(() => import("../pages/NotFound"));
 
 // Shown while a lazy chunk is being downloaded
