@@ -1,0 +1,14 @@
+.logo {
+  height: 64px;
+  color: white;
+  font-size: 22px;
+  font-weight: bold;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  letter-spacing: 1px;
+}
+
+.ant-layout-sider {
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.15);
+}
