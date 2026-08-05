@@ -102,7 +102,7 @@ const normalizeRegistrationInput = ({ name, email, password, username }) => {
   };
 };
 
-const normalizeUpdateInput = async ({ name, email, username, password, role }) => {
+const normalizeUpdateInput = async ({ name, email, username, password, role, profileImage }) => {
   const update = {};
 
   if (name) update.name = String(name).trim();
@@ -110,9 +110,9 @@ const normalizeUpdateInput = async ({ name, email, username, password, role }) =
   if (username) update.username = String(username).trim().toLowerCase();
   if (role) update.role = role;
 
-  if (password) {
-    update.password = await bcrypt.hash(password, 10);
-  }
+  if (password) update.password = await bcrypt.hash(password, 10);
+
+  if (profileImage) update.profileImage = String(profileImage).trim();
 
   return update;
 };
@@ -143,7 +143,7 @@ const updateUser = async (id, input) => {
   const user = await User.findByIdAndUpdate(id, update, {
     new: true,
     runValidators: true,
-  }).select("-password -refreshToken");
+  }).select("-password -refreshToken").lean();
 
   return user;
 };

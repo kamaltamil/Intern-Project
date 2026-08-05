@@ -1,38 +1,24 @@
-import { useEffect, useState } from 'react';
-import { Card, Row, Col, Statistic, Table, Skeleton, Alert, Button, Tag, Form, Input } from 'antd';
+import { useState } from 'react';
+import { Row, Col, Skeleton, Alert, Button, Tag, Form, Input } from 'antd';
 import { TeamOutlined, UserOutlined, CrownOutlined, DollarOutlined } from '@ant-design/icons';
-import api from '../api/api';
+import { useQuery } from '@tanstack/react-query';
+import { fetchUsers } from '../api/queries';
 import DashboardLayout from '../components/DashboardLayout';
 import { useNavigate } from 'react-router-dom';
-import { useSelector, useDispatch } from 'react-redux';
-import { setUsers, startUserLoading, setUserError } from '../store/slices/userSlice';
+import CustomCard from '../components/CustomCard';
+import CustomTable from '../components/CustomTable';
 
 function AdminDashboardPage() {
-  const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { users = [], loading, error } = useSelector((state) => state.user);
-
   const [searchQuery, setSearchQuery] = useState('');
 
-  useEffect(() => {
-    if (users.length > 0) return;
+  const {
+    data: users = [],
+    isLoading,
+    isError,
+    error,
+  } = useQuery({ queryKey: ['users'], queryFn: fetchUsers });
 
-    const loadUsers = async () => {
-      try {
-        dispatch(startUserLoading(true));
-        const response = await api.get('/users');
-        dispatch(setUsers(response.data || []));
-      } catch {
-        dispatch(setUserError('Unable to load dashboard data'));
-      } finally {
-        dispatch(startUserLoading(false));
-      }
-    };
-
-    loadUsers();
-  }, [dispatch]);
-
-  // Filter users based on search query (name, email, or role)
   const filteredUsers = users.filter((user) => {
     const query = searchQuery.toLowerCase();
     return (
@@ -69,7 +55,24 @@ function AdminDashboardPage() {
     },
   ];
 
-  if (loading) {
+  const searchInput = () => (
+    <div className="flex justify-between items-center">
+      <h5 className="font-semibold text-[#2E2A27]">Users</h5>
+        <Form>
+          <Form.Item label='Find User' className="mb-0 ml-auto">
+            <Input.Search
+              placeholder="Search by name, email or role..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onSearch={(val) => setSearchQuery(val)}
+              allowClear
+            />
+          </Form.Item>
+        </Form>
+    </div>
+  );
+ 
+  if (isLoading) {
     return (
       <DashboardLayout>
         <Skeleton active paragraph={{ rows: 4 }} />
@@ -77,63 +80,40 @@ function AdminDashboardPage() {
     );
   }
 
-  if (error) {
+  if (isError) {
     return (
       <DashboardLayout>
-        <Alert type="error" message={error} />
+        <Alert type="error" message={error?.message || 'Unable to load dashboard data'} />
       </DashboardLayout>
     );
   }
+
+  const dashboardStats = [
+    { title: 'Total Users', value: users.length, icon: <TeamOutlined /> },
+    { title: 'Total Managers', value: totalManagers, icon: <CrownOutlined /> },
+    { title: 'Total Members', value: totalMembers, icon: <UserOutlined />},
+    { title: 'Revenue', value: revenue, icon: <DollarOutlined />},
+  ];
 
   return (
     <DashboardLayout>
       <div className="space-y-4">
         <Row gutter={[16, 16]}>
-          <Col xs={24} sm={12} lg={6}>
-            <Card className="rounded-2xl border border-[#ECE6DF] shadow-sm">
-              <Statistic
-                title="Total Users"
-                value={users.length}
-                prefix={<TeamOutlined />}
-                valueStyle={{ color: '#C76A34' }}
+           {dashboardStats.map((stat) => (
+            <Col xs={24} sm={12} lg={6} key={stat.title}>
+              <CustomCard
+                title={stat.title}
+                value={stat.value}
+                icon={stat.icon}
+                key={stat.title}
               />
-            </Card>
-          </Col>
-          <Col xs={24} sm={12} lg={6}>
-            <Card className="rounded-2xl border border-[#ECE6DF] shadow-sm">
-              <Statistic
-                title="Total Managers"
-                value={totalManagers}
-                prefix={<CrownOutlined />}
-                valueStyle={{ color: '#C76A34' }}
-              />
-            </Card>
-          </Col>
-          <Col xs={24} sm={12} lg={6}>
-            <Card className="rounded-2xl border border-[#ECE6DF] shadow-sm">
-              <Statistic
-                title="Total Members"
-                value={totalMembers}
-                prefix={<UserOutlined />}
-                valueStyle={{ color: '#C76A34' }}
-              />
-            </Card>
-          </Col>
-          <Col xs={24} sm={12} lg={6}>
-            <Card className="rounded-2xl border border-[#ECE6DF] shadow-sm">
-              <Statistic
-                title="Revenue"
-                value={revenue}
-                prefix={<DollarOutlined />}
-                valueStyle={{ color: '#C76A34' }}
-              />
-            </Card>
-          </Col>
+            </Col>
+          ))}
         </Row>
 
-        <Card className="rounded-2xl border border-[#ECE6DF] shadow-sm">
-          <div className="flex justify-between items-center mb-3">
-            <span className="font-semibold text-[#2E2A27]">Recent Users</span>
+       <CustomTable
+          title="Recent Users"
+          extraHeader={
             <Button
               type="primary"
               style={{ backgroundColor: '#C76A34', borderColor: '#C76A34' }}
@@ -141,33 +121,12 @@ function AdminDashboardPage() {
             >
               Manage All Users
             </Button>
-          </div>
-          <div>
-            <Form className='px-5'>
-              <Form.Item label='Find User'>
-                <Input.Search
-                  placeholder="Search by name, email or role..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  onSearch={(val) => setSearchQuery(val)}
-                  allowClear
-                />
-              </Form.Item>
-            </Form>
-          </div>
-          <div className='overflow-auto'>
-            <Table
-              rowKey="_id"
-              dataSource={
-                searchQuery
-                  ? filteredUsers              // show all filtered results when searching
-                  : users.slice(0, 5)          // show only first 5 when no search
-              }
-              columns={columns}
-              pagination={false}
-            />
-          </div>
-        </Card>
+          }
+          dataSource={searchQuery ? filteredUsers : users.slice(0, 5)}
+          columns={columns}
+          pagination={false}
+          tableTitleRender={() => searchInput()}
+        />
       </div>
     </DashboardLayout>
   );

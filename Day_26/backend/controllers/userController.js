@@ -50,10 +50,37 @@ const listUsers = async (req, res) => {
 
 const getSingleUser = async (req, res) => {
     try {
-        const user = await getUserById(req.params.id);
+        const requestedId = req.params.id;
+        const requestingUserId = req.user?.userId || req.user?.sub;
+        const requestingRole = req.user?.role;
+
+        // If the requester is asking for their own data, allow it
+        if (requestingUserId === requestedId) {
+            const user = await getUserById(requestedId);
+            if (!user) {
+                return res.status(404).json({ message: 'User not found' });
+            }
+
+            if (user.profileImage && process.env.BASE_URL) {
+                user.profileImage = `${process.env.BASE_URL}${user.profileImage}`;
+            }
+
+            return res.status(200).json(user);
+        }
+
+        // Otherwise only Admin or Manager can fetch other users by id
+        if (requestingRole !== 'Admin' && requestingRole !== 'Manager') {
+            return res.status(403).json({ message: 'Forbidden' });
+        }
+
+        const user = await getUserById(requestedId);
 
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
+        }
+
+        if (user.profileImage && process.env.BASE_URL) {
+            user.profileImage = `${process.env.BASE_URL}${user.profileImage}`;
         }
 
         return res.status(200).json(user);
@@ -98,10 +125,17 @@ const patchUser = async (req, res) => {
             return res.status(403).json({ message: 'You can only update your own profile' });
         }
 
+        if (req.file) {
+            req.body.profileImage = `/uploads/profile/${req.file.filename}`;
+        }
         const user = await updateUser(targetId, req.body);
 
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
+        }
+
+        if (user.profileImage && process.env.BASE_URL) {
+            user.profileImage = `${process.env.BASE_URL}${user.profileImage}`;
         }
 
         return res.status(200).json({ message: 'User updated successfully', user });

@@ -1,7 +1,9 @@
-import { useState } from 'react';
-import { Card, Form, Input, Button, Avatar, Typography, message, Divider, Tag } from 'antd';
-import { UserOutlined, EditOutlined, SaveOutlined, CloseOutlined } from '@ant-design/icons';
+import { useEffect, useState } from 'react';
+import { Card, Form, Input, Button, Avatar, Typography, message, Divider, Tag, Upload } from 'antd';
+import { UserOutlined, EditOutlined, SaveOutlined, CloseOutlined, UploadOutlined } from '@ant-design/icons';
 import { useDispatch, useSelector } from 'react-redux';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { updateUser, fetchMe } from '../api/queries';
 import api from '../api/api';
 import { setAuth } from '../store/slices/authSlice';
 import DashboardLayout from '../components/DashboardLayout';
@@ -10,10 +12,39 @@ const { Title, Text } = Typography;
 
 function ProfilePage() {
   const dispatch = useDispatch();
+  const queryClient = useQueryClient();
   const { user, token, refreshToken } = useSelector((state) => state.auth);
+  const { data: fetchedUser, isLoading: isUserLoading, isError: isUserError } = useQuery({
+    queryKey: ['me'],
+    queryFn: fetchMe,
+    staleTime: 1000 * 60 * 5,
+    retry: false,
+  });
+  const profileUser = fetchedUser || user;
   const [editing, setEditing] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [previewImage, setPreviewImage] = useState(() => {
+    const u = profileUser?.profileImage || user?.profileImage || null;
+    if (!u) return null;
+    if (u.startsWith('http')) return u;
+    try {
+      return `${new URL(api.defaults.baseURL).origin}${u}`;
+    } catch (e) {
+      return u;
+    }
+  });
   const [form] = Form.useForm();
+
+  useEffect(() => {
+    const u = profileUser?.profileImage || user?.profileImage || null;
+    if (!u) return setPreviewImage(null);
+    if (u.startsWith('http')) return setPreviewImage(u);
+    try {
+      setPreviewImage(`${new URL(api.defaults.baseURL).origin}${u}`);
+    } catch (e) {
+      setPreviewImage(u);
+    }
+  }, [profileUser?.profileImage, user?.profileImage]);
 
   const roleColor = {
     Admin: 'red',
@@ -23,10 +54,23 @@ function ProfilePage() {
 
   const onEditClick = () => {
     form.setFieldsValue({
-      name: user?.name || '',
-      email: user?.email || '',
-      username: user?.username || '',
+      name: profileUser?.name || '',
+      email: profileUser?.email || '',
+      username: profileUser?.username || '',
     });
+    setSelectedFile(null);
+    const u = profileUser?.profileImage || user?.profileImage || null;
+    if (!u) {
+      setPreviewImage(null);
+    } else if (u.startsWith('http')) {
+      setPreviewImage(u);
+    } else {
+      try {
+        setPreviewImage(`${new URL(api.defaults.baseURL).origin}${u}`);
+      } catch (e) {
+        setPreviewImage(u);
+      }
+    }
     setEditing(true);
   };
 
@@ -35,23 +79,9 @@ function ProfilePage() {
     form.resetFields();
   };
 
-  const onFinish = async (values) => {
-    if (!user?._id) {
-      message.error('User not found');
-      return;
-    }
-
-    try {
-      setLoading(true);
-      const response = await api.patch(`/users/${user._id}`, {
-        name: values.name,
-        email: values.email,
-        username: values.username,
-        ...(values.password ? { password: values.password } : {}),
-      });
-
-      const updatedUser = response.data?.user || response.data;
-
+  const profileMutation = useMutation({
+    mutationFn: (payload) => updateUser({ id: profileUser?._id || user?._id, payload }),
+    onSuccess: (updatedUser) => {
       dispatch(
         setAuth({
           user: updatedUser,
@@ -59,14 +89,35 @@ function ProfilePage() {
           refreshToken,
         })
       );
-
+      queryClient.setQueryData(['me'], updatedUser);
+      queryClient.invalidateQueries(['me']);
       message.success('Profile updated successfully');
       setEditing(false);
-    } catch (error) {
+    },
+    onError: (error) => {
       message.error(error?.response?.data?.message || 'Failed to update profile');
-    } finally {
-      setLoading(false);
+    },
+  });
+
+  const onFinish = (values) => {
+    const id = profileUser?._id || user?._id;
+    if (!id) {
+      message.error('User not found');
+      return;
     }
+
+    const formData = new FormData();
+    formData.append('name', values.name);
+    formData.append('email', values.email);
+    formData.append('username', values.username);
+    if (values.password) {
+      formData.append('password', values.password);
+    }
+    if (selectedFile) {
+      formData.append('profileImage', selectedFile);
+    }
+
+    profileMutation.mutate(formData);
   };
 
   return (
@@ -78,38 +129,47 @@ function ProfilePage() {
           <div className="flex items-center gap-4 mb-6">
             <Avatar
               size={72}
+              src={previewImage}
               style={{ backgroundColor: '#C76A34', fontSize: 28 }}
             >
-              {user?.name?.charAt(0)?.toUpperCase() || 'U'}
+              {!previewImage && (profileUser?.name?.charAt(0)?.toUpperCase() || 'U')}
             </Avatar>
             <div>
-              <div className="text-xl font-semibold text-[#2E2A27]">{user?.name || 'Unknown'}</div>
-              <div className="text-[#A74E2B] text-sm">@{user?.username || 'user'}</div>
-              <Tag color={roleColor[user?.role] || 'default'} className="mt-1">
-                {user?.role || 'Member'}
+              <div className="text-xl font-semibold text-[#2E2A27]">{profileUser?.name || 'Unknown'}</div>
+              <div className="text-[#A74E2B] text-sm">@{profileUser?.username || 'user'}</div>
+              <Tag color={roleColor[profileUser?.role] || 'default'} className="mt-1">
+                {profileUser?.role || 'Member'}
               </Tag>
             </div>
           </div>
 
           <Divider />
 
-          {!editing ? (
+          {isUserLoading ? (
+            <div className="py-10">
+              <p>Loading profile...</p>
+            </div>
+          ) : isUserError ? (
+            <div className="py-10">
+              <p>Unable to load profile data.</p>
+            </div>
+          ) : !editing ? (
             <div className="space-y-3">
               <div className="flex justify-between">
                 <Text type="secondary">Full Name</Text>
-                <Text strong>{user?.name || '-'}</Text>
+                <Text strong>{profileUser?.name || '-'}</Text>
               </div>
               <div className="flex justify-between">
                 <Text type="secondary">Email</Text>
-                <Text strong>{user?.email || '-'}</Text>
+                <Text strong>{profileUser?.email || '-'}</Text>
               </div>
               <div className="flex justify-between">
                 <Text type="secondary">Username</Text>
-                <Text strong>@{user?.username || '-'}</Text>
+                <Text strong>@{profileUser?.username || '-'}</Text>
               </div>
               <div className="flex justify-between">
                 <Text type="secondary">Role</Text>
-                <Tag color={roleColor[user?.role] || 'default'}>{user?.role || 'Member'}</Tag>
+                <Tag color={roleColor[profileUser?.role] || 'default'}>{profileUser?.role || 'Member'}</Tag>
               </div>
 
               <div className="pt-4">
@@ -125,6 +185,27 @@ function ProfilePage() {
             </div>
           ) : (
             <Form form={form} layout="vertical" onFinish={onFinish}>
+              <Form.Item label="Profile Photo">
+                <Upload
+                  accept="image/*"
+                  showUploadList={false}
+                  beforeUpload={() => false}
+                  onChange={({ file }) => {
+                    const selected = file.originFileObj || file;
+                    if (selected) {
+                      setSelectedFile(selected);
+                      const reader = new FileReader();
+                      reader.onload = (e) => setPreviewImage(e.target.result);
+                      reader.readAsDataURL(selected);
+                    }
+                  }}
+                >
+                  <Button icon={<UploadOutlined />} type="default">
+                    Choose Photo
+                  </Button>
+                </Upload>
+              </Form.Item>
+
               <Form.Item
                 label="Full Name"
                 name="name"
@@ -164,7 +245,7 @@ function ProfilePage() {
                   type="primary"
                   htmlType="submit"
                   icon={<SaveOutlined />}
-                  loading={loading}
+                  loading={profileMutation.isLoading}
                   style={{ backgroundColor: '#C76A34', borderColor: '#C76A34' }}
                 >
                   Save Changes

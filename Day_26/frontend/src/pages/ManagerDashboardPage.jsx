@@ -1,35 +1,21 @@
-import { useEffect } from 'react';
-import { Card, Row, Col, Statistic, Table, Skeleton, Alert } from 'antd';
-import { useDispatch, useSelector } from 'react-redux';
-import api from '../api/api';
-import DashboardLayout from '../components/DashboardLayout';
-import { setUsers, startUserLoading, setUserError } from '../store/slices/userSlice';
+import { Row, Col, Skeleton, Alert } from "antd";
+import { useQuery } from "@tanstack/react-query";
+import { fetchUsers } from "../api/queries";
+import DashboardLayout from "../components/DashboardLayout";
+import CustomCard from "../components/CustomCard";
+import CustomTable from "../components/CustomTable";
 
 function ManagerDashboardPage() {
-  const dispatch = useDispatch();
-  const { list: users, loading, error } = useSelector((state) => state.user);
+  const {
+    data: users = [],
+    isLoading,
+    isError,
+    error,
+  } = useQuery({ queryKey: ["users"], queryFn: fetchUsers });
 
-  useEffect(() => {
-    if (users.length > 0) return;
+  const members = users.filter((item) => item.role === "Member");
 
-    const loadUsers = async () => {
-      try {
-        dispatch(startUserLoading(true));
-        const response = await api.get('/users');
-        dispatch(setUsers(response.data || []));
-      } catch {
-        dispatch(setUserError('Unable to load manager dashboard data'));
-      } finally {
-        dispatch(startUserLoading(false));
-      }
-    };
-
-    loadUsers();
-  }, [dispatch, users.length]);
-
-  const members = users.filter((item) => item.role === 'Member');
-
-  if (loading) {
+  if (isLoading) {
     return (
       <DashboardLayout>
         <Skeleton active paragraph={{ rows: 4 }} />
@@ -37,47 +23,50 @@ function ManagerDashboardPage() {
     );
   }
 
-  if (error) {
+  if (isError) {
     return (
       <DashboardLayout>
-        <Alert type="error" message={error} />
+        <Alert
+          type="error"
+          message={error?.message || "Unable to load manager dashboard data"}
+        />
       </DashboardLayout>
     );
   }
+
+  const managerStats = [
+    { title: "Today Bookings", value: members.length, color: "#C76A34" },
+    { title: "Pending Bookings", value: members.length, color: "#C76A34" },
+    { title: "Room Availability", value: 18, color: "#C76A34" },
+  ];
 
   return (
     <DashboardLayout>
       <div className="space-y-4">
         <Row gutter={[16, 16]}>
-          <Col xs={24} sm={12} lg={6}>
-            <Card className="rounded-2xl border border-[#ECE6DF] shadow-sm">
-              <Statistic title="Today Bookings" value={members.length} valueStyle={{ color: '#C76A34' }} />
-            </Card>
-          </Col>
-          <Col xs={24} sm={12} lg={6}>
-            <Card className="rounded-2xl border border-[#ECE6DF] shadow-sm">
-              <Statistic title="Pending Bookings" value={members.length} valueStyle={{ color: '#C76A34' }} />
-            </Card>
-          </Col>
-          <Col xs={24} sm={12} lg={6}>
-            <Card className="rounded-2xl border border-[#ECE6DF] shadow-sm">
-              <Statistic title="Room Availability" value="18" valueStyle={{ color: '#C76A34' }} />
-            </Card>
-          </Col>
+          {  managerStats.map((stat) => (
+              <Col xs={24} sm={12} lg={6} key={stat.title}>
+                <CustomCard
+                  title={stat.title}
+                  value={stat.value}
+                  color={stat.color}
+                  key={stat.title}
+                />
+              </Col>
+            ))
+          }
         </Row>
 
-        <Card className="rounded-2xl border border-[#ECE6DF] shadow-sm">
-          <Table
-            rowKey="_id"
-            dataSource={members}
-            columns={[
-              { title: 'Name', dataIndex: 'name' },
-              { title: 'Email', dataIndex: 'email' },
-              { title: 'Role', dataIndex: 'role' },
-            ]}
-            pagination={{ pageSize: 5 }}
-          />
-        </Card>
+        <CustomTable
+          dataSource={members}
+          columns={[
+            { title: "Name", dataIndex: "name" },
+            { title: "Email", dataIndex: "email" },
+            { title: "Role", dataIndex: "role" },
+          ]}
+          pagination={{ pageSize: 5 }}
+        />
+
       </div>
     </DashboardLayout>
   );

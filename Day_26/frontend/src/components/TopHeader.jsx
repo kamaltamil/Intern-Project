@@ -8,7 +8,9 @@ import {
 } from '@ant-design/icons';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
+import { useMutation } from '@tanstack/react-query';
 import { logout, setTheme } from '../store/slices/authSlice';
+import { logoutUser } from '../api/queries';
 import api from '../api/api';
 
 const { Header } = Layout;
@@ -18,16 +20,24 @@ function TopHeader() {
   const navigate = useNavigate();
   const { user, theme } = useSelector((state) => state.auth);
 
+  const logoutMutation = useMutation({
+    mutationFn: logoutUser,
+    onSettled: () => {
+      dispatch(logout());
+      navigate('/login');
+    },
+    onError: () => {
+      dispatch(logout());
+      navigate('/login');
+    },
+  });
+
   const isDark = theme === 'dark';
 
-  const handleLogout = async () => {
-    try {
-      if (user?._id) {
-        await api.post('/users/logout', { userId: user._id });
-      }
-    } catch {
-      // logout anyway even if API fails
-    } finally {
+  const handleLogout = () => {
+    if (user?._id) {
+      logoutMutation.mutate(user._id);
+    } else {
       dispatch(logout());
       navigate('/login');
     }
@@ -106,7 +116,20 @@ function TopHeader() {
               background: isDark ? '#2d2d44' : 'transparent',
             }}
           >
-            <Avatar style={{ backgroundColor: '#C76A34' }}>
+            <Avatar
+              src={
+                (function resolveImage(u) {
+                  if (!u) return null;
+                  if (u.startsWith('http')) return u;
+                  try {
+                    return `${new URL(api.defaults.baseURL).origin}${u}`;
+                  } catch (e) {
+                    return u;
+                  }
+                })(user?.profileImage)
+              }
+              style={{ backgroundColor: '#C76A34' }}
+            >
               {user?.name?.charAt(0)?.toUpperCase() || 'U'}
             </Avatar>
             <div className="flex flex-col leading-tight">

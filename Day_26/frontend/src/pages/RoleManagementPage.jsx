@@ -1,20 +1,21 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import {
-  Card, Table, Button, Popconfirm, message, Skeleton, Alert,
+  Button, Popconfirm, message, Alert,
   Typography, Space, Modal, Form, Input, Tag,
 } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined, TagsOutlined } from '@ant-design/icons';
-import api from '../api/api';
-import DashboardLayout from '../components/DashboardLayout';
-import { useSelector, useDispatch } from 'react-redux';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
-  setRoles, startRoleLoading, setRoleError, addRole, updateRole, removeRole,
-} from '../store/slices/roleSlice';
+  fetchRoles, createRole, updateRole as updateRoleApi, deleteRole,
+} from '../api/queries';
+import DashboardLayout from '../components/DashboardLayout';
+import CustomCard from '../components/CustomCard';
+import CustomTable from '../components/CustomTable';
 
 const { Title } = Typography;
 
 // Built-in roles that can't be deleted
-const PROTECTED_ROLES = ['Admin', 'Manager', 'Member'];
+const PROTECTED_ROLES = new Set(['Admin', 'Manager', 'Member']);
 
 const roleTagColor = (name) => {
   const map = { Admin: 'red', Manager: 'orange', Member: 'blue' };
@@ -22,29 +23,57 @@ const roleTagColor = (name) => {
 };
 
 function RoleManagementPage() {
-  const dispatch = useDispatch();
-  const { roles = [], loading, error } = useSelector((state) => state.role);
-
   const [modalOpen, setModalOpen] = useState(false);
   const [editingRole, setEditingRole] = useState(null); // null = create mode
-  const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState(null);
   const [form] = Form.useForm();
+  const queryClient = useQueryClient();
 
-  const loadRoles = async () => {
-    try {
-      dispatch(startRoleLoading());
-      const response = await api.get('/roles');
-      dispatch(setRoles(response.data || []));
-    } catch (err) {
-      dispatch(setRoleError('Unable to load roles'));
-    }
-  };
+  const {
+    data: rolesData = [],
+    error,
+    isLoading,
+    refetch,
+  } = useQuery({ queryKey: ['roles'], queryFn: fetchRoles });
 
-  useEffect(() => {
-    loadRoles();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const createRoleMutation = useMutation({
+    mutationFn: createRole,
+    onSuccess: () => {
+      message.success('Role created successfully');
+      setModalOpen(false);
+      queryClient.invalidateQueries(['roles']);
+    },
+    onError: (error) => {
+      message.error(error?.response?.data?.message || 'Failed to save role');
+    },
+  });
+
+  const updateRoleMutation = useMutation({
+    mutationFn: updateRoleApi,
+    onSuccess: () => {
+      message.success('Role updated successfully');
+      setModalOpen(false);
+      queryClient.invalidateQueries(['roles']);
+    },
+    onError: (error) => {
+      message.error(error?.response?.data?.message || 'Failed to save role');
+    },
+  });
+
+  const deleteRoleMutation = useMutation({
+    mutationFn: deleteRole,
+    onSuccess: () => {
+      message.success('Role deleted successfully');
+      queryClient.invalidateQueries(['roles']);
+      setDeletingId(null);
+    },
+    onError: (error) => {
+      message.error(error?.response?.data?.message || 'Failed to delete role');
+      setDeletingId(null);
+    },
+  });
+
+  const roleList = rolesData;
 
   // ── Open modal ────────────────────────────────────────────
   const openCreate = () => {
@@ -63,40 +92,22 @@ function RoleManagementPage() {
   const handleSave = async () => {
     try {
       const values = await form.validateFields();
-      setSaving(true);
 
       if (editingRole) {
-        // Update
-        const response = await api.patch(`/roles/${editingRole._id}`, values);
-        dispatch(updateRole(response.data.role));
-        message.success('Role updated successfully');
+        updateRoleMutation.mutate({ id: editingRole._id, payload: values });
       } else {
-        // Create
-        const response = await api.post('/roles', values);
-        dispatch(addRole(response.data.role));
-        message.success('Role created successfully');
+        createRoleMutation.mutate(values);
       }
-      setModalOpen(false);
     } catch (err) {
       if (err?.errorFields) return;
       message.error(err?.response?.data?.message || 'Failed to save role');
-    } finally {
-      setSaving(false);
     }
   };
 
   // ── Delete ────────────────────────────────────────────────
-  const handleDelete = async (roleId) => {
-    try {
-      setDeletingId(roleId);
-      await api.delete(`/roles/${roleId}`);
-      dispatch(removeRole(roleId));
-      message.success('Role deleted successfully');
-    } catch (err) {
-      message.error(err?.response?.data?.message || 'Failed to delete role');
-    } finally {
-      setDeletingId(null);
-    }
+  const handleDelete = (roleId) => {
+    setDeletingId(roleId);
+    deleteRoleMutation.mutate(roleId);
   };
 
   const columns = [
@@ -129,7 +140,7 @@ function RoleManagementPage() {
       title: 'Actions',
       key: 'actions',
       render: (_, record) => {
-        const isProtected = PROTECTED_ROLES.includes(record.name);
+        const isProtected = PROTECTED_ROLES.has(record.name);
         return (
           <Space>
             <Button
@@ -168,6 +179,12 @@ function RoleManagementPage() {
     },
   ];
 
+  const roleManagementStat = [
+    { title: 'Total Roles', value: roleList.length },
+    { title: 'Built-in Roles', value: roleList.filter((r) => PROTECTED_ROLES.has(r.name)).length },
+    { title: 'Custom Roles', value: roleList.filter((r) => !PROTECTED_ROLES.has(r.name)).length },
+  ];
+
   return (
     <DashboardLayout>
       <div className="space-y-4">
@@ -190,42 +207,26 @@ function RoleManagementPage() {
 
         {/* Summary */}
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-          <Card className="rounded-2xl border border-[#ECE6DF] shadow-sm text-center">
-            <div className="text-3xl font-bold text-[#C76A34]">{roles.length}</div>
-            <div className="text-gray-500 mt-1">Total Roles</div>
-          </Card>
-          <Card className="rounded-2xl border border-[#ECE6DF] shadow-sm text-center">
-            <div className="text-3xl font-bold text-[#C76A34]">
-              {roles.filter((r) => PROTECTED_ROLES.includes(r.name)).length}
-            </div>
-            <div className="text-gray-500 mt-1">Built-in Roles</div>
-          </Card>
-          <Card className="rounded-2xl border border-[#ECE6DF] shadow-sm text-center">
-            <div className="text-3xl font-bold text-[#C76A34]">
-              {roles.filter((r) => !PROTECTED_ROLES.includes(r.name)).length}
-            </div>
-            <div className="text-gray-500 mt-1">Custom Roles</div>
-          </Card>
+          {roleManagementStat.map((stat) => (
+            <CustomCard
+              key={stat.title}
+              title={stat.title}
+              value={stat.value}
+              color={stat.color}
+            />
+          ))}
         </div>
 
         {/* Roles Table */}
-        <Card className="rounded-2xl border border-[#ECE6DF] shadow-sm">
-          <div className="flex justify-between items-center mb-4">
-            <span className="font-semibold text-[#2E2A27]">All Roles ({roles.length})</span>
-            <Button onClick={loadRoles} size="small" loading={loading}>Refresh</Button>
-          </div>
+       <CustomTable
+        title={`All Roles (${roleList.length})`}
+        extraHeader={<Button onClick={refetch} size="small" loading={isLoading}>Refresh</Button>}
+        isLoading={isLoading}
+        dataSource={roleList}
+        columns={columns}
+        pagination={{ pageSize: 10 }}
+      />
 
-          {loading && roles.length === 0 ? (
-            <Skeleton active paragraph={{ rows: 4 }} />
-          ) : (
-            <Table
-              rowKey="_id"
-              dataSource={roles}
-              columns={columns}
-              pagination={{ pageSize: 10 }}
-            />
-          )}
-        </Card>
       </div>
 
       {/* Create / Edit Role Modal */}
@@ -241,7 +242,7 @@ function RoleManagementPage() {
         okText={editingRole ? 'Save Changes' : 'Create Role'}
         okButtonProps={{
           style: { backgroundColor: '#C76A34', borderColor: '#C76A34' },
-          loading: saving,
+          loading: createRoleMutation.isLoading || updateRoleMutation.isLoading,
         }}
         destroyOnClose
       >

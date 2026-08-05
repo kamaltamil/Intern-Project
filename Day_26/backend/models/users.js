@@ -34,6 +34,10 @@ const userSchema = new mongoose.Schema({
     role: {
         type: String,
         default: "Member"
+    },
+    profileImage: {
+        type: String,
+        default: null
     }
 })
 

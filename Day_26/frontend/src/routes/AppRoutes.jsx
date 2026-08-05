@@ -12,7 +12,11 @@ import ProtectedRoute from './ProtectedRoute';
 import BookingPage from '../pages/BookingPage';
 
 function DashboardHome() {
-  const { role } = useSelector((state) => state.auth);
+  const rawRole = useSelector((state) => state.auth.role);
+  const role = typeof rawRole === 'string'
+    ? rawRole.charAt(0).toUpperCase() + rawRole.slice(1).toLowerCase()
+    : 'Member';
+
   if (role === 'Admin') return <AdminDashboardPage />;
   if (role === 'Manager') return <ManagerDashboardPage />;
   return <MemberDashboardPage />;

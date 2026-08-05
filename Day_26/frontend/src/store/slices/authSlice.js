@@ -24,7 +24,10 @@ const authSlice = createSlice({
       state.user = payload.user || null;
       state.token = payload.token || null;
       state.refreshToken = payload.refreshToken || null;
-      state.role = payload.user?.role || 'Member';
+      const rawRole = payload.user?.role || 'Member';
+      state.role = typeof rawRole === 'string'
+        ? rawRole.charAt(0).toUpperCase() + rawRole.slice(1).toLowerCase()
+        : 'Member';
       state.loading = false;
       state.error = null;
     },
@@ -32,7 +35,12 @@ const authSlice = createSlice({
     updateUserProfile: (state, action) => {
       if (state.user) {
         state.user = { ...state.user, ...action.payload };
-        state.role = action.payload?.role || state.role;
+        if (action.payload?.role) {
+          const rawRole = action.payload.role;
+          state.role = typeof rawRole === 'string'
+            ? rawRole.charAt(0).toUpperCase() + rawRole.slice(1).toLowerCase()
+            : state.role;
+        }
       }
     },
 
