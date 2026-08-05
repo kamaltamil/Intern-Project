@@ -1,0 +1,31 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: #F8F4EE;
+  --card: #FFFFFF;
+  --primary: #C76A34;
+  --secondary: #E4B07A;
+  --accent: #A74E2B;
+  --text: #2E2A27;
+  --border: #ECE6DF;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Segoe UI', sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.ant-card,
+.ant-layout,
+.ant-menu {
+  border-radius: 16px;
+}
+

@@ -31,10 +31,6 @@ app.get("/", (req, res) => {
   res.json({ success: true, message: "Task Manager Backend Running" });
 });
 
-// Serve uploaded files with cross-origin policy so the frontend (port 3000)
-// can load images from the backend (port 8080).
-// Helmet sets Cross-Origin-Resource-Policy: same-origin globally, which blocks
-// cross-origin <img> loads — we override it only for this static route.
 app.use("/uploads", (req, res, next) => {
   res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
   next();
