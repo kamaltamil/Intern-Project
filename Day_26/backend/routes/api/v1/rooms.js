@@ -6,12 +6,11 @@ const {
     getAllRooms
 } = require('../../../controllers/roomsController');
 
-const { authenticateToken } = require('../../../middleware/auth');
 const { requirePermission } = require('../../../middleware/permission');
 
 // Anyone signed in can browse rooms (needed to make a booking)
-router.get('/', authenticateToken, getAllRooms);
+router.get('/', getAllRooms);
 // Adding new room inventory is a permissioned action
-router.post('/new', authenticateToken, requirePermission('rooms', 'create'), createRoom);
+router.post('/new', requirePermission('rooms', 'create'), createRoom);
 
 module.exports = router;

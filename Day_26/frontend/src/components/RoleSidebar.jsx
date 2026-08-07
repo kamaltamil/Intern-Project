@@ -73,7 +73,7 @@ function buildItemsFromPermissions(rolePermissions) {
   });
 
   // Ensure profile is always included at the end
-  if (!hasProfile && !items.find((i) => i.key === '/profile')) {
+  if (!hasProfile && !items.some((i) => i.key === '/profile')) {
     items.push(MODULE_MAP.profile);
   }
 
@@ -101,6 +101,11 @@ function RoleSidebar() {
     key: 'brand',
     icon: <CrownOutlined />,
     label: 'HotelPro',
+    style: {
+      color: '#C76A34',
+      fontSize: '20px',
+      fontWeight: 700,
+    }
   };
 
   let menuItems;

@@ -1,7 +1,7 @@
 import { Card, Typography, message } from 'antd';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, Link, Navigate } from 'react-router-dom';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { setAuth } from '../store/slices/authSlice';
 import { loginUser } from '../api/queries';
 import CustomForm from '../components/CustomForm';
@@ -12,6 +12,7 @@ function LoginPage() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { token } = useSelector((state) => state.auth);
+  const queryClient = useQueryClient();
 
   const loginMutation = useMutation({
     mutationFn: loginUser,
@@ -21,6 +22,7 @@ function LoginPage() {
         message.error('Invalid login response from backend');
         return;
       }
+      queryClient.clear();
       dispatch(setAuth({ user, token, refreshToken }));
       message.success('Login successful');
       navigate('/');

@@ -84,13 +84,14 @@ const renderField = (field) => {
 
 const CustomForm = ({
   form = [],
+  formInstance,
   onFinish,
   layout = "vertical",
   className = "mt-6",
 }) => {
   
   return (
-    <Form layout={layout} className={className} onFinish={onFinish}>
+    <Form form={formInstance} layout={layout} className={className} onFinish={onFinish}>
       {form.map((field) => {
         const valuePropName =
           field.valuePropName ||

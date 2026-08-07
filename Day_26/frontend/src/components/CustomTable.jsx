@@ -55,8 +55,9 @@ const CustomTable = ({
       {isLoading && dataSource.length === 0 ? (
         <Skeleton active paragraph={{ rows: 4 }} />
       ) : (
-        <div ref={tableWrapperRef} className="w-full overflow-hidden">
+        <div ref={tableWrapperRef} className="w-full overflow-hidden pr-1">
           <Table
+            className="custom-scroll-table"
             rowKey={rowKey}
             dataSource={dataSource}
             columns={columns}

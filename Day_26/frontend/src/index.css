@@ -27,21 +27,13 @@ body {
   border-radius: 50%;
 }
 
-@layer utilities {
-  html, body {
-    scrollbar-width: none; 
-    -ms-overflow-style: none;
-  }
-
-  html::-webkit-scrollbar, 
-  body::-webkit-scrollbar {
-    display: none;
-  }
+.custom-scroll-table .ant-table-body::-webkit-scrollbar {
+  width: 6px;
 }
-
-.ant-card,
-.ant-layout,
-.ant-menu {
-  border-radius: 16px;
+.custom-scroll-table .ant-table-body::-webkit-scrollbar-thumb {
+  background-color: var(--primary);
+  border-radius: 4px;
 }
-
+.custom-scroll-table .ant-table-body::-webkit-scrollbar-track {
+  background: transparent;
+}

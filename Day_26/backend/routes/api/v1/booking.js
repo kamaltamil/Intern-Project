@@ -6,13 +6,10 @@ const {
     getBookings
 } = require('../../../controllers/bookingController')
 
-const {
-    authenticateToken
-} = require('../../../middleware/auth')
 
 const { requirePermission } = require('../../../middleware/permission')
 
-router.get('/', authenticateToken, requirePermission('bookings', 'view'), getBookings)
-router.post('/new', authenticateToken, requirePermission('bookings', 'create'), bookRoom)
+router.get('/', requirePermission('bookings', 'view'), getBookings)
+router.post('/new', requirePermission('bookings', 'create'), bookRoom)
 
 module.exports = router;

@@ -343,7 +343,7 @@ function RoleManagementPage() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <TagsOutlined className="text-[#C76A34] text-2xl" />
-            <Title level={4} className="!mb-0 !text-[#2E2A27]">Role Management</Title>
+            <Title level={4} className="!mb-0 !text-[#2E2A27] dark:!text-[#f0f0f0]">Role Management</Title>
           </div>
           <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}
             style={{ backgroundColor: '#C76A34', borderColor: '#C76A34' }}>

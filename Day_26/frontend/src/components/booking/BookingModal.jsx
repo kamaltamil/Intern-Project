@@ -62,31 +62,20 @@ const BookingModal = ({
         optionFilterProp: "label",
       },
 
-      options: rooms.map((room) => (
-        <Option
-          key={room._id}
-          value={room._id}
-          label={`Room ${room.roomNumber}`}
-        >
+      options: rooms.map((room) => ({
+        value: room._id,
+        label: (
           <Space>
             <Tag color="blue">{room.type}</Tag>
-
             <span>Room #{room.roomNumber}</span>
-
-            <span
-              style={{
-                color: "#999",
-              }}
-            >
-              ₹{room.price}/night
-            </span>
+            <span style={{ color: "#999" }}>₹{room.price}/night</span>
           </Space>
-        </Option>
-      )),
+        ),
+      })),
     },
 
     {
-      type: "rangePicker",
+      type: "rangepicker",
 
       name: "dateRange",
 
@@ -149,7 +138,11 @@ const BookingModal = ({
         </Space>
       }
     >
-      <CustomForm form={form} fields={bookingFields} />
+      <CustomForm
+      form={bookingFields}
+      formInstance={form}
+      onFinish={handleSubmit}
+    />
 
       <BookingCostPreview room={selectedRoom} dateRange={selectedDateRange} />
     </Modal>

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Card, Form, Input, Button, Avatar, Typography, message, Divider, Tag, Upload } from 'antd';
+import { Card, Button, Avatar, Typography, message, Divider, Tag, Form } from 'antd';
 import { UserOutlined, EditOutlined, SaveOutlined, CloseOutlined, UploadOutlined } from '@ant-design/icons';
 import { useDispatch, useSelector } from 'react-redux';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -7,6 +7,7 @@ import { updateUser, fetchMe } from '../api/queries';
 import api from '../api/api';
 import { setAuth } from '../store/slices/authSlice';
 import DashboardLayout from '../components/DashboardLayout';
+import CustomForm from '../components/CustomForm';
 
 const { Title, Text } = Typography;
 
@@ -25,10 +26,11 @@ function ProfilePage() {
   const queryClient = useQueryClient();
   const { user, token, refreshToken } = useSelector((state) => state.auth);
   const { data: fetchedUser, isLoading: isUserLoading, isError: isUserError } = useQuery({
-    queryKey: ['me'],
+    queryKey: ['me', user?._id],
     queryFn: fetchMe,
     staleTime: 1000 * 60 * 5,
     retry: false,
+    enabled: !!user?._id,
   });
   const profileUser = fetchedUser || user;
   const [editing, setEditing] = useState(false);
@@ -80,8 +82,8 @@ function ProfilePage() {
       const nextImage = resolveProfileImage(updatedUser?.profileImage || null);
       setSavedImage(nextImage);
       setPreviewImage(nextImage);
-      queryClient.setQueryData(['me'], updatedUser);
-      queryClient.invalidateQueries(['me']);
+      queryClient.setQueryData(['me', user?._id], updatedUser);
+      queryClient.invalidateQueries({ queryKey: ['me', user?._id] });
       message.success('Profile updated successfully');
       setEditing(false);
     },
@@ -111,10 +113,148 @@ function ProfilePage() {
     profileMutation.mutate(formData);
   };
 
+  const handlePhotoChange = ({ file }) => {
+    const selected = file.originFileObj || file;
+    if (selected) {
+      setSelectedFile(selected);
+      const reader = new FileReader();
+      reader.onload = (e) => setPreviewImage(e.target.result);
+      reader.readAsDataURL(selected);
+    }
+  };
+
+  const editProfileFields = [
+    {
+      type: 'upload',
+      name: 'profilePhoto',
+      label: 'Profile Photo',
+      props: {
+        accept: 'image/*',
+        showUploadList: false,
+        beforeUpload: () => false,
+        onChange: handlePhotoChange,
+      },
+      children: (
+        <Button icon={<UploadOutlined />} type="default">
+          Choose Photo
+        </Button>
+      ),
+    },
+    {
+      type: 'input',
+      name: 'name',
+      label: 'Full Name',
+      placeholder: 'Enter your name',
+      rules: [{ required: true, message: 'Name is required' }],
+      props: { prefix: <UserOutlined /> },
+    },
+    {
+      type: 'input',
+      name: 'email',
+      label: 'Email',
+      placeholder: 'Enter your email',
+      rules: [
+        { required: true, message: 'Email is required' },
+        { type: 'email', message: 'Enter a valid email' },
+      ],
+    },
+    {
+      type: 'input',
+      name: 'username',
+      label: 'Username',
+      placeholder: 'Enter your username',
+      rules: [{ required: true, message: 'Username is required' }],
+    },
+    {
+      type: 'password',
+      name: 'password',
+      label: 'New Password (leave blank to keep current)',
+      placeholder: 'Enter new password (optional)',
+    },
+  ];
+
+  const renderProfileBody = () => {
+    if (isUserLoading) {
+      return (
+        <div className="py-10">
+          <p>Loading profile...</p>
+        </div>
+      );
+    }
+
+    if (isUserError) {
+      return (
+        <div className="py-10">
+          <p>Unable to load profile data.</p>
+        </div>
+      );
+    }
+
+    if (!editing) {
+      return (
+        <div className="space-y-3">
+          <div className="flex justify-between">
+            <Text type="secondary">Full Name</Text>
+            <Text strong>{profileUser?.name || '-'}</Text>
+          </div>
+          <div className="flex justify-between">
+            <Text type="secondary">Email</Text>
+            <Text strong>{profileUser?.email || '-'}</Text>
+          </div>
+          <div className="flex justify-between">
+            <Text type="secondary">Username</Text>
+            <Text strong>@{profileUser?.username || '-'}</Text>
+          </div>
+          <div className="flex justify-between">
+            <Text type="secondary">Role</Text>
+            <Tag color={roleColor[profileUser?.role] || 'default'}>{profileUser?.role || 'Member'}</Tag>
+          </div>
+
+          <div className="pt-4">
+            <Button
+              type="primary"
+              icon={<EditOutlined />}
+              onClick={onEditClick}
+              style={{ backgroundColor: '#C76A34', borderColor: '#C76A34' }}
+            >
+              Edit Profile
+            </Button>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <>
+        <CustomForm
+          form={editProfileFields}
+          formInstance={form}
+          onFinish={onFinish}
+          className="mt-2"
+        />
+
+        <div className="flex gap-2">
+          <Button
+            type="primary"
+            icon={<SaveOutlined />}
+            loading={profileMutation.isLoading}
+            onClick={() => form.submit()}
+            style={{ backgroundColor: '#C76A34', borderColor: '#C76A34' }}
+          >
+            Save Changes
+          </Button>
+          <Button icon={<CloseOutlined />} onClick={onCancel}>
+            Cancel
+          </Button>
+        </div>
+      </>
+    );
+  };
+
   return (
     <DashboardLayout>
       <div className="max-w-2xl mx-auto space-y-4">
-        <Title level={4} className="!text-[#2E2A27]">My Profile</Title>
+        <Title level={4} className="!text-[#2E2A27] dark:!text-[#f0f0f0]">My Profile</Title>
 
         <Card className="rounded-2xl border border-[#ECE6DF] shadow-sm">
           <div className="flex items-center gap-4 mb-6">
@@ -136,117 +276,7 @@ function ProfilePage() {
 
           <Divider />
 
-          {isUserLoading ? (
-            <div className="py-10">
-              <p>Loading profile...</p>
-            </div>
-          ) : isUserError ? (
-            <div className="py-10">
-              <p>Unable to load profile data.</p>
-            </div>
-          ) : !editing ? (
-            <div className="space-y-3">
-              <div className="flex justify-between">
-                <Text type="secondary">Full Name</Text>
-                <Text strong>{profileUser?.name || '-'}</Text>
-              </div>
-              <div className="flex justify-between">
-                <Text type="secondary">Email</Text>
-                <Text strong>{profileUser?.email || '-'}</Text>
-              </div>
-              <div className="flex justify-between">
-                <Text type="secondary">Username</Text>
-                <Text strong>@{profileUser?.username || '-'}</Text>
-              </div>
-              <div className="flex justify-between">
-                <Text type="secondary">Role</Text>
-                <Tag color={roleColor[profileUser?.role] || 'default'}>{profileUser?.role || 'Member'}</Tag>
-              </div>
-
-              <div className="pt-4">
-                <Button
-                  type="primary"
-                  icon={<EditOutlined />}
-                  onClick={onEditClick}
-                  style={{ backgroundColor: '#C76A34', borderColor: '#C76A34' }}
-                >
-                  Edit Profile
-                </Button>
-              </div>
-            </div>
-          ) : (
-            <Form form={form} layout="vertical" onFinish={onFinish}>
-              <Form.Item label="Profile Photo">
-                <Upload
-                  accept="image/*"
-                  showUploadList={false}
-                  beforeUpload={() => false}
-                  onChange={({ file }) => {
-                    const selected = file.originFileObj || file;
-                    if (selected) {
-                      setSelectedFile(selected);
-                      const reader = new FileReader();
-                      reader.onload = (e) => setPreviewImage(e.target.result);
-                      reader.readAsDataURL(selected);
-                    }
-                  }}
-                >
-                  <Button icon={<UploadOutlined />} type="default">
-                    Choose Photo
-                  </Button>
-                </Upload>
-              </Form.Item>
-
-              <Form.Item
-                label="Full Name"
-                name="name"
-                rules={[{ required: true, message: 'Name is required' }]}
-              >
-                <Input prefix={<UserOutlined />} placeholder="Enter your name" />
-              </Form.Item>
-
-              <Form.Item
-                label="Email"
-                name="email"
-                rules={[
-                  { required: true, message: 'Email is required' },
-                  { type: 'email', message: 'Enter a valid email' },
-                ]}
-              >
-                <Input placeholder="Enter your email" />
-              </Form.Item>
-
-              <Form.Item
-                label="Username"
-                name="username"
-                rules={[{ required: true, message: 'Username is required' }]}
-              >
-                <Input placeholder="Enter your username" />
-              </Form.Item>
-
-              <Form.Item
-                label="New Password (leave blank to keep current)"
-                name="password"
-              >
-                <Input.Password placeholder="Enter new password (optional)" />
-              </Form.Item>
-
-              <div className="flex gap-2">
-                <Button
-                  type="primary"
-                  htmlType="submit"
-                  icon={<SaveOutlined />}
-                  loading={profileMutation.isLoading}
-                  style={{ backgroundColor: '#C76A34', borderColor: '#C76A34' }}
-                >
-                  Save Changes
-                </Button>
-                <Button icon={<CloseOutlined />} onClick={onCancel}>
-                  Cancel
-                </Button>
-              </div>
-            </Form>
-          )}
+          {renderProfileBody()}
         </Card>
       </div>
     </DashboardLayout>

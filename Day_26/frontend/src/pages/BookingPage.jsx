@@ -129,7 +129,7 @@ function BookingPage() {
           <div className="flex items-center gap-2">
             <CalendarOutlined className="text-2xl text-[#C76A34]" />
 
-            <Title level={4} className="!mb-0 !text-[#2E2A27]">
+            <Title level={4} className="!mb-0 !text-[#2E2A27] dark:!text-[#f0f0f0]">
               {pageTitle}
             </Title>
           </div>
@@ -151,13 +151,17 @@ function BookingPage() {
 
         {/* ---------- Error ---------- */}
 
-        {bookingsError && (
-          <Alert
-            type="error"
-            showIcon
-            message={bookingsQueryError?.message || "Unable to load bookings."}
-          />
-        )}
+       {bookingsError && (
+        <Alert
+          type="error"
+          showIcon
+          message={
+            bookingsQueryError?.response?.data?.message ||
+            bookingsQueryError?.message ||
+            "Unable to load bookings."
+          }
+        />
+      )}
 
         {/* ---------- Statistics ---------- */}
 
@@ -187,11 +191,8 @@ function BookingPage() {
           dataSource={bookings}
           columns={columns}
           pagination={{
-            pageSize: 8,
+            pageSize: 5,
             showSizeChanger: false,
-          }}
-          scroll={{
-            x: 900,
           }}
         />
 

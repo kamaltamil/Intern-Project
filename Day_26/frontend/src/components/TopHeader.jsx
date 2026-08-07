@@ -8,7 +8,7 @@ import {
 } from "@ant-design/icons";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { logout, setTheme } from "../store/slices/authSlice";
 import { logoutUser } from "../api/queries";
 import api from "../api/api";
@@ -18,15 +18,18 @@ const { Header } = Layout;
 function TopHeader() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { user, theme } = useSelector((state) => state.auth);
 
   const logoutMutation = useMutation({
     mutationFn: logoutUser,
     onSettled: () => {
+      queryClient.clear();
       dispatch(logout());
       navigate("/login");
     },
     onError: () => {
+      queryClient.clear();
       dispatch(logout());
       navigate("/login");
     },

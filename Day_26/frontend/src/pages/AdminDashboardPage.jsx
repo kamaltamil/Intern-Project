@@ -69,7 +69,9 @@ function AdminDashboardPage() {
   const tableHeader = () => (
     <div className="flex justify-between items-center gap-2">
         <Form>
-          <Form.Item className="mb-0 ml-auto">
+          <Form.Item 
+            label="Recent Users"
+            className="mb-0 ml-auto font-semibold">
             <Input.Search
               placeholder="Search by name, email or role..."
               value={searchQuery}
@@ -128,7 +130,7 @@ function AdminDashboardPage() {
         </Row>
 
        <CustomTable
-          title="Recent Users"
+          // title="Recent Users"
           dataSource={searchQuery ? filteredUsers : safeUsers.slice(0, 5)}
           columns={columns}
           pagination={{ pageSize: 3 }}
