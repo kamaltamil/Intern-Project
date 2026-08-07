@@ -66,9 +66,8 @@ function AdminDashboardPage() {
     },
   ];
 
-  const searchInput = () => (
+  const tableHeader = () => (
     <div className="flex justify-between items-center gap-2">
-        <h5 className="font-semibold text-[#2E2A27]">Users</h5>
         <Form>
           <Form.Item className="mb-0 ml-auto">
             <Input.Search
@@ -80,6 +79,13 @@ function AdminDashboardPage() {
             />
           </Form.Item>
         </Form>
+        <Button
+              type="primary"
+              style={{ backgroundColor: '#C76A34', borderColor: '#C76A34' }}
+              onClick={() => navigate('/users')}
+            >
+              Manage All Users
+        </Button>
     </div>
   );
  
@@ -123,19 +129,10 @@ function AdminDashboardPage() {
 
        <CustomTable
           title="Recent Users"
-          extraHeader={
-            <Button
-              type="primary"
-              style={{ backgroundColor: '#C76A34', borderColor: '#C76A34' }}
-              onClick={() => navigate('/users')}
-            >
-              Manage All Users
-            </Button>
-          }
           dataSource={searchQuery ? filteredUsers : safeUsers.slice(0, 5)}
           columns={columns}
-          pagination={false}
-          tableTitleRender={() => searchInput()}
+          pagination={{ pageSize: 3 }}
+          tableTitleRender={() => tableHeader()}
         />
       </div>
     </DashboardLayout>

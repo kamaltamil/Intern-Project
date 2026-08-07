@@ -26,6 +26,14 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
+// API responses are always dynamic/DB-backed — never let the browser cache
+// and reuse a stale one (this is what makes GET /users, /roles, /booking
+// keep serving old data even after the backend has been updated/restarted).
+app.use('/api/v1', (req, res, next) => {
+  res.set('Cache-Control', 'no-store');
+  next();
+});
+
 app.use('/api/v1', apiv1Router);
 
 // catch 404 and forward to error handler

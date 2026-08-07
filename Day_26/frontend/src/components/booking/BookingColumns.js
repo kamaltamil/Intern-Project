@@ -153,26 +153,6 @@ export const getBookingColumns = (
     },
 
     {
-      title: "Guest",
-      dataIndex: "user",
-      render: (user) =>
-        user ? (
-          <Space
-            direction="vertical"
-            size={0}
-          >
-            <span>{user.name}</span>
-
-            <span className="text-xs text-gray-400">
-              {user.email}
-            </span>
-          </Space>
-        ) : (
-          "—"
-        ),
-    },
-
-    {
       title: "Check In",
       dataIndex: "startDate",
       render: formatDate,
