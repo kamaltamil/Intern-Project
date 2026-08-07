@@ -6,7 +6,7 @@ const Role = require('./models/role');
 const RolePermissions = require('./models/rolePermissions');
 const User = require('./models/users');
 
-const MODULES = ['dashboard', 'users', 'roles', 'bookings', 'approval', 'reports', 'profile'];
+const MODULES = ['dashboard', 'users', 'roles', 'bookings', 'rooms', 'approval', 'reports', 'profile'];
 
 const ROLE_SEEDS = [
   {
@@ -18,6 +18,7 @@ const ROLE_SEEDS = [
       users:     { view: true,  create: true,  update: true,  delete: true  },
       roles:     { view: true,  create: true,  update: true,  delete: true  },
       bookings:  { view: true,  create: true,  update: true,  delete: true  },
+      rooms:     { view: true,  create: true,  update: true,  delete: true  },
       approval:  { view: true,  create: true,  update: true,  delete: true  },
       reports:   { view: true,  create: true,  update: true,  delete: true  },
       profile:   { view: true,  create: false, update: true,  delete: false },
@@ -32,6 +33,7 @@ const ROLE_SEEDS = [
       users:     { view: true,  create: false, update: false, delete: false },
       roles:     { view: false, create: false, update: false, delete: false },
       bookings:  { view: true,  create: true,  update: true,  delete: false },
+      rooms:     { view: true,  create: false, update: false, delete: false },
       approval:  { view: true,  create: false, update: true,  delete: false },
       reports:   { view: true,  create: false, update: false, delete: false },
       profile:   { view: true,  create: false, update: true,  delete: false },
@@ -46,6 +48,7 @@ const ROLE_SEEDS = [
       users:     { view: false, create: false, update: false, delete: false },
       roles:     { view: false, create: false, update: false, delete: false },
       bookings:  { view: true,  create: true,  update: false, delete: false },
+      rooms:     { view: true,  create: false, update: false, delete: false },
       approval:  { view: false, create: false, update: false, delete: false },
       reports:   { view: false, create: false, update: false, delete: false },
       profile:   { view: true,  create: false, update: true,  delete: false },

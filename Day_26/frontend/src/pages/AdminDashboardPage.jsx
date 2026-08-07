@@ -20,7 +20,10 @@ function AdminDashboardPage() {
     error,
   } = useQuery({ queryKey: ['users'], queryFn: fetchUsers });
 
-  const filteredUsers = users.filter((user) => {
+  // Defensive: never let a bad/failed response crash the page
+  const safeUsers = Array.isArray(users) ? users : [];
+
+  const filteredUsers = safeUsers.filter((user) => {
     const query = searchQuery.toLowerCase();
     return (
       user.name?.toLowerCase().includes(query) ||
@@ -29,9 +32,9 @@ function AdminDashboardPage() {
     );
   });
 
-  const totalManagers = users.filter((item) => item.role === 'Manager').length;
-  const totalMembers = users.filter((item) => item.role === 'Member').length;
-  const revenue = users.length * 125;
+  const totalManagers = safeUsers.filter((item) => item.role === 'Manager').length;
+  const totalMembers = safeUsers.filter((item) => item.role === 'Member').length;
+  const revenue = safeUsers.length * 125;
 
   const roleColor = { Admin: 'red', Manager: 'orange', Member: 'blue' };
 
@@ -97,7 +100,7 @@ function AdminDashboardPage() {
   }
 
   const dashboardStats = [
-    { title: 'Total Users', value: users.length, icon: <TeamOutlined /> },
+    { title: 'Total Users', value: safeUsers.length, icon: <TeamOutlined /> },
     { title: 'Total Managers', value: totalManagers, icon: <CrownOutlined /> },
     { title: 'Total Members', value: totalMembers, icon: <UserOutlined />},
     { title: 'Revenue', value: revenue, icon: <DollarOutlined />},
@@ -129,7 +132,7 @@ function AdminDashboardPage() {
               Manage All Users
             </Button>
           }
-          dataSource={searchQuery ? filteredUsers : users.slice(0, 5)}
+          dataSource={searchQuery ? filteredUsers : safeUsers.slice(0, 5)}
           columns={columns}
           pagination={false}
           tableTitleRender={() => searchInput()}

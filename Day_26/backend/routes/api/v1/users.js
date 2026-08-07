@@ -13,7 +13,8 @@ const {
   refreshToken
 } = require('../../../controllers/userController');
 
-const { authenticateToken, requireRole } = require('../../../middleware/auth');
+const { authenticateToken } = require('../../../middleware/auth');
+const { requirePermission } = require('../../../middleware/permission');
 
 const upload = require('../../../middleware/profileUpload')
 
@@ -26,12 +27,13 @@ router.post("/refresh-token", refreshToken);
 // Protected routes (auth required)
 router.get('/me', authenticateToken, getMe);
 
-router.get('/', authenticateToken, listUsers);
+// Viewing the full user list is a permissioned action (managing other users)
+router.get('/', authenticateToken, requirePermission('users', 'view'), listUsers);
+// Fetching a single user: self-access or 'users' view permission (checked in controller)
 router.get('/:id', authenticateToken, getSingleUser);
 
-// router.get('/get_authorities', authenticateToken, listUsers);
-
-// Only authenticated users can update their own profile, Admin can update anyone
+// Users can update their own profile ('profile' permission), Admin/roles with
+// 'users' update permission can update anyone (checked in controller)
 router.patch('/:id', authenticateToken,
   (req, res, next) => {
     upload.single('profileImage')(req, res, (err) => {
@@ -42,7 +44,7 @@ router.patch('/:id', authenticateToken,
     });
 }, patchUser);
 
-// Admin only - delete user
-router.delete('/:id', authenticateToken, requireRole('Admin'), removeUser);
+// Deleting a user is a permissioned action
+router.delete('/:id', authenticateToken, requirePermission('users', 'delete'), removeUser);
 
 module.exports = router;

@@ -313,7 +313,10 @@ function UsersManagementPage() {
 
   /* ---------------- Loading ---------------- */
 
-  if (usersLoading && users.length === 0) {
+  // Defensive: never let a bad/failed response crash the page
+  const safeUsers = Array.isArray(users) ? users : [];
+
+  if (usersLoading && safeUsers.length === 0) {
     return (
       <DashboardLayout>
         <Skeleton active paragraph={{ rows: 6 }} />
@@ -341,17 +344,17 @@ function UsersManagementPage() {
   const stats = [
     {
       title: "Admins",
-      value: users.filter((u) => u.role === "Admin").length,
+      value: safeUsers.filter((u) => u.role === "Admin").length,
       icon: <CrownOutlined />,
     },
     {
       title: "Managers",
-      value: users.filter((u) => u.role === "Manager").length,
+      value: safeUsers.filter((u) => u.role === "Manager").length,
       icon: <TeamOutlined />,
     },
     {
       title: "Members",
-      value: users.filter((u) => u.role === "Member").length,
+      value: safeUsers.filter((u) => u.role === "Member").length,
       icon: <UserOutlined />,
     },
   ];
@@ -376,9 +379,9 @@ function UsersManagementPage() {
         </div>
 
         <CustomTable
-          title={`All Users (${users.length})`}
+          title={`All Users (${safeUsers.length})`}
           isLoading={usersLoading}
-          dataSource={users}
+          dataSource={safeUsers}
           columns={columns}
           pagination={{ pageSize: 5 }}
           extraHeader={

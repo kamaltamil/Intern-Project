@@ -3,13 +3,14 @@ const {
     getAllUsers,
     getAllMembers,
     getUserById,
-    getUserAuthorities,
     updateUser,
     deleteUser,
     loginUser,
     logoutUser,
     refreshAccessToken,
 } = require('../services/userService');
+
+const { hasPermission } = require('../services/permissionService');
 
 const createUser = async (req, res) => {
     try {
@@ -38,14 +39,12 @@ const createUser = async (req, res) => {
 
 const listUsers = async (req, res) => {
     try {
-        const role = req.body?.role || req.user?.role;
+        // Route already confirmed the caller has 'users:view'. Roles that can also
+        // delete users (full user management, e.g. Admin) see everyone; roles with
+        // view-only access (e.g. Manager) see the member roster.
+        const canManageUsers = req.permissions?.users?.delete;
+        const users = canManageUsers ? await getAllUsers() : await getAllMembers();
 
-        console.log(role)
-        const users = await getUserAuthorities(role, req.user?.userId);
-        
-        if (!users) {
-            return res.status(403).json({ message: 'Forbidden' });
-        }
         return res.status(200).json(users);
     } catch (error) {
         return res.status(500).json({ message: 'Error fetching users', error: error.message });
@@ -56,29 +55,19 @@ const getSingleUser = async (req, res) => {
     try {
         const requestedId = req.params.id;
         const requestingUserId = req.user?.userId || req.user?.sub;
-        const requestingRole = req.user?.role;
+        const isSelf = requestingUserId === requestedId;
 
-        // If the requester is asking for their own data, allow it
-        if (requestingUserId === requestedId) {
-            const user = await getUserById(requestedId);
-            if (!user) {
-                return res.status(404).json({ message: 'User not found' });
-            }
+        // Viewing your own record needs 'profile:view'; viewing someone else's
+        // needs 'users:view' — both are permissions an Admin assigns per role.
+        const allowed = isSelf
+            ? await hasPermission(req.user?.role, 'profile', 'view')
+            : await hasPermission(req.user?.role, 'users', 'view');
 
-            if (user.profileImage && process.env.BASE_URL) {
-                user.profileImage = `${process.env.BASE_URL}${user.profileImage}`;
-            }
-
-            return res.status(200).json(user);
-        }
-
-        // Otherwise only Admin or Manager can fetch other users by id
-        if (requestingRole !== 'Admin' && requestingRole !== 'Manager') {
+        if (!allowed) {
             return res.status(403).json({ message: 'Forbidden' });
         }
 
         const user = await getUserById(requestedId);
-
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }
@@ -114,19 +103,23 @@ const getMe = async (req, res) => {
 
 const patchUser = async (req, res) => {
     try {
-        // Allow user to update their own profile, or Admin to update anyone
         const requestingUserId = req.user?.userId || req.user?.sub;
-        const requestingRole = req.user?.role;
         const targetId = req.params.id;
+        const isSelf = requestingUserId === targetId;
 
-        // Only Admin can change roles
-        if (req.body.role && requestingRole !== 'Admin') {
-            return res.status(403).json({ message: 'Only Admin can change roles' });
+        // Updating your own profile needs 'profile:update'; updating someone
+        // else's needs 'users:update' — both configurable per role by an Admin.
+        const allowed = isSelf
+            ? await hasPermission(req.user?.role, 'profile', 'update')
+            : await hasPermission(req.user?.role, 'users', 'update');
+
+        if (!allowed) {
+            return res.status(403).json({ message: 'Forbidden' });
         }
 
-        // Non-admin can only update their own profile
-        if (requestingRole !== 'Admin' && requestingUserId !== targetId) {
-            return res.status(403).json({ message: 'You can only update your own profile' });
+        // Reassigning a user's role is a role-management action
+        if (req.body.role && !(await hasPermission(req.user?.role, 'roles', 'update'))) {
+            return res.status(403).json({ message: 'You do not have permission to change roles' });
         }
 
         if (req.file) {
@@ -227,5 +220,4 @@ module.exports = {
     login,
     logout,
     refreshToken,
-    getUserAuthorities
 };

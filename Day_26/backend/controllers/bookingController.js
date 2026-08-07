@@ -43,12 +43,20 @@ const getBookings = async (req, res) => {
             return res.status(401).json({ message: 'Unauthorized' });
         }
 
-        let bookings = [];
-        if (req.user?.role === 'Admin') {
+        // Route already confirmed 'bookings:view'. Scope is then derived from
+        // permissions an Admin can configure per role:
+        //  - full booking control (bookings:delete)  -> see every booking
+        //  - can review/approve bookings (approval:view) -> see bookings made by members
+        //  - otherwise                                -> see only your own bookings
+        const canViewAll = req.permissions?.bookings?.delete;
+        const canReview = req.permissions?.approval?.view;
+
+        let bookings;
+        if (canViewAll) {
             bookings = await getAllBookings();
-        } else if (req.user?.role === 'Manager') {
+        } else if (canReview) {
             bookings = await getMemberBookings();
-        } else if (req.user?.role === 'Member') {
+        } else {
             bookings = await getBookingsByUserId(userId);
         }
 

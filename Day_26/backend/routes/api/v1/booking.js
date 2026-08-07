@@ -10,7 +10,9 @@ const {
     authenticateToken
 } = require('../../../middleware/auth')
 
-router.get('/', authenticateToken, getBookings)
-router.post('/new', authenticateToken, bookRoom)
+const { requirePermission } = require('../../../middleware/permission')
+
+router.get('/', authenticateToken, requirePermission('bookings', 'view'), getBookings)
+router.post('/new', authenticateToken, requirePermission('bookings', 'create'), bookRoom)
 
 module.exports = router;

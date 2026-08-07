@@ -9,13 +9,14 @@ const {
     assignPermissionsHandler,
 } = require('../../../controllers/roleController');
 
-const { authenticateToken, requireRole } = require('../../../middleware/auth');
+const { authenticateToken } = require('../../../middleware/auth');
+const { requirePermission } = require('../../../middleware/permission');
 
 // GET /roles is allowed for any authenticated user so they can fetch their own permissions
 router.get('/', authenticateToken, listRoles);
-router.post('/', authenticateToken, requireRole('Admin'), createRoleHandler);
-router.patch('/:id', authenticateToken, requireRole('Admin'), updateRoleHandler);
-router.delete('/:id', authenticateToken, requireRole('Admin'), deleteRoleHandler);
-router.patch('/:id/permissions', authenticateToken, requireRole('Admin'), assignPermissionsHandler);
+router.post('/', authenticateToken, requirePermission('roles', 'create'), createRoleHandler);
+router.patch('/:id', authenticateToken, requirePermission('roles', 'update'), updateRoleHandler);
+router.delete('/:id', authenticateToken, requirePermission('roles', 'delete'), deleteRoleHandler);
+router.patch('/:id/permissions', authenticateToken, requirePermission('roles', 'update'), assignPermissionsHandler);
 
 module.exports = router;

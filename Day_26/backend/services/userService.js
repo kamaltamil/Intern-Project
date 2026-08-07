@@ -2,8 +2,6 @@ const bcrypt = require("bcrypt");
 const crypto = require("node:crypto");
 const jwt = require("jsonwebtoken");
 const User = require("../models/users");
-const Role = require('../models/role');
-const RolePermissions = require('../models/rolePermissions');
 
 
 const ensureUniqueUsername = async (baseUsername) => {
@@ -132,11 +130,6 @@ const getUserById = async (id) => {
   return await User.findById(id).select("-password -refreshToken");
 };
 
-const getUserAuthorities = async (role, userId) => {
-  const user = await User.findById(userId).select("role rolePermissions");
-  return user ? { role: user.role, rolePermissions: user.rolePermissions } : null;
-}
-
 const deleteUser = async (id) => {
   return await User.findByIdAndDelete(id);
 };
@@ -222,7 +215,6 @@ module.exports = {
   getAllUsers,
   getAllMembers,
   getUserById,
-  getUserAuthorities,
   updateUser,
   deleteUser,
   loginUser,

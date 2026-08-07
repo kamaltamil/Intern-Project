@@ -1,5 +1,6 @@
 const Room = require('../models/rooms');
 const Booking = require('../models/booking');
+const User = require('../models/users');
 
 
 const varifyAndBookRoom = async ({ roomId, userId, startDate, endDate }) => {
@@ -49,7 +50,10 @@ const getAllBookings = async () => {
 }
 const getMemberBookings = async () => {
     try {
-        const bookings = await Booking.find({ role: 'Member' }).populate('room');
+        // Booking doesn't store the booker's role directly, so resolve it
+        // via the users who currently have the 'Member' role.
+        const memberIds = await User.find({ role: 'Member' }).distinct('_id');
+        const bookings = await Booking.find({ user: { $in: memberIds } }).populate('room');
         return bookings;
     } catch (error) {
         throw new Error('Error fetching bookings: ' + error.message);
