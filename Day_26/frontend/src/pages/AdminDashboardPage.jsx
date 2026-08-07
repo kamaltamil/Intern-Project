@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Row, Col, Skeleton, Alert, Button, Tag, Form, Input } from 'antd';
+import { Row, Col, Skeleton, Alert, Button, Tag, Form, Input, Avatar } from 'antd';
 import { TeamOutlined, UserOutlined, CrownOutlined, DollarOutlined } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
 import { fetchUsers } from '../api/queries';
@@ -7,6 +7,7 @@ import DashboardLayout from '../components/DashboardLayout';
 import { useNavigate } from 'react-router-dom';
 import CustomCard from '../components/CustomCard';
 import CustomTable from '../components/CustomTable';
+import { resolveProfileImage } from "../utils/image";
 
 function AdminDashboardPage() {
   const navigate = useNavigate();
@@ -36,16 +37,23 @@ function AdminDashboardPage() {
 
   const columns = [
     {
-      title: 'Name',
-      dataIndex: 'name',
-      render: (name) => (
-        <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-full bg-[#C76A34] flex items-center justify-center text-white text-xs font-bold">
-            {name?.charAt(0)?.toUpperCase() || 'U'}
+      title: "Name",
+      dataIndex: "name",
+      render: (name, record) => {
+        return (
+          <div className="flex items-center gap-2">
+            <Avatar
+              src={resolveProfileImage(record.profileImage)}
+              style={{ backgroundColor: "#C76A34" }}
+            >
+              {!record.profileImage &&
+                (record.name?.charAt(0)?.toUpperCase() || "U")}
+            </Avatar>
+
+            <span>{name}</span>
           </div>
-          <span>{name}</span>
-        </div>
-      ),
+        );
+      },
     },
     { title: 'Email', dataIndex: 'email' },
     {
@@ -56,10 +64,10 @@ function AdminDashboardPage() {
   ];
 
   const searchInput = () => (
-    <div className="flex justify-between items-center">
-      <h5 className="font-semibold text-[#2E2A27]">Users</h5>
+    <div className="flex justify-between items-center gap-2">
+        <h5 className="font-semibold text-[#2E2A27]">Users</h5>
         <Form>
-          <Form.Item label='Find User' className="mb-0 ml-auto">
+          <Form.Item className="mb-0 ml-auto">
             <Input.Search
               placeholder="Search by name, email or role..."
               value={searchQuery}
@@ -105,7 +113,6 @@ function AdminDashboardPage() {
                 title={stat.title}
                 value={stat.value}
                 icon={stat.icon}
-                key={stat.title}
               />
             </Col>
           ))}

@@ -38,48 +38,55 @@ function SignupPage() {
 
   const signupForm = [
     {
-      label: 'Full Name',
-      name: 'name',
-      rules: [{ required: true, message: 'Name is required' }],
-      placeholder: 'Enter your full name',
+      type: "input",
+      label: "Full Name",
+      name: "name",
+      placeholder: "Enter your full name",
+      rules: [{ required: true }],
     },
     {
-      label: 'Email',
-      name: 'email',
+      type: "input",
+      label: "Email",
+      name: "email",
+      placeholder: "Enter your email",
       rules: [
-        { required: true, message: 'Email is required' },
-        { type: 'email', message: 'Enter a valid email' },
+        { required: true },
+        { type: "email" },
       ],
-      placeholder: 'Enter your email',
     },
     {
-      label: 'Username',
-      name: 'username',
-      rules: [{ required: true, message: 'Username is required' }],
-      placeholder: 'Choose a username',
+      type: "input",
+      label: "Username",
+      name: "username",
+      placeholder: "Choose username",
+      rules: [{ required: true }],
     },
     {
-      label: 'Password',
-      name: 'password',
+      type: "password",
+      label: "Password",
+      name: "password",
+      placeholder: "Create password",
       rules: [
-        { required: true, message: 'Password is required' },
-        { min: 6, message: 'Password must be at least 6 characters' },
+        { required: true },
+        { min: 6 },
       ],
-      placeholder: 'Create a password',
-    }, 
+    },
     {
-      type: 'submit',
-      label: 'Sign Up',
+      type: "submit",
+      label: "Sign Up",
       buttonProps: {
-        type: 'primary',
-        htmlType: 'submit',
+        type: "primary",
+        htmlType: "submit",
         block: true,
-        size: 'large',
-        loading: signupMutation.isLoading,
-        style: { backgroundColor: '#C76A34', borderColor: '#C76A34' },
+        size: "large",
+        loading: signupMutation.isPending,
+        style: {
+          backgroundColor: "#C76A34",
+          borderColor: "#C76A34",
+        },
       },
-    }
-  ]
+    },
+  ];
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#F8F4EE] p-4">
       <Card className="w-full max-w-md rounded-2xl shadow-md border border-[#ECE6DF]">

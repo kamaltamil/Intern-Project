@@ -39,31 +39,47 @@ function LoginPage() {
   }
 
   const loginForm = [
-    {
-      label: 'Email or Username',
-      name: 'email',
-      rules: [{ required: true, message: 'Email or username is required' }],
-      placeholder: 'Enter your email or username',
-    },
-    {
-      label: 'Password',
-      name: 'password',
-      rules: [{ required: true, message: 'Password is required' }],
-      placeholder: 'Enter your password',
-    },
-    {
-      type: 'submit',
-      label: 'Sign In',
-      buttonProps: {
-        type: 'primary',
-        htmlType: 'submit',
-        block: true,
-        size: 'large',
-        loading: loginMutation.isLoading,
-        style: { backgroundColor: '#C76A34', borderColor: '#C76A34' },
+      {
+        type: "input",
+        label: "Email or Username",
+        name: "email",
+        placeholder: "Enter your email or username",
+        rules: [
+          {
+            required: true,
+            message: "Email or username is required",
+          },
+        ],
       },
-    },
-  ];
+      {
+        type: "password",
+        label: "Password",
+        name: "password",
+        placeholder: "Enter your password",
+        rules: [
+          {
+            required: true,
+            message: "Password is required",
+          },
+        ],
+      },
+      {
+        type: "submit",
+        label: "Sign In",
+        buttonProps: {
+          type: "primary",
+          htmlType: "submit",
+          block: true,
+          size: "large",
+          loading: loginMutation.isPending,
+          style: {
+            backgroundColor: "#C76A34",
+            borderColor: "#C76A34",
+          },
+        },
+      },
+    ];
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#F8F4EE] p-4">
       <Card className="w-full max-w-md rounded-2xl shadow-md border border-[#ECE6DF]">

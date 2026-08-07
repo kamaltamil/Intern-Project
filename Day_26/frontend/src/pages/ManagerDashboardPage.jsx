@@ -45,12 +45,11 @@ function ManagerDashboardPage() {
       <div className="space-y-4">
         <Row gutter={[16, 16]}>
           {  managerStats.map((stat) => (
-              <Col xs={24} sm={12} lg={6} key={stat.title}>
+              <Col xs={24} sm={12} lg={8} key={stat.title}>
                 <CustomCard
                   title={stat.title}
                   value={stat.value}
                   color={stat.color}
-                  key={stat.title}
                 />
               </Col>
             ))

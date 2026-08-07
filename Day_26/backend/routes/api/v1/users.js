@@ -10,7 +10,7 @@ const {
   login,
   logout,
   getMe,
-  refreshToken,
+  refreshToken
 } = require('../../../controllers/userController');
 
 const { authenticateToken, requireRole } = require('../../../middleware/auth');
@@ -28,6 +28,8 @@ router.get('/me', authenticateToken, getMe);
 
 router.get('/', authenticateToken, listUsers);
 router.get('/:id', authenticateToken, getSingleUser);
+
+// router.get('/get_authorities', authenticateToken, listUsers);
 
 // Only authenticated users can update their own profile, Admin can update anyone
 router.patch('/:id', authenticateToken,

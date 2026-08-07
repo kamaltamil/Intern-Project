@@ -16,6 +16,17 @@ const roleSchema = new mongoose.Schema(
             maxlength: [200, 'Description must be at most 200 characters'],
             default: '',
         },
+        color: {
+            type: String,
+            default: '#722ed1',
+            trim: true,
+        },
+        permissions: [
+            {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'RolePermissions',
+            }
+        ]
     },
     { timestamps: true }
 );

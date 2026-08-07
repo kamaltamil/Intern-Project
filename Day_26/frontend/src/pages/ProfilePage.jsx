@@ -10,6 +10,16 @@ import DashboardLayout from '../components/DashboardLayout';
 
 const { Title, Text } = Typography;
 
+const resolveProfileImage = (image) => {
+  if (!image) return null;
+  if (image.startsWith('http')) return image;
+  try {
+    return `${new URL(api.defaults.baseURL).origin}${image}`;
+  } catch (e) {
+    return image;
+  }
+};
+
 function ProfilePage() {
   const dispatch = useDispatch();
   const queryClient = useQueryClient();
@@ -23,27 +33,14 @@ function ProfilePage() {
   const profileUser = fetchedUser || user;
   const [editing, setEditing] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
-  const [previewImage, setPreviewImage] = useState(() => {
-    const u = profileUser?.profileImage || user?.profileImage || null;
-    if (!u) return null;
-    if (u.startsWith('http')) return u;
-    try {
-      return `${new URL(api.defaults.baseURL).origin}${u}`;
-    } catch (e) {
-      return u;
-    }
-  });
+  const [savedImage, setSavedImage] = useState(() => resolveProfileImage(profileUser?.profileImage || user?.profileImage || null));
+  const [previewImage, setPreviewImage] = useState(() => resolveProfileImage(profileUser?.profileImage || user?.profileImage || null));
   const [form] = Form.useForm();
 
   useEffect(() => {
-    const u = profileUser?.profileImage || user?.profileImage || null;
-    if (!u) return setPreviewImage(null);
-    if (u.startsWith('http')) return setPreviewImage(u);
-    try {
-      setPreviewImage(`${new URL(api.defaults.baseURL).origin}${u}`);
-    } catch (e) {
-      setPreviewImage(u);
-    }
+    const nextImage = resolveProfileImage(profileUser?.profileImage || user?.profileImage || null);
+    setSavedImage(nextImage);
+    setPreviewImage(nextImage);
   }, [profileUser?.profileImage, user?.profileImage]);
 
   const roleColor = {
@@ -59,22 +56,13 @@ function ProfilePage() {
       username: profileUser?.username || '',
     });
     setSelectedFile(null);
-    const u = profileUser?.profileImage || user?.profileImage || null;
-    if (!u) {
-      setPreviewImage(null);
-    } else if (u.startsWith('http')) {
-      setPreviewImage(u);
-    } else {
-      try {
-        setPreviewImage(`${new URL(api.defaults.baseURL).origin}${u}`);
-      } catch (e) {
-        setPreviewImage(u);
-      }
-    }
+    setPreviewImage(savedImage);
     setEditing(true);
   };
 
   const onCancel = () => {
+    setSelectedFile(null);
+    setPreviewImage(savedImage);
     setEditing(false);
     form.resetFields();
   };
@@ -89,6 +77,9 @@ function ProfilePage() {
           refreshToken,
         })
       );
+      const nextImage = resolveProfileImage(updatedUser?.profileImage || null);
+      setSavedImage(nextImage);
+      setPreviewImage(nextImage);
       queryClient.setQueryData(['me'], updatedUser);
       queryClient.invalidateQueries(['me']);
       message.success('Profile updated successfully');

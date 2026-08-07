@@ -5,6 +5,8 @@ const initialState = {
   token: null,
   refreshToken: null,
   role: 'Member',
+  rolePermissions: [], // [{ resource, action: { view, create, update, delete } }]
+  permissionsLoaded: false,
   theme: 'light',
   loading: false,
   error: null,
@@ -28,6 +30,7 @@ const authSlice = createSlice({
       state.role = typeof rawRole === 'string'
         ? rawRole.charAt(0).toUpperCase() + rawRole.slice(1).toLowerCase()
         : 'Member';
+      state.permissionsLoaded = false;
       state.loading = false;
       state.error = null;
     },
@@ -53,12 +56,19 @@ const authSlice = createSlice({
       state.error = action.payload;
     },
 
+    setRolePermissions: (state, action) => {
+      state.rolePermissions = action.payload || [];
+      state.permissionsLoaded = true;
+    },
+
     logout: (state) => {
-      const currentTheme = state.theme; // preserve theme across logout
+      const currentTheme = state.theme;
       state.user = null;
       state.token = null;
       state.refreshToken = null;
       state.role = 'Member';
+      state.rolePermissions = [];
+      state.permissionsLoaded = false;
       state.loading = false;
       state.error = null;
       state.theme = currentTheme;
@@ -77,6 +87,7 @@ export const {
   updateUserProfile,
   setTheme,
   setError,
+  setRolePermissions,
   logout,
   setTokens,
 } = authSlice.actions;

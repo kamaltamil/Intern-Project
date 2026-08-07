@@ -13,7 +13,7 @@ const Users = React.lazy(() => import("../pages/Users"));
 const NotFound = React.lazy(() => import("../pages/NotFound"));
 
 const PageLoader = (
-  <div style={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "100vh" }}>
+  <div className="flex items-center justify-center min-h-screen">
     <Spin size="large" />
   </div>
 );

@@ -12,6 +12,7 @@ import {
   Form,
   Input,
   Select,
+  Avatar,
 } from "antd";
 import {
   DeleteOutlined,
@@ -19,17 +20,24 @@ import {
   UserOutlined,
   TeamOutlined,
   CrownOutlined,
+  PlusOutlined,
+  ReloadOutlined,
 } from "@ant-design/icons";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+
 import DashboardLayout from "../components/DashboardLayout";
+import CustomCard from "../components/CustomCard";
+import CustomTable from "../components/CustomTable";
+
 import {
   fetchUsers,
   fetchRoles,
   updateUser as updateUserApi,
   deleteUser,
+  signupUser,
 } from "../api/queries";
-import CustomCard from "../components/CustomCard";
-import CustomTable from "../components/CustomTable";
+
+import { resolveProfileImage } from "../utils/image";
 
 const { Title } = Typography;
 const { Option } = Select;
@@ -41,11 +49,21 @@ const roleColor = {
 };
 
 function UsersManagementPage() {
-  const [updatingId, setUpdatingId] = useState(null);
-  const [editModalOpen, setEditModalOpen] = useState(false);
-  const [editingUser, setEditingUser] = useState(null);
-  const [form] = Form.useForm();
   const queryClient = useQueryClient();
+
+  /* ---------------- State ---------------- */
+
+  const [updatingId, setUpdatingId] = useState(null);
+
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [addModalOpen, setAddModalOpen] = useState(false);
+
+  const [editingUser, setEditingUser] = useState(null);
+
+  const [editForm] = Form.useForm();
+  const [addForm] = Form.useForm();
+
+  /* ---------------- Queries ---------------- */
 
   const {
     data: users = [],
@@ -53,80 +71,186 @@ function UsersManagementPage() {
     isError: usersError,
     error: usersQueryError,
     refetch: refetchUsers,
-  } = useQuery({ queryKey: ["users"], queryFn: fetchUsers });
+  } = useQuery({
+    queryKey: ["users"],
+    queryFn: fetchUsers,
+  });
 
   const { data: roles = [] } = useQuery({
     queryKey: ["roles"],
     queryFn: fetchRoles,
   });
 
+  /* ---------------- Role Options ---------------- */
+
+  const builtInRoles = new Set(["Admin", "Manager", "Member"]);
+
+  const customRoles = roles
+    .map((role) => role.name)
+    .filter((name) => !builtInRoles.has(name));
+
+  const allRoleOptions = [...builtInRoles, ...customRoles];
+
+  /* ---------------- Update User ---------------- */
+
   const updateUserMutation = useMutation({
     mutationFn: updateUserApi,
+
     onSuccess: () => {
       message.success("User updated successfully");
+
       setEditModalOpen(false);
       setEditingUser(null);
-      queryClient.invalidateQueries(["users"]);
+      editForm.resetFields();
+
+      queryClient.invalidateQueries({
+        queryKey: ["users"],
+      });
     },
+
     onError: (error) => {
-      message.error(error?.response?.data?.message || "Failed to update user");
+      message.error(
+        error?.response?.data?.message ||
+          "Failed to update user"
+      );
     },
   });
+
+  /* ---------------- Add User ---------------- */
+
+  const addUserMutation = useMutation({
+    mutationFn: signupUser,
+
+    onSuccess: () => {
+      message.success("User created successfully");
+
+      setAddModalOpen(false);
+      addForm.resetFields();
+
+      queryClient.invalidateQueries({
+        queryKey: ["users"],
+      });
+    },
+
+    onError: (error) => {
+      message.error(
+        error?.response?.data?.message ||
+          "Unable to create user"
+      );
+    },
+  });
+
+  /* ---------------- Delete User ---------------- */
 
   const deleteUserMutation = useMutation({
     mutationFn: deleteUser,
+
     onSuccess: () => {
       message.success("User deleted successfully");
+
       setUpdatingId(null);
-      queryClient.invalidateQueries(["users"]);
+
+      queryClient.invalidateQueries({
+        queryKey: ["users"],
+      });
     },
+
     onError: (error) => {
-      message.error(error?.response?.data?.message || "Failed to delete user");
       setUpdatingId(null);
+
+      message.error(
+        error?.response?.data?.message ||
+          "Failed to delete user"
+      );
     },
   });
 
+  /* ---------------- Modal Handlers ---------------- */
+
+  const openAddModal = () => {
+    addForm.resetFields();
+    setAddModalOpen(true);
+  };
+
+  const closeAddModal = () => {
+    addForm.resetFields();
+    setAddModalOpen(false);
+  };
+
   const openEditModal = (user) => {
     setEditingUser(user);
-    form.setFieldsValue({
+
+    editForm.setFieldsValue({
       name: user.name,
       username: user.username,
       email: user.email,
       role: user.role,
     });
+
     setEditModalOpen(true);
   };
 
+  const closeEditModal = () => {
+    setEditingUser(null);
+    editForm.resetFields();
+    setEditModalOpen(false);
+  };
+
+  /* ---------------- Save Edit ---------------- */
+
   const handleEditSave = async () => {
     try {
-      const values = await form.validateFields();
-      updateUserMutation.mutate({ id: editingUser._id, payload: values });
-    } catch (err) {
-      if (err?.errorFields) return;
+      const values = await editForm.validateFields();
+
+      updateUserMutation.mutate({
+        id: editingUser._id,
+        payload: values,
+      });
+    } catch {
+      // validation handled by antd
     }
   };
 
-  const handleDelete = (userId) => {
-    setUpdatingId(userId);
-    deleteUserMutation.mutate(userId);
+  /* ---------------- Add User ---------------- */
+
+  const handleAddUser = async () => {
+    try {
+      const values = await addForm.validateFields();
+
+      addUserMutation.mutate({
+        name: values.name,
+        username: values.username,
+        email: values.email,
+        password: values.password,
+        role: values.role,
+      });
+    } catch (err) {
+      console.log(err)
+    }
+  };
+  /* ---------------- Delete ---------------- */
+
+  const handleDelete = (id) => {
+    setUpdatingId(id);
+    deleteUserMutation.mutate(id);
   };
 
-  const builtInRoles = new Set(["Admin", "Manager", "Member"]);
-  const customRoleNames = roles
-    .map((r) => r.name)
-    .filter((n) => !builtInRoles.has(n));
-  const allRoleOptions = [...builtInRoles, ...customRoleNames];
+    /* ---------------- Table Columns ---------------- */
 
   const columns = [
     {
       title: "Name",
       dataIndex: "name",
-      key: "name",
-      render: (name) => (
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-full bg-[#C76A34] flex items-center justify-center text-white font-semibold text-sm">
-            {name?.charAt(0)?.toUpperCase() || "U"}
-          </div>
+      render: (name, record) => (
+        <div className="flex items-center gap-3">
+          <Avatar
+            src={resolveProfileImage(record.profileImage)}
+            style={{ backgroundColor: "#C76A34" }}
+          >
+            {!record.profileImage &&
+              (record.name?.charAt(0)?.toUpperCase() || "U")}
+          </Avatar>
+
           <span className="font-medium">{name}</span>
         </div>
       ),
@@ -134,37 +258,41 @@ function UsersManagementPage() {
     {
       title: "Email",
       dataIndex: "email",
-      key: "email",
-      render: (email) => <span className="text-gray-600">{email}</span>,
     },
     {
       title: "Username",
       dataIndex: "username",
-      key: "username",
-      render: (username) => <span className="text-gray-500">@{username}</span>,
+      render: (username) => (
+        <span className="text-gray-500">@{username}</span>
+      ),
     },
     {
       title: "Role",
       dataIndex: "role",
-      key: "role",
-      render: (role) => <Tag color={roleColor[role] || "purple"}>{role}</Tag>,
+      render: (role) => (
+        <Tag color={roleColor[role] || "purple"}>
+          {role}
+        </Tag>
+      ),
     },
     {
       title: "Actions",
-      key: "actions",
       render: (_, record) => (
         <Space>
           <Button
             icon={<EditOutlined />}
-            size="small"
             onClick={() => openEditModal(record)}
-            style={{ borderColor: "#C76A34", color: "#C76A34" }}
+            style={{
+              borderColor: "#C76A34",
+              color: "#C76A34",
+            }}
           >
             Edit
           </Button>
+
           <Popconfirm
             title="Delete User"
-            description={`Are you sure you want to delete ${record.name}?`}
+            description={`Delete ${record.name}?`}
             onConfirm={() => handleDelete(record._id)}
             okText="Delete"
             cancelText="Cancel"
@@ -172,9 +300,8 @@ function UsersManagementPage() {
           >
             <Button
               danger
-              icon={<DeleteOutlined />}
-              size="small"
               loading={updatingId === record._id}
+              icon={<DeleteOutlined />}
             >
               Delete
             </Button>
@@ -183,6 +310,8 @@ function UsersManagementPage() {
       ),
     },
   ];
+
+  /* ---------------- Loading ---------------- */
 
   if (usersLoading && users.length === 0) {
     return (
@@ -197,130 +326,254 @@ function UsersManagementPage() {
       <DashboardLayout>
         <Alert
           type="error"
-          message={usersQueryError?.message || "Unable to load users"}
           showIcon
+          message={
+            usersQueryError?.message ??
+            "Unable to load users"
+          }
         />
       </DashboardLayout>
     );
   }
 
-  const totalAdmins = users.filter((u) => u.role === "Admin").length;
-  const totalManagers = users.filter((u) => u.role === "Manager").length;
-  const totalMembers = users.filter((u) => u.role === "Member").length;
+  /* ---------------- Dashboard Cards ---------------- */
 
-  const userManagementStats = [
-    { title: "Admins", value: totalAdmins, icon: <CrownOutlined /> },
-    { title: "Managers", value: totalManagers, icon: <TeamOutlined /> },
-    { title: "Members", value: totalMembers, icon: <UserOutlined /> }
+  const stats = [
+    {
+      title: "Admins",
+      value: users.filter((u) => u.role === "Admin").length,
+      icon: <CrownOutlined />,
+    },
+    {
+      title: "Managers",
+      value: users.filter((u) => u.role === "Manager").length,
+      icon: <TeamOutlined />,
+    },
+    {
+      title: "Members",
+      value: users.filter((u) => u.role === "Member").length,
+      icon: <UserOutlined />,
+    },
   ];
 
   return (
-    <DashboardLayout> 
-      <div className="space-y-4">
-        <Title level={4} className="!text-[#2E2A27]">
+    <DashboardLayout>
+      <div className="space-y-5">
+
+        <Title level={4}>
           User Management
         </Title>
 
-        {/* Summary cards */}
-        <div className="grid grid-cols-3 gap-4 mb-4">
-          {
-            userManagementStats.map((stat) => (
-              <CustomCard
-                title={stat.title}
-                value={stat.value}
-                icon={stat.icon} 
-                key={stat.title}
-              />
-            ))
-          }
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {stats.map((item) => (
+            <CustomCard
+              key={item.title}
+              title={item.title}
+              value={item.value}
+              icon={item.icon}
+            />
+          ))}
         </div>
 
-        {/* Users Table */}
         <CustomTable
           title={`All Users (${users.length})`}
-          extraHeader={<Button onClick={refetchUsers} size="small" loading={usersLoading}>Refresh</Button>}
           isLoading={usersLoading}
           dataSource={users}
           columns={columns}
-          pagination={{ pageSize: 8 }}
-          scroll={{ x: 600 }}
+          pagination={{ pageSize: 5 }}
+          extraHeader={
+            <Space>
+              <Button
+                icon={<ReloadOutlined />}
+                onClick={refetchUsers}
+              >
+                Refresh
+              </Button>
+
+              <Button
+                type="primary"
+                icon={<PlusOutlined />}
+                style={{
+                  backgroundColor: "#C76A34",
+                  borderColor: "#C76A34",
+                }}
+                onClick={openAddModal}
+              >
+                Add User
+              </Button>
+            </Space>
+          }
         />
+
+        {/* ---------------- Add User Modal ---------------- */}
+
+        <Modal
+          title="Add User"
+          open={addModalOpen}
+          onCancel={closeAddModal}
+          onOk={handleAddUser}
+          okText="Create User"
+          okButtonProps={{
+            loading: addUserMutation.isPending,
+            style: {
+              backgroundColor: "#C76A34",
+              borderColor: "#C76A34",
+            },
+          }}
+        >
+          <Form
+            layout="vertical"
+            form={addForm}
+          >
+            <Form.Item
+              name="name"
+              label="Full Name"
+              rules={[
+                {
+                  required: true,
+                  message: "Name is required",
+                },
+              ]}
+            >
+              <Input />
+            </Form.Item>
+
+            <Form.Item
+              name="username"
+              label="Username"
+              rules={[
+                {
+                  required: true,
+                  message: "Username is required",
+                },
+              ]}
+            >
+              <Input />
+            </Form.Item>
+
+            <Form.Item
+              name="email"
+              label="Email"
+              rules={[
+                {
+                  required: true,
+                  type: "email",
+                },
+              ]}
+            >
+              <Input />
+            </Form.Item>
+            <Form.Item
+                name="role"
+                label="Role"
+                rules={[
+                  {
+                    required: true,
+                    message: "Please select a role",
+                  },
+                ]}
+              >
+                <Select placeholder="Select Role">
+                  {allRoleOptions.map((role) => (
+                    <Option key={role} value={role}>
+                      <Tag color={roleColor[role] || "purple"}>
+                        {role}
+                      </Tag>
+                    </Option>
+                  ))}
+                </Select>
+            </Form.Item>
+            <Form.Item
+              name="password"
+              label="Password"
+              rules={[
+                {
+                  required: true,
+                  min: 6,
+                },
+              ]}
+            >
+              <Input.Password />
+            </Form.Item>
+          </Form>
+        </Modal>
+
+        {/* ---------------- Edit User Modal ---------------- */}
+
+        <Modal
+          title={`Edit ${editingUser?.name ?? ""}`}
+          open={editModalOpen}
+          onCancel={closeEditModal}
+          onOk={handleEditSave}
+          okText="Save Changes"
+          okButtonProps={{
+            loading: updateUserMutation.isPending,
+            style: {
+              backgroundColor: "#C76A34",
+              borderColor: "#C76A34",
+            },
+          }}
+        >
+          <Form
+            form={editForm}
+            layout="vertical"
+          >
+            <Form.Item
+              name="name"
+              label="Full Name"
+              rules={[{ required: true }]}
+            >
+              <Input />
+            </Form.Item>
+
+            <Form.Item
+              name="username"
+              label="Username"
+              rules={[{ required: true }]}
+            >
+              <Input />
+            </Form.Item>
+
+            <Form.Item
+              name="email"
+              label="Email"
+              rules={[
+                {
+                  required: true,
+                  type: "email",
+                },
+              ]}
+            >
+              <Input />
+            </Form.Item>
+
+            <Form.Item
+              name="role"
+              label="Role"
+              rules={[{ required: true }]}
+            >
+              <Select>
+                {allRoleOptions.map((role) => (
+                  <Option
+                    key={role}
+                    value={role}
+                  >
+                    {role}
+                  </Option>
+                ))}
+              </Select>
+            </Form.Item>
+                
+            <Form.Item
+              name="password"
+              label="New Password"
+            >
+              <Input.Password placeholder="Leave blank to keep current password" />
+            </Form.Item>
+          </Form>
+        </Modal>
+
       </div>
-
-      {/* Edit User Modal */}
-      <Modal
-        title={
-          <span className="text-[#2E2A27] font-semibold">
-            Edit User — {editingUser?.name}
-          </span>
-        }
-        open={editModalOpen}
-        onOk={handleEditSave}
-        onCancel={() => setEditModalOpen(false)}
-        okText="Save Changes"
-        okButtonProps={{
-          style: { backgroundColor: "#C76A34", borderColor: "#C76A34" },
-          loading: updateUserMutation.isLoading,
-        }}
-        destroyOnClose
-      >
-        <Form form={form} layout="vertical" className="mt-4">
-          <Form.Item
-            name="name"
-            label="Full Name"
-            rules={[
-              { required: true, message: "Name is required" },
-              { min: 3, message: "Name must be at least 3 characters" },
-            ]}
-          >
-            <Input placeholder="Enter full name" />
-          </Form.Item>
-
-          <Form.Item
-            name="username"
-            label="Username"
-            rules={[
-              { required: true, message: "Username is required" },
-              { min: 3, message: "Username must be at least 3 characters" },
-            ]}
-          >
-            <Input prefix="@" placeholder="Enter username" />
-          </Form.Item>
-
-          <Form.Item
-            name="email"
-            label="Email"
-            rules={[
-              { required: true, message: "Email is required" },
-              { type: "email", message: "Enter a valid email" },
-            ]}
-          >
-            <Input placeholder="Enter email" />
-          </Form.Item>
-
-          <Form.Item
-            name="role"
-            label="Role"
-            rules={[{ required: true, message: "Role is required" }]}
-          >
-            <Select placeholder="Select role">
-              {allRoleOptions.map((r) => (
-                <Option key={r} value={r}>
-                  <Tag color={roleColor[r] || "purple"}>{r}</Tag>
-                </Option>
-              ))}
-            </Select>
-          </Form.Item>
-
-          <Form.Item
-            name="password"
-            label="New Password"
-            help="Leave blank to keep the current password"
-          >
-            <Input.Password placeholder="Enter new password (optional)" />
-          </Form.Item>
-        </Form>
-      </Modal>
     </DashboardLayout>
   );
 }

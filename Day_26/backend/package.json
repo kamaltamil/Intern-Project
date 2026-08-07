@@ -3,7 +3,9 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "start": "node ./bin/www"
+    "start": "node ./bin/www",
+    "seed": "node seed.js",
+    "seed:force": "node seed.js --force"
   },
   "dependencies": {
     "bcrypt": "^6.0.0",

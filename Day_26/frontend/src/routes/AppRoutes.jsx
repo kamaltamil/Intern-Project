@@ -1,107 +1,152 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { useLoadRolePermissions } from '../utils/useLoadRolePermissions';
+import { lazy, Suspense } from 'react';
 import { useSelector } from 'react-redux';
-import LoginPage from '../pages/LoginPage';
-import SignupPage from '../pages/SignupPage';
-import AdminDashboardPage from '../pages/AdminDashboardPage';
-import ManagerDashboardPage from '../pages/ManagerDashboardPage';
-import MemberDashboardPage from '../pages/MemberDashboardPage';
-import ProfilePage from '../pages/ProfilePage';
-import UsersManagementPage from '../pages/UsersManagementPage';
-import RoleManagementPage from '../pages/RoleManagementPage';
-import ProtectedRoute from './ProtectedRoute';
-import BookingPage from '../pages/BookingPage';
+import { Spin } from 'antd';
 
+const LoginPage           = lazy(() => import('../pages/LoginPage'));
+const SignupPage           = lazy(() => import('../pages/SignupPage'));
+const AdminDashboardPage   = lazy(() => import('../pages/AdminDashboardPage'));
+const ManagerDashboardPage = lazy(() => import('../pages/ManagerDashboardPage'));
+const MemberDashboardPage  = lazy(() => import('../pages/MemberDashboardPage'));
+const ProfilePage          = lazy(() => import('../pages/ProfilePage'));
+const UsersManagementPage  = lazy(() => import('../pages/UsersManagementPage'));
+const RoleManagementPage   = lazy(() => import('../pages/RoleManagementPage'));
+const ProtectedRoute       = lazy(() => import('./ProtectedRoute'));
+const BookingPage          = lazy(() => import('../pages/BookingPage'));
+
+/** Renders the correct dashboard based on the user's role stored in Redux */
 function DashboardHome() {
   const rawRole = useSelector((state) => state.auth.role);
-  const role = typeof rawRole === 'string'
-    ? rawRole.charAt(0).toUpperCase() + rawRole.slice(1).toLowerCase()
-    : 'Member';
+  const role =
+    typeof rawRole === 'string'
+      ? rawRole.charAt(0).toUpperCase() + rawRole.slice(1).toLowerCase()
+      : 'Member';
 
   if (role === 'Admin') return <AdminDashboardPage />;
   if (role === 'Manager') return <ManagerDashboardPage />;
   return <MemberDashboardPage />;
 }
 
+const PageLoader = (
+  <div className="flex items-center justify-center min-h-screen">
+    <Spin size="large" />
+  </div>
+);
+
+/**
+ * AppRoutes
+ *
+ * All protected routes use ONLY requiredPermission for access control.
+ * allowedRoles has been removed — roles and their permissions are managed
+ * entirely through the DB (seeded via seed.js, configurable by Admin).
+ *
+ * Admin always bypasses the permission check inside ProtectedRoute.
+ */
+
+function PermissionLoaderWrapper({ children }) {
+  useLoadRolePermissions();
+  return children;
+}
+
 function AppRoutes() {
   return (
-    <BrowserRouter>
-      <Routes>
-        {/* Public routes */}
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/signup" element={<SignupPage />} />
-        <Route path="/unauthorized" element={<div className="flex items-center justify-center min-h-screen text-xl text-red-500">Unauthorized Access</div>} />
+    <Suspense fallback={PageLoader}>
+      <PermissionLoaderWrapper>
+        <BrowserRouter>
+        <Routes>
+          {/* ── Public ───────────────────────────────────────── */}
+          <Route path="/login"        element={<LoginPage />} />
+          <Route path="/signup"       element={<SignupPage />} />
+          <Route
+            path="/unauthorized"
+            element={
+              <div className="flex items-center justify-center min-h-screen text-xl text-red-500">
+                Unauthorized Access
+              </div>
+            }
+          />
 
-        {/* Protected routes - all roles */}
-        <Route
-          path="/"
-          element={
-            <ProtectedRoute allowedRoles={['Admin', 'Manager', 'Member']}>
-              <DashboardHome />
-            </ProtectedRoute>
-          }
-        />
+          {/* ── Dashboard (all logged-in users) ──────────────── */}
+          <Route
+            path="/"
+            element={
+              <ProtectedRoute requiredPermission={{ resource: 'dashboard', action: 'view' }}>
+                <DashboardHome />
+              </ProtectedRoute>
+            }
+          />
 
-        <Route
-          path="/profile"
-          element={
-            <ProtectedRoute allowedRoles={['Admin', 'Manager', 'Member']}>
-              <ProfilePage />
-            </ProtectedRoute>
-          }
-        />
+          {/* ── Profile (all logged-in users) ────────────────── */}
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute requiredPermission={{ resource: 'profile', action: 'view' }}>
+                <ProfilePage />
+              </ProtectedRoute>
+            }
+          />
 
-        {/* Admin only */}
-        <Route
-          path="/users"
-          element={
-            <ProtectedRoute allowedRoles={['Admin']}>
-              <UsersManagementPage />
-            </ProtectedRoute>
-          }
-        />
+          {/* ── User Management ──────────────────────────────── */}
+          <Route
+            path="/users"
+            element={
+              <ProtectedRoute requiredPermission={{ resource: 'users', action: 'view' }}>
+                <UsersManagementPage />
+              </ProtectedRoute>
+            }
+          />
 
-        <Route
-          path="/roles"
-          element={
-            <ProtectedRoute allowedRoles={['Admin']}>
-              <RoleManagementPage />
-            </ProtectedRoute>
-          }
-        />
+          {/* ── Role Management ──────────────────────────────── */}
+          <Route
+            path="/roles"
+            element={
+              <ProtectedRoute requiredPermission={{ resource: 'roles', action: 'view' }}>
+                <RoleManagementPage />
+              </ProtectedRoute>
+            }
+          />
 
-        {/* Placeholder routes - can be built out later */}
-        <Route
-          path="/bookings"
-          element={
-            <ProtectedRoute allowedRoles={['Admin', 'Manager', 'Member']}>
-              <BookingPage />
-            </ProtectedRoute>
-          }
-        />
+          {/* ── Bookings ─────────────────────────────────────── */}
+          <Route
+            path="/bookings"
+            element={
+              <ProtectedRoute requiredPermission={{ resource: 'bookings', action: 'view' }}>
+                <BookingPage />
+              </ProtectedRoute>
+            }
+          />
 
-        <Route
-          path="/reports"
-          element={
-            <ProtectedRoute allowedRoles={['Admin']}>
-              <div className="flex items-center justify-center min-h-screen text-xl text-[#C76A34]">Reports - Coming Soon</div>
-            </ProtectedRoute>
-          }
-        />
+          {/* ── Reports ──────────────────────────────────────── */}
+          <Route
+            path="/reports"
+            element={
+              <ProtectedRoute requiredPermission={{ resource: 'reports', action: 'view' }}>
+                <div className="flex items-center justify-center min-h-screen text-xl text-[#C76A34]">
+                  Reports - Coming Soon
+                </div>
+              </ProtectedRoute>
+            }
+          />
 
+          {/* ── Booking Approval ─────────────────────────────── */}
+          <Route
+            path="/approval"
+            element={
+              <ProtectedRoute requiredPermission={{ resource: 'approval', action: 'view' }}>
+                <div className="flex items-center justify-center min-h-screen text-xl text-[#C76A34]">
+                  Booking Approval - Coming Soon
+                </div>
+              </ProtectedRoute>
+            }
+          />
 
-        <Route
-          path="/approval"
-          element={
-            <ProtectedRoute allowedRoles={['Manager']}>
-              <div className="flex items-center justify-center min-h-screen text-xl text-[#C76A34]">Booking Approval - Coming Soon</div>
-            </ProtectedRoute>
-          }
-        />
-
-        {/* Catch-all redirect */}
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </BrowserRouter>
+          {/* ── Catch-all ────────────────────────────────────── */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </BrowserRouter>
+      </PermissionLoaderWrapper>
+    </Suspense>
   );
 }
 

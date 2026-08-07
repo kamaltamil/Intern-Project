@@ -75,3 +75,14 @@ export const createBooking = async (payload) => {
   const response = await api.post('/booking/new', payload);
   return response.data || {};
 };
+
+export const assignPermissions = async ({ id, permissions }) => {
+  const response = await api.patch(`/roles/${id}/permissions`, { permissions });
+  return response.data?.role || response.data;
+};
+
+export const fetchRoleByName = async (roleName) => {
+  const response = await api.get('/roles');
+  const roles = response.data || [];
+  return roles.find((r) => r.name.toLowerCase() === roleName.toLowerCase()) || null;
+};

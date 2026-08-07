@@ -3,6 +3,7 @@ const {
     getAllUsers,
     getAllMembers,
     getUserById,
+    getUserAuthorities,
     updateUser,
     deleteUser,
     loginUser,
@@ -12,8 +13,14 @@ const {
 
 const createUser = async (req, res) => {
     try {
-        const { name, email, username, password } = req.body;
-        const result = await registerUser({ name, email, username, password });
+        const {
+            name,
+            username,
+            email,
+            password,
+            role
+        } = req.body;
+        const result = await registerUser({ name, email, username, password, role});
 
         return res.status(201).json({
             message: 'User created successfully',
@@ -32,16 +39,13 @@ const createUser = async (req, res) => {
 const listUsers = async (req, res) => {
     try {
         const role = req.body?.role || req.user?.role;
-        let users;
 
-        if (role === 'Admin') {
-            users = await getAllUsers();
-        } else if (role === 'Manager') {
-            users = await getAllMembers();
-        } else {
+        console.log(role)
+        const users = await getUserAuthorities(role, req.user?.userId);
+        
+        if (!users) {
             return res.status(403).json({ message: 'Forbidden' });
         }
-
         return res.status(200).json(users);
     } catch (error) {
         return res.status(500).json({ message: 'Error fetching users', error: error.message });
@@ -223,4 +227,5 @@ module.exports = {
     login,
     logout,
     refreshToken,
+    getUserAuthorities
 };
