@@ -4,7 +4,7 @@ const router = express.Router();
 const usersRouter = require('./users');
 const booking = require('./booking');
 const rooms = require('./rooms');
-const roles = require('./roles');
+const roles = require('./roleRoutes');
 
 const { authenticateToken } = require('../../../middleware/auth');
 const { rateLimiter } = require('../../../config/rateLimiting')

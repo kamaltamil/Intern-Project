@@ -3,9 +3,10 @@ const crypto = require("node:crypto");
 const jwt = require("jsonwebtoken");
 const User = require("../models/users");
 
-
 const ensureUniqueUsername = async (baseUsername) => {
-  const username = String(baseUsername || "").toLowerCase().trim();
+  const username = String(baseUsername || "")
+    .toLowerCase()
+    .trim();
   const existing = await User.findOne({ username });
 
   if (!existing) return username;
@@ -21,27 +22,49 @@ const ensureUniqueUsername = async (baseUsername) => {
   return candidate;
 };
 
-const accessSecret = process.env.JWT_ACCESS_SECRET || 'dev-access-secret';
-const refreshSecret = process.env.JWT_REFRESH_SECRET || 'dev-refresh-secret';
+const accessSecret = process.env.JWT_ACCESS_SECRET || "dev-access-secret";
 
-const createAccessToken = (userId, role) =>
-  jwt.sign({ sub: userId, userId, role }, accessSecret, { expiresIn: "1h" });
+const refreshSecret = process.env.JWT_REFRESH_SECRET || "dev-refresh-secret";
+
+const createAccessToken = (userId) =>
+  jwt.sign(
+    {
+      sub: userId,
+      userId,
+    },
+    accessSecret,
+    {
+      expiresIn: "1h",
+    },
+  );
 
 const createRefreshToken = (userId) =>
   jwt.sign(
-    { userId, jti: crypto.randomUUID() },
+    {
+      userId,
+      jti: crypto.randomUUID(),
+    },
     refreshSecret,
-    { expiresIn: "7d" }
+    {
+      expiresIn: "7d",
+    },
   );
 
 const generateAndStoreTokens = async (user) => {
-  const token = createAccessToken(user._id, user.role);
+  const token = createAccessToken(user._id);
+
   const refreshToken = createRefreshToken(user._id);
+
   const hashedRefreshToken = await bcrypt.hash(refreshToken, 10);
 
-  await User.findByIdAndUpdate(user._id, { refreshToken: hashedRefreshToken });
+  await User.findByIdAndUpdate(user._id, {
+    refreshToken: hashedRefreshToken,
+  });
 
-  return { token, refreshToken };
+  return {
+    token,
+    refreshToken,
+  };
 };
 
 const buildLoginQuery = ({ email, username, identifier }) => {
@@ -57,10 +80,12 @@ const buildLoginQuery = ({ email, username, identifier }) => {
 };
 
 const loginUser = async ({ identifier, password }) => {
-  const user = await User.findOne(buildLoginQuery({ identifier }));
+  const user = await User.findOne(buildLoginQuery({ identifier })).populate(
+    "role",
+  );
 
   if (!user) {
-    const error = new Error('Invalid credentials');
+    const error = new Error("Invalid credentials");
     error.statusCode = 401;
     throw error;
   }
@@ -68,7 +93,7 @@ const loginUser = async ({ identifier, password }) => {
   const isPasswordValid = await bcrypt.compare(password, user.password);
 
   if (!isPasswordValid) {
-    const error = new Error('Invalid credentials');
+    const error = new Error("Invalid credentials");
     error.statusCode = 401;
     throw error;
   }
@@ -76,7 +101,7 @@ const loginUser = async ({ identifier, password }) => {
   const { token, refreshToken } = await generateAndStoreTokens(user);
 
   return {
-    user: await User.findById(user._id).select('-password -refreshToken'),
+    user: await User.findById(user._id).select("-password -refreshToken"),
     token,
     refreshToken,
   };
@@ -86,14 +111,18 @@ const logoutUser = async (id) => {
   return await User.findByIdAndUpdate(
     id,
     { refreshToken: null },
-    { new: true }
+    { new: true },
   );
 };
 
 const normalizeRegistrationInput = ({ name, email, password, username }) => {
   const normalizedName = String(name || username || "user").trim();
-  const normalizedUsername = String(username || normalizedName).trim().toLowerCase();
-  const normalizedEmail = String(email || `${normalizedUsername}@local.dev`).trim().toLowerCase();
+  const normalizedUsername = String(username || normalizedName)
+    .trim()
+    .toLowerCase();
+  const normalizedEmail = String(email || `${normalizedUsername}@local.dev`)
+    .trim()
+    .toLowerCase();
 
   return {
     name: normalizedName,
@@ -103,7 +132,14 @@ const normalizeRegistrationInput = ({ name, email, password, username }) => {
   };
 };
 
-const normalizeUpdateInput = async ({ name, email, username, password, role, profileImage }) => {
+const normalizeUpdateInput = async ({
+  name,
+  email,
+  username,
+  password,
+  role,
+  profileImage,
+}) => {
   const update = {};
 
   if (name) update.name = String(name).trim();
@@ -124,7 +160,7 @@ const getAllUsers = async () => {
 
 const getAllMembers = async () => {
   return await User.find({ role: "Member" }).select("-password -refreshToken");
-}
+};
 
 const getUserById = async (id) => {
   return await User.findById(id).select("-password -refreshToken");
@@ -144,7 +180,9 @@ const updateUser = async (id, input) => {
   const user = await User.findByIdAndUpdate(id, update, {
     new: true,
     runValidators: true,
-  }).select("-password -refreshToken").lean();
+  })
+    .select("-password -refreshToken")
+    .lean();
 
   return user;
 };
@@ -175,39 +213,41 @@ const registerUser = async (input) => {
   const { token, refreshToken } = await generateAndStoreTokens(user);
 
   return {
-    user: await User.findById(user._id).select("-password -refreshToken -refreshToken"),
+    user: await User.findById(user._id).select(
+      "-password -refreshToken -refreshToken",
+    ),
     token,
     refreshToken,
   };
 };
 
 const refreshAccessToken = async (refreshToken) => {
-    let payload;
+  let payload;
 
-    try {
-        payload = jwt.verify(refreshToken, refreshSecret);
-    } catch (error) {
-        error.statusCode = 401;
-        throw error;
-    }
+  try {
+    payload = jwt.verify(refreshToken, refreshSecret);
+  } catch (error) {
+    error.statusCode = 401;
+    throw error;
+  }
 
-    const user = await User.findById(payload.userId);
+  const user = await User.findById(payload.userId);
 
-    if (!user?.refreshToken) {
-        const error = new Error('Unauthorized');
-        error.statusCode = 401;
-        throw error;
-    }
+  if (!user?.refreshToken) {
+    const error = new Error("Unauthorized");
+    error.statusCode = 401;
+    throw error;
+  }
 
-    const valid = await bcrypt.compare(refreshToken, user.refreshToken);
+  const valid = await bcrypt.compare(refreshToken, user.refreshToken);
 
-    if (!valid) {
-        const error = new Error('Invalid refresh token');
-        error.statusCode = 401;
-        throw error;
-    }
+  if (!valid) {
+    const error = new Error("Invalid refresh token");
+    error.statusCode = 401;
+    throw error;
+  }
 
-    return await generateAndStoreTokens(user);
+  return await generateAndStoreTokens(user);
 };
 
 module.exports = {

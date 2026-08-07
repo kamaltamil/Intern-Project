@@ -9,12 +9,12 @@ const permissionSchema = new mongoose.Schema(
             enum: Object.values(MODULES),
             trim: true,
         },
-        action: {
-            view:   { type: Boolean, default: false },
+        actions: {
+            view: { type: Boolean, default: false },
             create: { type: Boolean, default: false },
             update: { type: Boolean, default: false },
             delete: { type: Boolean, default: false },
-        },
+        }
     },
     { _id: false }
 );

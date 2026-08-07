@@ -1,13 +1,9 @@
-// Modules that appear in the Role permission matrix (Role Management UI).
-const MODULES = {
-  DASHBOARD: 'dashboard',
-  USERS: 'users',
-  ROLES: 'roles',
-  BOOKINGS: 'bookings',
-  ROOMS: 'rooms',
-  APPROVAL: 'approval',
-  REPORTS: 'reports',
-  PROFILE: 'profile',
+module.exports = {
+  USERS: "Users",
+  ROLES: "Roles",
+  BOOKINGS: "Bookings",
+  APPROVALS: "Approvals",
+  REPORTS: "Reports",
+  PROFILE: "Profile",
+  DASHBOARD: "Dashboard",
 };
-
-module.exports = MODULES;

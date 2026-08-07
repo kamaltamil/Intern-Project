@@ -32,8 +32,9 @@ const userSchema = new mongoose.Schema({
         default: null
     },
     role: {
-        type: String,
-        default: "Member"
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Role",
+        required: true,
     },
     profileImage: {
         type: String,

@@ -1,129 +1,130 @@
 const {
-    createRole,
-    getAllRoles,
-    getRoleById,
-    updateRole,
-    deleteRole,
-    assignPermissions,
-} = require('../services/roleService');
-
-const MODULE_LIST = require('../constants/modules');
-const MODULE_LABELS = require('../constants/moduleLabels');
-const ACTION_LIST = require('../constants/actions');
-const ROLE_COLORS = require('../constants/roleColors');
+  createRole,
+  getAllRoles,
+  getRoleById,
+  updateRole,
+  deleteRole,
+} = require("../services/roleService");
 
 /**
- * GET /roles/meta
- * Static config the Role Management UI needs to render the permission
- * grid and color picker — comes from the backend so the frontend never
- * hardcodes module labels, action names, or color options.
+ * Create Role
  */
-const getRoleMeta = (req, res) => {
-    const modules = Object.values(MODULE_LIST).map((resource) => ({
-        resource,
-        label: MODULE_LABELS[resource] || resource,
-    }));
-
-    return res.json({
-        modules,
-        actions: Object.values(ACTION_LIST),
-        colors: ROLE_COLORS,
-    });
-};
-
 const createRoleHandler = async (req, res) => {
-    try {
-        const { name, description, color, permissions } = req.body;
+  try {
+    const {
+      name,
+      description,
+      color,
+      permissions,
+      isDefault,
+    } = req.body;
 
-        if (!name) {
-            return res.status(400).json({ message: "Role name is required" });
-        }
-
-        // Step 1: Create the role with empty permissions
-        const role = await createRole({ name, description, color });
-
-        // Step 2: If permissions payload provided, assign them and return the populated role
-        if (Array.isArray(permissions) && permissions.length > 0 && permissions[0]?.resource) {
-            const populatedRole = await assignPermissions(role._id, permissions);
-            return res.status(201).json({ message: "Role created successfully", role: populatedRole });
-        }
-
-        return res.status(201).json({ message: "Role created successfully", role });
-
-    } catch (error) {
-        return res.status(error.statusCode || 500).json({ message: error.message });
+    if (!name) {
+      return res.status(400).json({
+        message: "Role name is required",
+      });
     }
-};
 
-const listRoles = async (req, res) => {
-    try {
-        const roles = await getAllRoles();
-        return res.json(roles);
-    } catch (error) {
-        return res.status(500).json({ message: error.message });
-    }
-};
+    const role = await createRole({
+      name,
+      description,
+      color,
+      permissions,
+      isDefault,
+    });
 
-const updateRoleHandler = async (req, res) => {
-    try {
-        // Allow name, description and color to be updated here
-        const { name, description, color } = req.body;
-
-        const role = await updateRole(req.params.id, { name, description, color });
-
-        if (!role) {
-            return res.status(404).json({ message: "Role not found" });
-        }
-
-        return res.json({ message: "Role updated successfully", role });
-
-    } catch (error) {
-        return res.status(500).json({ message: error.message });
-    }
-};
-
-const deleteRoleHandler = async (req, res) => {
-    try {
-        const role = await deleteRole(req.params.id);
-        if (!role) {
-            return res.status(404).json({ message: 'Role not found' });
-        }
-        return res.status(200).json({ message: 'Role deleted successfully', role });
-    } catch (error) {
-        return res.status(500).json({ message: 'Error deleting role', error: error.message });
-    }
+    return res.status(201).json({
+      message: "Role created successfully",
+      role,
+    });
+  } catch (error) {
+    return res.status(error.statusCode || 500).json({
+      message:
+        error.statusCode === 409
+          ? "Role already exists"
+          : error.message || "Failed to create role",
+    });
+  }
 };
 
 /**
- * PATCH /roles/:id/permissions
- * Body: { permissions: [{ resource: string, action: { view, create, update, delete } }] }
+ * Get All Roles
  */
-const assignPermissionsHandler = async (req, res) => {
-    try {
-        const { permissions } = req.body;
+const listRoles = async (req, res) => {
+  try {
+    const roles = await getAllRoles();
 
-        if (!Array.isArray(permissions)) {
-            return res.status(400).json({ message: 'permissions must be an array' });
-        }
+    return res.status(200).json(roles);
+  } catch (error) {
+    return res.status(500).json({
+      message: "Failed to fetch roles", error
+    });
+  }
+};
 
-        const role = await assignPermissions(req.params.id, permissions);
+/**
+ * Get Single Role
+ */
+const getRoleHandler = async (req, res) => {
+  try {
+    const role = await getRoleById(req.params.id);
 
-        return res.json({
-            message: 'Permissions assigned successfully',
-            role,
-        });
-    } catch (error) {
-        return res.status(error.statusCode || 500).json({
-            message: error.message,
-        });
+    if (!role) {
+      return res.status(404).json({
+        message: "Role not found",
+      });
     }
+
+    return res.status(200).json(role);
+  } catch (error) {
+    return res.status(500).json({
+      message: "Failed to fetch role", error
+    });
+  }
+};
+
+/**
+ * Update Role
+ */
+const updateRoleHandler = async (req, res) => {
+  try {
+    const updatedRole = await updateRole(
+      req.params.id,
+      req.body
+    );
+
+    return res.status(200).json({
+      message: "Role updated successfully",
+      role: updatedRole,
+    });
+  } catch (error) {
+    return res.status(error.statusCode || 500).json({
+      message: error.message,
+    });
+  }
+};
+
+/**
+ * Delete Role
+ */
+const deleteRoleHandler = async (req, res) => {
+  try {
+    await deleteRole(req.params.id);
+
+    return res.status(200).json({
+      message: "Role deleted successfully",
+    });
+  } catch (error) {
+    return res.status(error.statusCode || 500).json({
+      message: error.message,
+    });
+  }
 };
 
 module.exports = {
-    createRoleHandler,
-    listRoles,
-    updateRoleHandler,
-    deleteRoleHandler,
-    assignPermissionsHandler,
-    getRoleMeta,
+  createRoleHandler,
+  listRoles,
+  getRoleHandler,
+  updateRoleHandler,
+  deleteRoleHandler,
 };
