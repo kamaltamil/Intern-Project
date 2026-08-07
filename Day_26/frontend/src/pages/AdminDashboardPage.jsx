@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useSelector } from 'react-redux';
 import { Row, Col, Skeleton, Alert, Button, Tag, Form, Input, Avatar } from 'antd';
 import { TeamOutlined, UserOutlined, CrownOutlined, DollarOutlined } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
@@ -12,6 +13,8 @@ import { resolveProfileImage } from "../utils/image";
 function AdminDashboardPage() {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
+  const { theme } = useSelector((state) => state.auth);
+  const isDark = theme === "dark";
 
   const {
     data: users = [],
@@ -66,12 +69,11 @@ function AdminDashboardPage() {
     },
   ];
 
-  const tableHeader = () => (
+  const searchInput = () => (
     <div className="flex justify-between items-center gap-2">
+        <h5 className="font-semibold" style={{ color: isDark ? "#f0f0f0" : "#2E2A27" }}>Users</h5>
         <Form>
-          <Form.Item 
-            label="Recent Users"
-            className="mb-0 ml-auto font-semibold">
+          <Form.Item className="mb-0 ml-auto">
             <Input.Search
               placeholder="Search by name, email or role..."
               value={searchQuery}
@@ -81,13 +83,6 @@ function AdminDashboardPage() {
             />
           </Form.Item>
         </Form>
-        <Button
-              type="primary"
-              style={{ backgroundColor: '#C76A34', borderColor: '#C76A34' }}
-              onClick={() => navigate('/users')}
-            >
-              Manage All Users
-        </Button>
     </div>
   );
  
@@ -130,11 +125,20 @@ function AdminDashboardPage() {
         </Row>
 
        <CustomTable
-          // title="Recent Users"
+          title="Recent Users"
+          extraHeader={
+            <Button
+              type="primary"
+              style={{ backgroundColor: '#C76A34', borderColor: '#C76A34' }}
+              onClick={() => navigate('/users')}
+            >
+              Manage All Users
+            </Button>
+          }
           dataSource={searchQuery ? filteredUsers : safeUsers.slice(0, 5)}
           columns={columns}
-          pagination={{ pageSize: 3 }}
-          tableTitleRender={() => tableHeader()}
+          pagination={false}
+          tableTitleRender={() => searchInput()}
         />
       </div>
     </DashboardLayout>

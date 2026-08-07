@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useSelector } from 'react-redux';
 import {
   Button, Tag, Space, Typography, Divider,
   Modal, Form, Input, Drawer, Checkbox,
@@ -8,6 +9,8 @@ import {
   PlusOutlined, SettingOutlined, CheckOutlined,
   InfoCircleOutlined, TagsOutlined,
   CheckCircleFilled, MinusCircleFilled,
+  DeleteOutlined,
+  ExclamationCircleOutlined,
 } from '@ant-design/icons';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { fetchRoles, createRole, deleteRole, assignPermissions } from '../api/queries';
@@ -177,6 +180,8 @@ function PermissionReadOnly({ dbPermissions, modules, actions }) {
 function RoleManagementPage() {
   const [form] = Form.useForm();
   const queryClient = useQueryClient();
+  const { theme } = useSelector((state) => state.auth);
+  const isDark = theme === "dark";
 
   // Create modal
   const [createOpen, setCreateOpen]           = useState(false);
@@ -223,6 +228,17 @@ function RoleManagementPage() {
     onError: err => message.error(err?.response?.data?.message || 'Failed to save permissions'),
   });
 
+   const handleDeleteClick = (record) => {
+    Modal.confirm({
+      title: "Delete Role",
+      icon: <ExclamationCircleOutlined style={{ color: "#ff4d4f" }} />,
+      content: `Are you sure you want to delete ${record.role}?`,
+      okText: "Delete",
+      okType: "danger",
+      cancelText: "Cancel",
+      onOk: () => deleteRoleMutation.mutate(record._id),
+    });
+  };
   // ── Create modal ─────────────────────────────────────────────
   const openCreate = () => {
     form.resetFields();
@@ -314,14 +330,15 @@ function RoleManagementPage() {
             <Button size="small" icon={<SettingOutlined />} style={{ borderColor: '#6366f1', color: '#6366f1' }} onClick={() => openPermissions(record)}>
               Permissions
             </Button>
-            {!isBuiltIn && (
-              <Popconfirm
-                title={`Delete "${record.name}"?`}
-                onConfirm={() => deleteRoleMutation.mutate(record._id)}
-                okText="Delete" cancelText="Cancel" okButtonProps={{ danger: true }}
+             {!isBuiltIn && (
+              <Button
+                size="small"
+                onClick={() => handleDeleteClick(record)}
+                danger
+                icon={<DeleteOutlined />}
               >
-                <Button size="small" danger>Delete</Button>
-              </Popconfirm>
+                Delete
+              </Button>
             )}
           </Space>
         );
@@ -343,7 +360,7 @@ function RoleManagementPage() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <TagsOutlined className="text-[#C76A34] text-2xl" />
-            <Title level={4} className="!mb-0 !text-[#2E2A27] dark:!text-[#f0f0f0]">Role Management</Title>
+            <Title level={4} className="!mb-0" style={{ color: isDark ? "#f0f0f0" : "#2E2A27" }}>Role Management</Title>
           </div>
           <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}
             style={{ backgroundColor: '#C76A34', borderColor: '#C76A34' }}>
@@ -513,7 +530,7 @@ function RoleManagementPage() {
             </Descriptions>
 
             <div>
-              <Title level={5} style={{ marginBottom: 12, color: '#374151' }}>Module Permissions</Title>
+              <Title level={5} style={{ marginBottom: 12, color: isDark ? "#f0f0f0" : '#374151' }}>Module Permissions</Title>
               <PermissionReadOnly
                 dbPermissions={detailsRole.permissions || []}
                 modules={modules}

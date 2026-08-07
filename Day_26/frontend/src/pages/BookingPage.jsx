@@ -28,7 +28,8 @@ const { Title } = Typography;
 function BookingPage() {
   const queryClient = useQueryClient();
 
-  const { role } = useSelector((state) => state.auth);
+  const { role, theme } = useSelector((state) => state.auth);
+  const isDark = theme === "dark";
 
   const [bookModalOpen, setBookModalOpen] = useState(false);
 
@@ -129,7 +130,7 @@ function BookingPage() {
           <div className="flex items-center gap-2">
             <CalendarOutlined className="text-2xl text-[#C76A34]" />
 
-            <Title level={4} className="!mb-0 !text-[#2E2A27] dark:!text-[#f0f0f0]">
+            <Title level={4} className="!mb-0" style={{ color: isDark ? "#f0f0f0" : "#2E2A27" }}>
               {pageTitle}
             </Title>
           </div>
@@ -151,17 +152,13 @@ function BookingPage() {
 
         {/* ---------- Error ---------- */}
 
-       {bookingsError && (
-        <Alert
-          type="error"
-          showIcon
-          message={
-            bookingsQueryError?.response?.data?.message ||
-            bookingsQueryError?.message ||
-            "Unable to load bookings."
-          }
-        />
-      )}
+        {bookingsError && (
+          <Alert
+            type="error"
+            showIcon
+            message={bookingsQueryError?.message || "Unable to load bookings."}
+          />
+        )}
 
         {/* ---------- Statistics ---------- */}
 
@@ -191,8 +188,11 @@ function BookingPage() {
           dataSource={bookings}
           columns={columns}
           pagination={{
-            pageSize: 5,
+            pageSize: 8,
             showSizeChanger: false,
+          }}
+          scroll={{
+            x: 900,
           }}
         />
 

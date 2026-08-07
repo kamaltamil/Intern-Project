@@ -1,7 +1,9 @@
 import { useState } from "react";
+import { useSelector } from "react-redux";
 import {
   Button,
   Tag,
+  Popconfirm,
   message,
   Skeleton,
   Alert,
@@ -9,6 +11,8 @@ import {
   Space,
   Modal,
   Form,
+  Input,
+  Select,
   Avatar,
 } from "antd";
 import {
@@ -19,14 +23,12 @@ import {
   CrownOutlined,
   PlusOutlined,
   ReloadOutlined,
-  ExclamationCircleOutlined,
 } from "@ant-design/icons";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 import DashboardLayout from "../components/DashboardLayout";
 import CustomCard from "../components/CustomCard";
 import CustomTable from "../components/CustomTable";
-import CustomForm from "../components/CustomForm";
 
 import {
   fetchUsers,
@@ -39,6 +41,7 @@ import {
 import { resolveProfileImage } from "../utils/image";
 
 const { Title } = Typography;
+const { Option } = Select;
 
 const roleColor = {
   Admin: "red",
@@ -48,12 +51,16 @@ const roleColor = {
 
 function UsersManagementPage() {
   const queryClient = useQueryClient();
+  const { theme } = useSelector((state) => state.auth);
+  const isDark = theme === "dark";
 
   /* ---------------- State ---------------- */
 
   const [updatingId, setUpdatingId] = useState(null);
+
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [addModalOpen, setAddModalOpen] = useState(false);
+
   const [editingUser, setEditingUser] = useState(null);
 
   const [editForm] = Form.useForm();
@@ -80,30 +87,34 @@ function UsersManagementPage() {
   /* ---------------- Role Options ---------------- */
 
   const builtInRoles = new Set(["Admin", "Manager", "Member"]);
+
   const customRoles = roles
     .map((role) => role.name)
     .filter((name) => !builtInRoles.has(name));
-  const allRoleOptions = [...builtInRoles, ...customRoles];
 
-  const roleSelectOptions = allRoleOptions.map((role) => ({
-    label: <Tag color={roleColor[role] || "purple"}>{role}</Tag>,
-    value: role,
-  }));
+  const allRoleOptions = [...builtInRoles, ...customRoles];
 
   /* ---------------- Update User ---------------- */
 
   const updateUserMutation = useMutation({
     mutationFn: updateUserApi,
+
     onSuccess: () => {
       message.success("User updated successfully");
+
       setEditModalOpen(false);
       setEditingUser(null);
       editForm.resetFields();
-      queryClient.invalidateQueries({ queryKey: ["users"] });
+
+      queryClient.invalidateQueries({
+        queryKey: ["users"],
+      });
     },
+
     onError: (error) => {
       message.error(
-        error?.response?.data?.message || "Failed to update user"
+        error?.response?.data?.message ||
+          "Failed to update user"
       );
     },
   });
@@ -112,15 +123,22 @@ function UsersManagementPage() {
 
   const addUserMutation = useMutation({
     mutationFn: signupUser,
+
     onSuccess: () => {
       message.success("User created successfully");
+
       setAddModalOpen(false);
       addForm.resetFields();
-      queryClient.invalidateQueries({ queryKey: ["users"] });
+
+      queryClient.invalidateQueries({
+        queryKey: ["users"],
+      });
     },
+
     onError: (error) => {
       message.error(
-        error?.response?.data?.message || "Unable to create user"
+        error?.response?.data?.message ||
+          "Unable to create user"
       );
     },
   });
@@ -129,15 +147,23 @@ function UsersManagementPage() {
 
   const deleteUserMutation = useMutation({
     mutationFn: deleteUser,
+
     onSuccess: () => {
       message.success("User deleted successfully");
+
       setUpdatingId(null);
-      queryClient.invalidateQueries({ queryKey: ["users"] });
+
+      queryClient.invalidateQueries({
+        queryKey: ["users"],
+      });
     },
+
     onError: (error) => {
       setUpdatingId(null);
+
       message.error(
-        error?.response?.data?.message || "Failed to delete user"
+        error?.response?.data?.message ||
+          "Failed to delete user"
       );
     },
   });
@@ -156,12 +182,14 @@ function UsersManagementPage() {
 
   const openEditModal = (user) => {
     setEditingUser(user);
+
     editForm.setFieldsValue({
       name: user.name,
       username: user.username,
       email: user.email,
       role: user.role,
     });
+
     setEditModalOpen(true);
   };
 
@@ -171,25 +199,38 @@ function UsersManagementPage() {
     setEditModalOpen(false);
   };
 
-  /* ---------------- Finish Handlers (called by CustomForm's onFinish) ---------------- */
+  /* ---------------- Save Edit ---------------- */
 
-  const handleAddUserFinish = (values) => {
-    addUserMutation.mutate({
-      name: values.name,
-      username: values.username,
-      email: values.email,
-      password: values.password,
-      role: values.role,
-    });
+  const handleEditSave = async () => {
+    try {
+      const values = await editForm.validateFields();
+
+      updateUserMutation.mutate({
+        id: editingUser._id,
+        payload: values,
+      });
+    } catch {
+      // validation handled by antd
+    }
   };
 
-  const handleEditUserFinish = (values) => {
-    updateUserMutation.mutate({
-      id: editingUser._id,
-      payload: values,
-    });
-  };
+  /* ---------------- Add User ---------------- */
 
+  const handleAddUser = async () => {
+    try {
+      const values = await addForm.validateFields();
+
+      addUserMutation.mutate({
+        name: values.name,
+        username: values.username,
+        email: values.email,
+        password: values.password,
+        role: values.role,
+      });
+    } catch (err) {
+      console.log(err)
+    }
+  };
   /* ---------------- Delete ---------------- */
 
   const handleDelete = (id) => {
@@ -197,19 +238,7 @@ function UsersManagementPage() {
     deleteUserMutation.mutate(id);
   };
 
-const handleDeleteClick = (record) => {
-  Modal.confirm({
-    title: "Delete User",
-    icon: <ExclamationCircleOutlined style={{ color: "#ff4d4f" }} />,
-    content: `Are you sure you want to delete ${record.name}?`,
-    okText: "Delete",
-    okType: "danger",
-    cancelText: "Cancel",
-    onOk: () => handleDelete(record._id),
-  });
-};
-
-  /* ---------------- Table Columns ---------------- */
+    /* ---------------- Table Columns ---------------- */
 
   const columns = [
     {
@@ -224,20 +253,30 @@ const handleDeleteClick = (record) => {
             {!record.profileImage &&
               (record.name?.charAt(0)?.toUpperCase() || "U")}
           </Avatar>
+
           <span className="font-medium">{name}</span>
         </div>
       ),
     },
-    { title: "Email", dataIndex: "email" },
+    {
+      title: "Email",
+      dataIndex: "email",
+    },
     {
       title: "Username",
       dataIndex: "username",
-      render: (username) => <span className="text-gray-500">@{username}</span>,
+      render: (username) => (
+        <span className="text-gray-500">@{username}</span>
+      ),
     },
     {
       title: "Role",
       dataIndex: "role",
-      render: (role) => <Tag color={roleColor[role] || "purple"}>{role}</Tag>,
+      render: (role) => (
+        <Tag color={roleColor[role] || "purple"}>
+          {role}
+        </Tag>
+      ),
     },
     {
       title: "Actions",
@@ -246,23 +285,38 @@ const handleDeleteClick = (record) => {
           <Button
             icon={<EditOutlined />}
             onClick={() => openEditModal(record)}
-            style={{ borderColor: "#C76A34", color: "#C76A34" }}
+            style={{
+              borderColor: "#C76A34",
+              color: "#C76A34",
+            }}
           >
             Edit
           </Button>
-          <Button
-            danger
-            loading={updatingId === record._id}
-            icon={<DeleteOutlined />}
-            onClick={() => handleDeleteClick(record)}
+
+          <Popconfirm
+            title="Delete User"
+            description={`Delete ${record.name}?`}
+            onConfirm={() => handleDelete(record._id)}
+            okText="Delete"
+            cancelText="Cancel"
+            okButtonProps={{ danger: true }}
           >
-            Delete
-          </Button>
+            <Button
+              danger
+              loading={updatingId === record._id}
+              icon={<DeleteOutlined />}
+            >
+              Delete
+            </Button>
+          </Popconfirm>
         </Space>
       ),
     },
   ];
 
+  /* ---------------- Loading ---------------- */
+
+  // Defensive: never let a bad/failed response crash the page
   const safeUsers = Array.isArray(users) ? users : [];
 
   if (usersLoading && safeUsers.length === 0) {
@@ -280,14 +334,15 @@ const handleDeleteClick = (record) => {
           type="error"
           showIcon
           message={
-            usersQueryError?.response?.data?.message ||
-            usersQueryError?.message ||
+            usersQueryError?.message ??
             "Unable to load users"
           }
         />
       </DashboardLayout>
     );
   }
+
+  /* ---------------- Dashboard Cards ---------------- */
 
   const stats = [
     {
@@ -307,94 +362,11 @@ const handleDeleteClick = (record) => {
     },
   ];
 
-  /* ---------------- CustomForm Field Definitions ---------------- */
-
-  const addUserFields = [
-    {
-      type: "input",
-      name: "name",
-      label: "Full Name",
-      placeholder: "Enter full name",
-      rules: [{ required: true, message: "Name is required" }],
-    },
-    {
-      type: "input",
-      name: "username",
-      label: "Username",
-      placeholder: "Choose username",
-      rules: [{ required: true, message: "Username is required" }],
-    },
-    {
-      type: "input",
-      name: "email",
-      label: "Email",
-      placeholder: "Enter email",
-      rules: [
-        { required: true, message: "Email is required" },
-        { type: "email", message: "Enter a valid email" },
-      ],
-    },
-    {
-      type: "select",
-      name: "role",
-      label: "Role",
-      placeholder: "Select Role",
-      options: roleSelectOptions,
-      rules: [{ required: true, message: "Please select a role" }],
-    },
-    {
-      type: "password",
-      name: "password",
-      label: "Password",
-      placeholder: "Create password",
-      rules: [
-        { required: true, message: "Password is required" },
-        { min: 6, message: "Password must be at least 6 characters" },
-      ],
-    },
-  ];
-
-  const editUserFields = [
-    {
-      type: "input",
-      name: "name",
-      label: "Full Name",
-      rules: [{ required: true, message: "Name is required" }],
-    },
-    {
-      type: "input",
-      name: "username",
-      label: "Username",
-      rules: [{ required: true, message: "Username is required" }],
-    },
-    {
-      type: "input",
-      name: "email",
-      label: "Email",
-      rules: [
-        { required: true, message: "Email is required" },
-        { type: "email", message: "Enter a valid email" },
-      ],
-    },
-    {
-      type: "select",
-      name: "role",
-      label: "Role",
-      options: roleSelectOptions,
-      rules: [{ required: true, message: "Please select a role" }],
-    },
-    {
-      type: "password",
-      name: "password",
-      label: "New Password",
-      placeholder: "Leave blank to keep current password",
-    },
-  ];
-
   return (
     <DashboardLayout>
       <div className="space-y-5">
-        <Title level={4} className="!text-[#2E2A27] dark:!text-[#f0f0f0]">
+
+        <Title level={4} style={{ color: isDark ? "#f0f0f0" : "#2E2A27" }}>
           User Management
         </Title>
 
@@ -417,13 +389,20 @@ const handleDeleteClick = (record) => {
           pagination={{ pageSize: 5 }}
           extraHeader={
             <Space>
-              <Button icon={<ReloadOutlined />} onClick={refetchUsers}>
+              <Button
+                icon={<ReloadOutlined />}
+                onClick={refetchUsers}
+              >
                 Refresh
               </Button>
+
               <Button
                 type="primary"
                 icon={<PlusOutlined />}
-                style={{ backgroundColor: "#C76A34", borderColor: "#C76A34" }}
+                style={{
+                  backgroundColor: "#C76A34",
+                  borderColor: "#C76A34",
+                }}
                 onClick={openAddModal}
               >
                 Add User
@@ -433,44 +412,173 @@ const handleDeleteClick = (record) => {
         />
 
         {/* ---------------- Add User Modal ---------------- */}
+
         <Modal
           title="Add User"
           open={addModalOpen}
           onCancel={closeAddModal}
-          onOk={() => addForm.submit()}
+          onOk={handleAddUser}
           okText="Create User"
           okButtonProps={{
             loading: addUserMutation.isPending,
-            style: { backgroundColor: "#C76A34", borderColor: "#C76A34" },
+            style: {
+              backgroundColor: "#C76A34",
+              borderColor: "#C76A34",
+            },
           }}
         >
-          <CustomForm
-            form={addUserFields}
-            formInstance={addForm}
-            onFinish={handleAddUserFinish}
-            className="mt-2"
-          />
+          <Form
+            layout="vertical"
+            form={addForm}
+          >
+            <Form.Item
+              name="name"
+              label="Full Name"
+              rules={[
+                {
+                  required: true,
+                  message: "Name is required",
+                },
+              ]}
+            >
+              <Input />
+            </Form.Item>
+
+            <Form.Item
+              name="username"
+              label="Username"
+              rules={[
+                {
+                  required: true,
+                  message: "Username is required",
+                },
+              ]}
+            >
+              <Input />
+            </Form.Item>
+
+            <Form.Item
+              name="email"
+              label="Email"
+              rules={[
+                {
+                  required: true,
+                  type: "email",
+                },
+              ]}
+            >
+              <Input />
+            </Form.Item>
+            <Form.Item
+                name="role"
+                label="Role"
+                rules={[
+                  {
+                    required: true,
+                    message: "Please select a role",
+                  },
+                ]}
+              >
+                <Select placeholder="Select Role">
+                  {allRoleOptions.map((role) => (
+                    <Option key={role} value={role}>
+                      <Tag color={roleColor[role] || "purple"}>
+                        {role}
+                      </Tag>
+                    </Option>
+                  ))}
+                </Select>
+            </Form.Item>
+            <Form.Item
+              name="password"
+              label="Password"
+              rules={[
+                {
+                  required: true,
+                  min: 6,
+                },
+              ]}
+            >
+              <Input.Password />
+            </Form.Item>
+          </Form>
         </Modal>
 
         {/* ---------------- Edit User Modal ---------------- */}
+
         <Modal
           title={`Edit ${editingUser?.name ?? ""}`}
           open={editModalOpen}
           onCancel={closeEditModal}
-          onOk={() => editForm.submit()}
+          onOk={handleEditSave}
           okText="Save Changes"
           okButtonProps={{
             loading: updateUserMutation.isPending,
-            style: { backgroundColor: "#C76A34", borderColor: "#C76A34" },
+            style: {
+              backgroundColor: "#C76A34",
+              borderColor: "#C76A34",
+            },
           }}
         >
-          <CustomForm
-            form={editUserFields}
-            formInstance={editForm}
-            onFinish={handleEditUserFinish}
-            className="mt-2"
-          />
+          <Form
+            form={editForm}
+            layout="vertical"
+          >
+            <Form.Item
+              name="name"
+              label="Full Name"
+              rules={[{ required: true }]}
+            >
+              <Input />
+            </Form.Item>
+
+            <Form.Item
+              name="username"
+              label="Username"
+              rules={[{ required: true }]}
+            >
+              <Input />
+            </Form.Item>
+
+            <Form.Item
+              name="email"
+              label="Email"
+              rules={[
+                {
+                  required: true,
+                  type: "email",
+                },
+              ]}
+            >
+              <Input />
+            </Form.Item>
+
+            <Form.Item
+              name="role"
+              label="Role"
+              rules={[{ required: true }]}
+            >
+              <Select>
+                {allRoleOptions.map((role) => (
+                  <Option
+                    key={role}
+                    value={role}
+                  >
+                    {role}
+                  </Option>
+                ))}
+              </Select>
+            </Form.Item>
+                
+            <Form.Item
+              name="password"
+              label="New Password"
+            >
+              <Input.Password placeholder="Leave blank to keep current password" />
+            </Form.Item>
+          </Form>
         </Modal>
+
       </div>
     </DashboardLayout>
   );
