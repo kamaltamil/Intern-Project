@@ -9,42 +9,14 @@ import {
   PlusOutlined, SettingOutlined, CheckOutlined,
   InfoCircleOutlined, TagsOutlined,
   CheckCircleFilled, MinusCircleFilled,
-  DeleteOutlined,
-  ExclamationCircleOutlined,
 } from '@ant-design/icons';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { fetchRoles, createRole, deleteRole, assignPermissions } from '../api/queries';
+import { fetchRoles, fetchRoleMeta, createRole, deleteRole, assignPermissions } from '../api/queries';
 import DashboardLayout from '../components/DashboardLayout';
 import CustomCard from '../components/CustomCard';
 import CustomTable from '../components/CustomTable';
 
 const { Title, Text } = Typography;
-
-const PROTECTED_ROLES = new Set(['Admin', 'Manager', 'Member']);
-
-// Preset color options for unique role tag colors
-const COLOR_OPTIONS = [
-  { label: 'Purple',   value: '#722ed1' },
-  { label: 'Red',      value: '#f5222d' },
-  { label: 'Orange',   value: '#fa8c16' },
-  { label: 'Blue',     value: '#1890ff' },
-  { label: 'Green',    value: '#52c41a' },
-  { label: 'Cyan',     value: '#13c2c2' },
-  { label: 'Pink',     value: '#eb2f96' },
-  { label: 'Geekblue', value: '#2f54eb' },
-  { label: 'Gold',     value: '#faad14' },
-];
-
-// Display labels for resources — if a resource isn't listed here, the raw name is shown
-const RESOURCE_LABEL = {
-  dashboard: 'Dashboard',
-  users:     'User Management',
-  roles:     'Role Management',
-  bookings:  'Bookings',
-  approval:  'Booking Approval',
-  reports:   'Reports',
-  profile:   'Profile',
-};
 
 function formatDate(d) {
   if (!d) return '—';
@@ -66,6 +38,21 @@ function buildPermState(dbPermissions, modules, actions) {
 // Convert state back to the API payload format
 function stateToPayload(state) {
   return Object.entries(state).map(([resource, action]) => ({ resource, action }));
+}
+
+// Enforces the view <-> create/update/delete dependency rule on a single
+// module's action set: turning view off clears the other three; turning
+// any of the other three on forces view on. Mirrors the backend validator
+// in roleValidator.js so the UI never produces a payload it would reject.
+function applyDependency(current, action, value) {
+  const next = { ...current, [action]: value };
+  if (action === 'view' && !value) {
+    return { view: false, create: false, update: false, delete: false };
+  }
+  if (action !== 'view' && value) {
+    next.view = true;
+  }
+  return next;
 }
 
 // ── Editable permission grid ─────────────────────────────────────────────────
@@ -109,6 +96,7 @@ function PermissionGrid({ modules, actions, permState, onToggle, onModuleAll, on
                   <td key={action} style={{ textAlign: 'center', padding: '9px 8px' }}>
                     <Checkbox
                       checked={current[action] || false}
+                      disabled={action !== 'view' && !current.view}
                       onChange={() => onToggle(resource, action)}
                     />
                   </td>
@@ -201,13 +189,15 @@ function RoleManagementPage() {
     queryFn: fetchRoles,
   });
 
-  // Derive modules and actions from DB data — no hardcoding
-  const referencePerms = roles.find(r => r.permissions?.length > 0)?.permissions || [];
-  const modules = referencePerms.map(p => ({
-    resource: p.resource,
-    label: RESOURCE_LABEL[p.resource] || p.resource,
-  }));
-  const actions = referencePerms.length > 0 ? Object.keys(referencePerms[0].action || {}) : [];
+  const { data: roleMeta = { modules: [], actions: [], colors: [] } } = useQuery({
+    queryKey: ['role-meta'],
+    queryFn: fetchRoleMeta,
+  });
+
+  // Modules, actions and color options all come from the backend now —
+  // nothing about the permission matrix is hardcoded in the frontend.
+  const modules = roleMeta.modules;
+  const actions = roleMeta.actions;
 
   // ── Mutations ────────────────────────────────────────────────
   const createRoleMutation = useMutation({
@@ -228,17 +218,6 @@ function RoleManagementPage() {
     onError: err => message.error(err?.response?.data?.message || 'Failed to save permissions'),
   });
 
-   const handleDeleteClick = (record) => {
-    Modal.confirm({
-      title: "Delete Role",
-      icon: <ExclamationCircleOutlined style={{ color: "#ff4d4f" }} />,
-      content: `Are you sure you want to delete ${record.role}?`,
-      okText: "Delete",
-      okType: "danger",
-      cancelText: "Cancel",
-      onOk: () => deleteRoleMutation.mutate(record._id),
-    });
-  };
   // ── Create modal ─────────────────────────────────────────────
   const openCreate = () => {
     form.resetFields();
@@ -279,18 +258,26 @@ function RoleManagementPage() {
   };
 
   const handlePermToggle = (resource, action) =>
-    setPermState(prev => ({ ...prev, [resource]: { ...prev[resource], [action]: !prev[resource][action] } }));
+    setPermState(prev => ({
+      ...prev,
+      [resource]: applyDependency(prev[resource], action, !prev[resource][action]),
+    }));
 
   const handlePermModuleAll = (resource) => {
     const allChecked = actions.every(a => permState[resource]?.[a]);
+    // Turning every action on/off together can never violate the
+    // dependency rule, so no extra fix-up needed here.
     setPermState(prev => ({ ...prev, [resource]: Object.fromEntries(actions.map(a => [a, !allChecked])) }));
   };
 
   const handlePermActionAll = (action) => {
     const allChecked = modules.every(m => permState[m.resource]?.[action]);
+    const value = !allChecked;
     setPermState(prev => {
       const next = { ...prev };
-      modules.forEach(({ resource }) => { next[resource] = { ...next[resource], [action]: !allChecked }; });
+      modules.forEach(({ resource }) => {
+        next[resource] = applyDependency(next[resource], action, value);
+      });
       return next;
     });
   };
@@ -313,7 +300,7 @@ function RoleManagementPage() {
     {
       title: 'Type',
       key: 'type',
-      render: (_, r) => PROTECTED_ROLES.has(r.name)
+      render: (_, r) => r.isSystem
         ? <Badge status="processing" text={<Text style={{ fontSize: 12 }}>Built-in</Text>} />
         : <Badge status="success"    text={<Text style={{ fontSize: 12 }}>Custom</Text>} />,
     },
@@ -321,7 +308,7 @@ function RoleManagementPage() {
       title: 'Actions',
       key: 'actions',
       render: (_, record) => {
-        const isBuiltIn = PROTECTED_ROLES.has(record.name);
+        const isBuiltIn = record.isSystem;
         return (
           <Space size={6}>
             <Button size="small" icon={<InfoCircleOutlined />} onClick={() => { setDetailsRole(record); setDetailsOpen(true); }}>
@@ -330,15 +317,14 @@ function RoleManagementPage() {
             <Button size="small" icon={<SettingOutlined />} style={{ borderColor: '#6366f1', color: '#6366f1' }} onClick={() => openPermissions(record)}>
               Permissions
             </Button>
-             {!isBuiltIn && (
-              <Button
-                size="small"
-                onClick={() => handleDeleteClick(record)}
-                danger
-                icon={<DeleteOutlined />}
+            {!isBuiltIn && (
+              <Popconfirm
+                title={`Delete "${record.name}"?`}
+                onConfirm={() => deleteRoleMutation.mutate(record._id)}
+                okText="Delete" cancelText="Cancel" okButtonProps={{ danger: true }}
               >
-                Delete
-              </Button>
+                <Button size="small" danger>Delete</Button>
+              </Popconfirm>
             )}
           </Space>
         );
@@ -348,8 +334,8 @@ function RoleManagementPage() {
 
   const stats = [
     { title: 'Total Roles',  value: roles.length },
-    { title: 'Built-in',     value: roles.filter(r => PROTECTED_ROLES.has(r.name)).length },
-    { title: 'Custom Roles', value: roles.filter(r => !PROTECTED_ROLES.has(r.name)).length },
+    { title: 'Built-in',     value: roles.filter(r => r.isSystem).length },
+    { title: 'Custom Roles', value: roles.filter(r => !r.isSystem).length },
   ];
 
   return (
@@ -425,7 +411,7 @@ function RoleManagementPage() {
               rules={[{ required: true, message: 'Color is required' }]}
             >
               <Select
-                options={COLOR_OPTIONS.map(c => ({
+                options={roleMeta.colors.map(c => ({
                   label: (
                     <div className="flex items-center gap-2">
                       <span style={{ width: 12, height: 12, borderRadius: '50%', backgroundColor: c.value, display: 'inline-block' }} />
@@ -517,7 +503,7 @@ function RoleManagementPage() {
                 </Tag>
               </Descriptions.Item>
               <Descriptions.Item label="Type">
-                {PROTECTED_ROLES.has(detailsRole.name)
+                {detailsRole.isSystem
                   ? <Badge status="processing" text="Built-in" />
                   : <Badge status="success" text="Custom" />
                 }

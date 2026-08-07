@@ -7,6 +7,30 @@ const {
     assignPermissions,
 } = require('../services/roleService');
 
+const MODULE_LIST = require('../constants/modules');
+const MODULE_LABELS = require('../constants/moduleLabels');
+const ACTION_LIST = require('../constants/actions');
+const ROLE_COLORS = require('../constants/roleColors');
+
+/**
+ * GET /roles/meta
+ * Static config the Role Management UI needs to render the permission
+ * grid and color picker — comes from the backend so the frontend never
+ * hardcodes module labels, action names, or color options.
+ */
+const getRoleMeta = (req, res) => {
+    const modules = Object.values(MODULE_LIST).map((resource) => ({
+        resource,
+        label: MODULE_LABELS[resource] || resource,
+    }));
+
+    return res.json({
+        modules,
+        actions: Object.values(ACTION_LIST),
+        colors: ROLE_COLORS,
+    });
+};
+
 const createRoleHandler = async (req, res) => {
     try {
         const { name, description, color, permissions } = req.body;
@@ -101,4 +125,5 @@ module.exports = {
     updateRoleHandler,
     deleteRoleHandler,
     assignPermissionsHandler,
+    getRoleMeta,
 };

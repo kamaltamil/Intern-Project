@@ -8,6 +8,7 @@ const {
 
 const { requirePermission } = require('../../../middleware/permission');
 
+// authenticateToken is already applied at the mount point in api.js
 // Anyone signed in can browse rooms (needed to make a booking)
 router.get('/', getAllRooms);
 // Adding new room inventory is a permissioned action

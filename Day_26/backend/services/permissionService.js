@@ -8,7 +8,7 @@ const Role = require('../models/role');
 const getPermissionsForRole = async (roleName) => {
     if (!roleName) return {};
 
-    const role = await Role.findOne({ name: roleName }).populate('permissions').lean();
+    const role = await Role.findOne({ name: roleName }).lean();
     if (!role) return {};
 
     const map = {};

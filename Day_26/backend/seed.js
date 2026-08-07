@@ -3,10 +3,11 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
 const connectDB = require('./config/db');
 const Role = require('./models/role');
-const RolePermissions = require('./models/rolePermissions');
 const User = require('./models/users');
+const MODULE_LIST = require('./constants/modules');
 
-const MODULES = ['dashboard', 'users', 'roles', 'bookings', 'rooms', 'approval', 'reports', 'profile'];
+const MODULES = Object.values(MODULE_LIST);
+const DEFAULT_ROLE_NAME = 'Member'; // role auto-assigned to new signups
 
 const ROLE_SEEDS = [
   {
@@ -69,36 +70,39 @@ async function seed() {
 
   if (force) {
     console.log('⚠️  --force: dropping existing seeded roles...');
-    const existing = await Role.find({ name: { $in: ROLE_SEEDS.map(r => r.name) } }).populate('permissions');
-    for (const role of existing) {
-      if (role.permissions.length) {
-        await RolePermissions.deleteMany({ _id: { $in: role.permissions.map(p => p._id) } });
-      }
-      await Role.findByIdAndDelete(role._id);
-    }
+    await Role.deleteMany({ name: { $in: ROLE_SEEDS.map(r => r.name) } });
     console.log('🗑️  Done.\n');
   }
 
   for (const roleSeed of ROLE_SEEDS) {
+    const isDefault = roleSeed.name === DEFAULT_ROLE_NAME;
     const exists = await Role.findOne({ name: roleSeed.name });
+
     if (exists && !force) {
-      console.log(`⏭️  "${roleSeed.name}" already exists — updating color if missing.`);
-      if (!exists.color) {
-        exists.color = roleSeed.color;
+      // Backfill new fields on an already-seeded DB without wiping it.
+      let changed = false;
+      if (!exists.color) { exists.color = roleSeed.color; changed = true; }
+      if (exists.isSystem !== true) { exists.isSystem = true; changed = true; }
+      if (exists.isDefault !== isDefault) { exists.isDefault = isDefault; changed = true; }
+      if (changed) {
         await exists.save();
+        console.log(`🔧 "${roleSeed.name}" already existed — backfilled isSystem/isDefault/color.`);
+      } else {
+        console.log(`⏭️  "${roleSeed.name}" already up to date.`);
       }
       continue;
     }
-
-    const permDocs = await RolePermissions.insertMany(
-      MODULES.map(resource => ({ resource, action: roleSeed.permissions[resource] }))
-    );
 
     await Role.create({
       name: roleSeed.name,
       description: roleSeed.description,
       color: roleSeed.color,
-      permissions: permDocs.map(p => p._id),
+      isSystem: true,
+      isDefault,
+      permissions: MODULES.map(resource => ({
+        resource,
+        action: roleSeed.permissions[resource],
+      })),
     });
 
     console.log(`✅ "${roleSeed.name}" seeded with color ${roleSeed.color}`);

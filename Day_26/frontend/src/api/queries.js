@@ -10,6 +10,11 @@ export const fetchRoles = async () => {
   return response.data || [];
 };
 
+export const fetchRoleMeta = async () => {
+  const response = await api.get('/roles/meta');
+  return response.data || { modules: [], actions: [], colors: [] };
+};
+
 export const fetchRooms = async () => {
   const response = await api.get('/rooms');
   return response.data?.rooms || response.data || [];
