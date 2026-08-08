@@ -179,6 +179,7 @@ const registerUser = async ({
     email: user.email,
     username: user.username,
     role: roleDoc.name,
+    roleColor: roleDoc.color || "#722ed1",
   };
 };
 
@@ -233,6 +234,7 @@ const loginUser = async (identifier, password) => {
       email: user.email,
       username: user.username,
       role: roleName,
+      roleColor: roleDoc?.color || "#722ed1",
       profileImage: user.profileImage,
     },
     token: tokens.token,
@@ -334,6 +336,7 @@ const getProfile = async (userId) => {
       email: user.email,
       username: user.username,
       role: roleName,
+      roleColor: roleDoc?.color || "#722ed1",
       profileImage: user.profileImage,
     },
     role: roleName,

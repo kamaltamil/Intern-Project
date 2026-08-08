@@ -11,7 +11,7 @@ import { useNavigate } from "react-router-dom";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { logout, setTheme } from "../store/slices/authSlice";
 import { logoutUser } from "../api/queries";
-import api from "../api/api";
+import { resolveProfileImage } from "../utils/image";
 
 const { Header } = Layout;
 
@@ -129,15 +129,7 @@ function TopHeader() {
             }}
           >
             <Avatar
-              src={(function resolveImage(u) {
-                if (!u) return null;
-                if (u.startsWith("http")) return u;
-                try {
-                  return `${new URL(api.defaults.baseURL).origin}${u}`;
-                } catch (e) {
-                  return u;
-                }
-              })(user?.profileImage)}
+              src={resolveProfileImage(user?.profileImage)}
               style={{ backgroundColor: "#C76A34" }}
             >
               {user?.name?.charAt(0)?.toUpperCase() || "U"}
@@ -149,7 +141,7 @@ function TopHeader() {
               >
                 {user?.name || "User"}
               </span>
-              <span className="text-xs" style={{ color: "#C76A34" }}>
+              <span className="text-xs" style={{ color: typeof user?.role === "object" ? (user.role?.color || "#C76A34") : (user?.roleColor || "#C76A34") }}>
                 {typeof user?.role === "object" ? user.role?.name : user?.role || "Member"}
               </span>
             </div>

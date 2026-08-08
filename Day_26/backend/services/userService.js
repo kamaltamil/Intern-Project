@@ -285,6 +285,12 @@ const updateUser = async (id, payload, requestingUser = null) => {
     user.isActive = payload.isActive;
   }
 
+  /* ------------------------- Profile Image -------------------------- */
+
+  if (payload.profileImage !== undefined) {
+    user.profileImage = payload.profileImage;
+  }
+
   await user.save();
 
   return await User.findById(user._id).populate("role").select("-password -refreshToken");

@@ -12,8 +12,8 @@ import {
   Modal,
   Row,
   Select,
+  Skeleton,
   Space,
-  Spin,
   Switch,
   Table,
   Tag,
@@ -459,9 +459,7 @@ function RoleManagementPage() {
   if (isLoading) {
     return (
       <DashboardLayout>
-        <div className="flex justify-center items-center min-h-[400px]">
-          <Spin size="large" />
-        </div>
+        <Skeleton active paragraph={{ rows: 6 }} />
       </DashboardLayout>
     );
   }

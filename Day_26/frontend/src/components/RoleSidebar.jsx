@@ -104,9 +104,8 @@ function RoleSidebar() {
       fontSize: "18px",
       fontWeight: 700,
       cursor: "default",
-      marginBottom: 8,
-    },
-    disabled: true,
+      marginBottom: 8
+    }
   };
 
   const selectedKey =
@@ -115,6 +114,7 @@ function RoleSidebar() {
   return (
     <Sider
       breakpoint="lg"
+      collapsible={true}
       style={{
         background: isDark ? "#1a1a2e" : "#ffffff",
         borderRight: `1px solid ${isDark ? "#2d2d44" : "#ECE6DF"}`,

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Button, Alert, Typography, message } from "antd";
+import { Button, Alert, Typography, message, Row, Col } from "antd";
 
 import { CalendarOutlined, PlusOutlined } from "@ant-design/icons";
 
@@ -162,16 +162,19 @@ function BookingPage() {
 
         {/* ---------- Statistics ---------- */}
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {stats.map((item) => (
-            <CustomCard
-              key={item.title}
-              title={item.title}
-              value={item.value}
-              icon={item.icon}
-              color={item.color}
-            />
+        <div className="space-y-4">
+          <Row gutter={[16, 16]}>
+           {stats.map((stat) => (
+             <Col xs={24} sm={12} lg={6} key={stat.title}>
+              <CustomCard
+                title={stat.title}
+                value={stat.value}
+                icon={stat.icon}
+                color={stat.color}
+              />
+            </Col>
           ))}
+        </Row>
         </div>
 
         {/* ---------- Table ---------- */}

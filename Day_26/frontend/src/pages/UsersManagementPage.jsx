@@ -14,6 +14,8 @@ import {
   Input,
   Select,
   Avatar,
+  Row,
+  Col,
 } from "antd";
 import {
   DeleteOutlined,
@@ -379,15 +381,18 @@ function UsersManagementPage() {
         </div>
 
         {/* Stats Row */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {userStats.map((stat) => (
-            <CustomCard
-              key={stat.title}
-              title={stat.title}
-              value={stat.value}
-              icon={stat.icon}
-            />
-          ))}
+        <div className="space-y-4">
+          <Row gutter={[16, 16]}>
+            {userStats.map((stat) => (
+              <Col xs={24} sm={12} lg={6} key={stat.title}>
+                <CustomCard
+                  title={stat.title}
+                  value={stat.value}
+                  icon={stat.icon}
+                />
+              </Col>
+            ))}
+          </Row>
         </div>
 
         {/* Users Table */}

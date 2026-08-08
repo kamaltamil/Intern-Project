@@ -5,6 +5,7 @@ const CustomTable = ({
   title,
   extraHeader,      
   isLoading = false,
+  isError = false,
   rowKey = "_id",   
   dataSource = [],  
   columns = [],   
@@ -52,7 +53,7 @@ const CustomTable = ({
       )}
 
       {/* Skeleton Loading State Sync */}
-      {isLoading && dataSource.length === 0 ? (
+      {isLoading ? (
         <Skeleton active paragraph={{ rows: 4 }} />
       ) : (
         <div ref={tableWrapperRef} className="w-full overflow-hidden pr-1">

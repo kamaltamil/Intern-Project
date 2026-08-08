@@ -8,7 +8,14 @@ import './index.css';
 import AppRoutes from './routes/AppRoutes';
 import reportWebVitals from './reportWebVitals';
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>

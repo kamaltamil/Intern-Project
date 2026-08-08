@@ -108,7 +108,7 @@ const authSlice = createSlice({
       };
 
       if (action.payload?.role) {
-        state.role = action.payload.role;
+        state.role = typeof action.payload.role === 'object' ? action.payload.role.name : action.payload.role;
       }
 
       if (Array.isArray(action.payload?.permissions)) {

@@ -4,22 +4,12 @@ import { UserOutlined, EditOutlined, SaveOutlined, CloseOutlined, UploadOutlined
 import { useDispatch, useSelector } from 'react-redux';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { updateUser, fetchMe } from '../api/queries';
-import api from '../api/api';
 import { updateUserProfile } from '../store/slices/authSlice';
 import DashboardLayout from '../components/DashboardLayout';
+import { resolveProfileImage } from '../utils/image';
 import { ROLE_COLORS } from '../constants/roleColors';
 
 const { Title, Text } = Typography;
-
-const resolveProfileImage = (image) => {
-  if (!image) return null;
-  if (image.startsWith('http')) return image;
-  try {
-    return `${new URL(api.defaults.baseURL).origin}${image}`;
-  } catch {
-    return image;
-  }
-};
 
 const getFallbackRoleColor = (roleName) => {
   const match = ROLE_COLORS.find(
@@ -53,7 +43,7 @@ function ProfilePage() {
   }, [profileUser?.user?.profileImage, user?.profileImage]);
 
   const roleName = typeof profileUser?.role === 'object' ? profileUser.role?.name : (profileUser?.role || 'Member');
-  const roleColor = typeof profileUser?.role === 'object' && profileUser.role?.color ? profileUser.role.color : getFallbackRoleColor(roleName);
+  const roleColor = typeof profileUser?.role === 'object' && profileUser.role?.color ? profileUser.role.color : (profileUser?.user?.roleColor || profileUser?.roleColor || user?.roleColor || getFallbackRoleColor(roleName));
 
   const onEditClick = () => {
     form.setFieldsValue({
