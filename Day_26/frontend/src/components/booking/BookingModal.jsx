@@ -1,12 +1,10 @@
 import React from "react";
-import { Modal, Form, Select, Tag, Space, message } from "antd";
+import { Modal, Form, Tag, Space, message } from "antd";
 import { HomeOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 
 import CustomForm from "../CustomForm";
 import BookingCostPreview from "./BookingCostPreview";
-
-const { Option } = Select;
 
 const BookingModal = ({
   open,

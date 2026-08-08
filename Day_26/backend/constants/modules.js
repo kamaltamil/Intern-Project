@@ -1,9 +1,9 @@
 module.exports = {
-  USERS: "Users",
-  ROLES: "Roles",
-  BOOKINGS: "Bookings",
-  APPROVALS: "Approvals",
-  REPORTS: "Reports",
-  PROFILE: "Profile",
-  DASHBOARD: "Dashboard",
+  USERS: "users",
+  ROLES: "roles",
+  BOOKINGS: "bookings",
+  REPORTS: "reports",
+  APPROVAL: "approval",
+  PROFILE: "profile",
+  DASHBOARD: "dashboard",
 };

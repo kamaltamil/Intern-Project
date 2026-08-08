@@ -9,6 +9,14 @@ import { useNavigate } from 'react-router-dom';
 import CustomCard from '../components/CustomCard';
 import CustomTable from '../components/CustomTable';
 import { resolveProfileImage } from "../utils/image";
+import { ROLE_COLORS } from "../constants/roleColors";
+
+const getFallbackRoleColor = (roleName) => {
+  const match = ROLE_COLORS.find(
+    (c) => c.label.toLowerCase() === roleName?.toLowerCase()
+  );
+  return match ? match.value : "#722ed1";
+};
 
 function AdminDashboardPage() {
   const navigate = useNavigate();
@@ -26,20 +34,21 @@ function AdminDashboardPage() {
   // Defensive: never let a bad/failed response crash the page
   const safeUsers = Array.isArray(users) ? users : [];
 
+  const getRoleName = (r) => (typeof r === 'object' ? r?.name : r) || '';
+
   const filteredUsers = safeUsers.filter((user) => {
     const query = searchQuery.toLowerCase();
+    const roleName = getRoleName(user.role);
     return (
       user.name?.toLowerCase().includes(query) ||
       user.email?.toLowerCase().includes(query) ||
-      user.role?.toLowerCase().includes(query)
+      roleName.toLowerCase().includes(query)
     );
   });
 
-  const totalManagers = safeUsers.filter((item) => item.role === 'Manager').length;
-  const totalMembers = safeUsers.filter((item) => item.role === 'Member').length;
+  const totalManagers = safeUsers.filter((item) => getRoleName(item.role) === 'Manager').length;
+  const totalMembers = safeUsers.filter((item) => getRoleName(item.role) === 'Member').length;
   const revenue = safeUsers.length * 125;
-
-  const roleColor = { Admin: 'red', Manager: 'orange', Member: 'blue' };
 
   const columns = [
     {
@@ -65,7 +74,11 @@ function AdminDashboardPage() {
     {
       title: 'Role',
       dataIndex: 'role',
-      render: (role) => <Tag color={roleColor[role] || 'default'}>{role}</Tag>,
+      render: (role) => {
+        const name = getRoleName(role);
+        const color = typeof role === 'object' && role?.color ? role.color : getFallbackRoleColor(name);
+        return <Tag color={color}>{name || 'Member'}</Tag>;
+      },
     },
   ];
 

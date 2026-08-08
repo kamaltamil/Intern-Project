@@ -6,50 +6,29 @@ const {
   deleteRole,
 } = require("../services/roleService");
 
-/**
- * Create Role
- */
+/* -------------------------------------------------------------------------- */
+/*                               Create Role                                  */
+/* -------------------------------------------------------------------------- */
+
 const createRoleHandler = async (req, res) => {
   try {
-    const {
-      name,
-      description,
-      color,
-      permissions,
-      isDefault,
-    } = req.body;
-
-    if (!name) {
-      return res.status(400).json({
-        message: "Role name is required",
-      });
-    }
-
-    const role = await createRole({
-      name,
-      description,
-      color,
-      permissions,
-      isDefault,
-    });
+    const role = await createRole(req.body);
 
     return res.status(201).json({
       message: "Role created successfully",
       role,
     });
   } catch (error) {
-    return res.status(error.statusCode || 500).json({
-      message:
-        error.statusCode === 409
-          ? "Role already exists"
-          : error.message || "Failed to create role",
+    return res.status(400).json({
+      message: error.message,
     });
   }
 };
 
-/**
- * Get All Roles
- */
+/* -------------------------------------------------------------------------- */
+/*                               List Roles                                   */
+/* -------------------------------------------------------------------------- */
+
 const listRoles = async (req, res) => {
   try {
     const roles = await getAllRoles();
@@ -57,15 +36,16 @@ const listRoles = async (req, res) => {
     return res.status(200).json(roles);
   } catch (error) {
     return res.status(500).json({
-      message: "Failed to fetch roles", error
+      message: error.message,
     });
   }
 };
 
-/**
- * Get Single Role
- */
-const getRoleHandler = async (req, res) => {
+/* -------------------------------------------------------------------------- */
+/*                              Get Role By Id                                */
+/* -------------------------------------------------------------------------- */
+
+const getRole = async (req, res) => {
   try {
     const role = await getRoleById(req.params.id);
 
@@ -78,35 +58,43 @@ const getRoleHandler = async (req, res) => {
     return res.status(200).json(role);
   } catch (error) {
     return res.status(500).json({
-      message: "Failed to fetch role", error
-    });
-  }
-};
-
-/**
- * Update Role
- */
-const updateRoleHandler = async (req, res) => {
-  try {
-    const updatedRole = await updateRole(
-      req.params.id,
-      req.body
-    );
-
-    return res.status(200).json({
-      message: "Role updated successfully",
-      role: updatedRole,
-    });
-  } catch (error) {
-    return res.status(error.statusCode || 500).json({
       message: error.message,
     });
   }
 };
 
-/**
- * Delete Role
- */
+/* -------------------------------------------------------------------------- */
+/*                               Update Role                                  */
+/* -------------------------------------------------------------------------- */
+
+const updateRoleHandler = async (req, res) => {
+  try {
+    const role = await updateRole(
+      req.params.id,
+      req.body
+    );
+
+    if (!role) {
+      return res.status(404).json({
+        message: "Role not found",
+      });
+    }
+
+    return res.status(200).json({
+      message: "Role updated successfully",
+      role,
+    });
+  } catch (error) {
+    return res.status(400).json({
+      message: error.message,
+    });
+  }
+};
+
+/* -------------------------------------------------------------------------- */
+/*                               Delete Role                                  */
+/* -------------------------------------------------------------------------- */
+
 const deleteRoleHandler = async (req, res) => {
   try {
     await deleteRole(req.params.id);
@@ -115,7 +103,7 @@ const deleteRoleHandler = async (req, res) => {
       message: "Role deleted successfully",
     });
   } catch (error) {
-    return res.status(error.statusCode || 500).json({
+    return res.status(400).json({
       message: error.message,
     });
   }
@@ -124,7 +112,7 @@ const deleteRoleHandler = async (req, res) => {
 module.exports = {
   createRoleHandler,
   listRoles,
-  getRoleHandler,
+  getRole,
   updateRoleHandler,
   deleteRoleHandler,
 };

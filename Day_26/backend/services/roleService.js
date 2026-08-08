@@ -1,160 +1,280 @@
 const Role = require("../models/role");
+const User = require("../models/user");
 const MODULES = require("../constants/modules");
 
-/**
- * Create default permission list
- */
-const getDefaultPermissions = () => {
-  return Object.values(MODULES).map((module) => ({
-    resource: module,
-    action: {
-      view: false,
-      create: false,
-      update: false,
-      delete: false,
-    },
-  }));
+/* -------------------------------------------------------------------------- */
+/*                           Permission Validation                            */
+/* -------------------------------------------------------------------------- */
+
+const buildPermissions = (permissions = []) => {
+  return Object.values(MODULES).map((resource) => {
+    const existing = permissions.find(
+      (item) => item.resource === resource
+    );
+
+    const rawCreate = existing?.action?.create || false;
+    const rawUpdate = existing?.action?.update || false;
+    const rawDelete = existing?.action?.delete || false;
+
+    const view =
+      existing?.action?.view ||
+      rawCreate ||
+      rawUpdate ||
+      rawDelete ||
+      false;
+
+    return {
+      resource,
+      action: {
+        view,
+        create: rawCreate,
+        update: rawUpdate,
+        delete: rawDelete,
+      },
+    };
+  });
 };
 
-/**
- * Create Role
- */
-const createRole = async (payload) => {
-  const {
-    name,
-    description = "",
-    color = "#722ed1",
-    permissions,
-    isDefault = false,
-  } = payload;
+/* -------------------------------------------------------------------------- */
+/*                              Create Role                                   */
+/* -------------------------------------------------------------------------- */
 
-  const existingRole = await Role.findOne({
-    name: name.trim(),
+const createRole = async ({
+  name,
+  description,
+  color,
+  permissions,
+  isDefault = false,
+  manageableRoles = [],
+}) => {
+  if (!name || !name.trim()) {
+    const error = new Error("Role name is required");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const exists = await Role.findOne({
+    name: new RegExp(`^${name.trim()}$`, "i"),
   });
 
-  if (existingRole) {
-    const error = new Error("Role already exists");
+  if (exists) {
+    const error = new Error("A role with this name already exists");
     error.statusCode = 409;
     throw error;
   }
 
+  const existingDefault = await Role.findOne({ isDefault: true });
+
   if (isDefault) {
-    await Role.updateMany(
-      {},
-      {
-        isDefault: false,
-      }
-    );
+    await Role.updateMany({}, { isDefault: false });
+  } else if (!existingDefault) {
+    isDefault = true;
   }
 
   const role = await Role.create({
     name: name.trim(),
-    description,
-    color,
-    permissions:
-      permissions && permissions.length > 0
-        ? permissions
-        : getDefaultPermissions(),
+    description: description?.trim() || "",
+    color: color || "#722ed1",
     isDefault,
+    permissions: buildPermissions(permissions),
+    manageableRoles: Array.isArray(manageableRoles) ? manageableRoles : [],
   });
 
   return role;
 };
 
-/**
- * Get All Roles
- */
+/* -------------------------------------------------------------------------- */
+/*                               Get All Roles                                */
+/* -------------------------------------------------------------------------- */
+
 const getAllRoles = async () => {
-  return await Role.find().sort({
-    isSystem: -1,
-    name: 1,
-  });
+  return await Role.find()
+    .populate("manageableRoles", "name color _id")
+    .sort({ createdAt: 1 });
 };
 
-/**
- * Get Role By Id
- */
+/* -------------------------------------------------------------------------- */
+/*                              Get Role By Id                                */
+/* -------------------------------------------------------------------------- */
+
 const getRoleById = async (id) => {
-  return await Role.findById(id);
+  return await Role.findById(id).populate("manageableRoles", "name color _id");
 };
 
-/**
- * Update Role
- */
-const updateRole = async (id, payload) => {
+/* -------------------------------------------------------------------------- */
+/*                              Update Role                                   */
+/* -------------------------------------------------------------------------- */
+
+const updateRole = async (
+  id,
+  {
+    name,
+    description,
+    color,
+    permissions,
+    isDefault,
+    manageableRoles,
+  }
+) => {
   const role = await Role.findById(id);
 
   if (!role) {
-    throw new Error("Role not found");
+    const error = new Error("Role not found");
+    error.statusCode = 404;
+    throw error;
   }
 
-  if (
-    payload.name &&
-    payload.name.trim().toLowerCase() !==
-      role.name.trim().toLowerCase()
-  ) {
+  /* ------------------------ Duplicate Name Check ------------------------ */
+
+  if (name && name.trim().toLowerCase() !== role.name.toLowerCase()) {
     const exists = await Role.findOne({
-      name: payload.name.trim(),
+      name: new RegExp(`^${name.trim()}$`, "i"),
       _id: { $ne: id },
     });
 
     if (exists) {
-      const error = new Error("Role already exists");
+      const error = new Error("A role with this name already exists");
       error.statusCode = 409;
       throw error;
     }
+
+    if (role.isSystem) {
+      const error = new Error("System role name cannot be changed");
+      error.statusCode = 400;
+      throw error;
+    }
+
+    role.name = name.trim();
   }
 
-  if (payload.isDefault) {
-    await Role.updateMany(
-      {},
-      {
-        isDefault: false,
+  /* ---------------------- Description ---------------------- */
+
+  if (description !== undefined) {
+    role.description = description;
+  }
+
+  /* ------------------------- Color -------------------------- */
+
+  if (color !== undefined) {
+    role.color = color;
+  }
+
+  /* --------------------- Default Role Enforcements ----------------------- */
+
+  if (isDefault === true) {
+    await Role.updateMany({ _id: { $ne: id } }, { isDefault: false });
+    role.isDefault = true;
+  } else if (isDefault === false) {
+    if (role.isDefault) {
+      const otherDefault = await Role.findOne({
+        _id: { $ne: id },
+        isDefault: true,
+      });
+
+      if (!otherDefault) {
+        const error = new Error(
+          "Cannot remove default status. The system must always have exactly one default role. Please assign another role as default first."
+        );
+        error.statusCode = 400;
+        throw error;
       }
-    );
+
+      role.isDefault = false;
+    }
   }
 
-  role.name = payload.name ?? role.name;
-  role.description = payload.description ?? role.description;
-  role.color = payload.color ?? role.color;
-  role.permissions =
-    payload.permissions ?? role.permissions;
-  role.isDefault =
-    payload.isDefault ?? role.isDefault;
+  /* ---------------------- Permissions ----------------------- */
+
+  if (permissions) {
+    role.permissions = buildPermissions(permissions);
+  }
+
+  /* ------------------- Manageable Roles -------------------- */
+
+  if (manageableRoles !== undefined) {
+    role.manageableRoles = Array.isArray(manageableRoles) ? manageableRoles : [];
+  }
 
   await role.save();
 
-  return role;
+  return await Role.findById(id).populate("manageableRoles", "name color _id");
 };
 
-/**
- * Delete Role
- */
+/* -------------------------------------------------------------------------- */
+/*                              Delete Role                                   */
+/* -------------------------------------------------------------------------- */
+
 const deleteRole = async (id) => {
   const role = await Role.findById(id);
 
   if (!role) {
-    throw new Error("Role not found");
-  }
-
-  if (role.isSystem) {
-    const error = new Error(
-      "System roles cannot be deleted"
-    );
-    error.statusCode = 403;
+    const error = new Error("Role not found");
+    error.statusCode = 404;
     throw error;
   }
 
-  return await Role.findByIdAndDelete(id);
+  if (role.isSystem) {
+    const error = new Error("System roles cannot be deleted");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const assignedUsers = await User.countDocuments({
+    $or: [{ role: role._id }, { role: role.name }],
+  });
+
+  if (assignedUsers > 0) {
+    const error = new Error(
+      `Cannot delete: ${assignedUsers} user(s) are assigned to this role`
+    );
+    error.statusCode = 400;
+    throw error;
+  }
+
+  if (role.isDefault) {
+    const nextDefault = await Role.findOne({ _id: { $ne: id } });
+    if (nextDefault) {
+      nextDefault.isDefault = true;
+      await nextDefault.save();
+    }
+  }
+
+  // Remove deleted role ID from all manageableRoles arrays across all roles
+  await Role.updateMany({}, { $pull: { manageableRoles: id } });
+
+  await Role.findByIdAndDelete(id);
+
+  return true;
 };
 
-/**
- * Get Default Role
- */
+/* -------------------------------------------------------------------------- */
+/*                           Default Role                                     */
+/* -------------------------------------------------------------------------- */
+
 const getDefaultRole = async () => {
-  return await Role.findOne({
-    isDefault: true,
-  });
+  let defaultRole = await Role.findOne({ isDefault: true });
+  if (!defaultRole) {
+    defaultRole = await Role.findOne({ name: "Member" }) || await Role.findOne();
+    if (defaultRole) {
+      defaultRole.isDefault = true;
+      await defaultRole.save();
+    }
+  }
+  return defaultRole;
+};
+
+/* -------------------------------------------------------------------------- */
+/*                     Get Default Permissions                                */
+/* -------------------------------------------------------------------------- */
+
+const getDefaultPermissions = async () => {
+  const role = await getDefaultRole();
+
+  if (!role) {
+    return [];
+  }
+
+  return role.permissions;
 };
 
 module.exports = {
@@ -165,4 +285,5 @@ module.exports = {
   deleteRole,
   getDefaultRole,
   getDefaultPermissions,
+  buildPermissions,
 };

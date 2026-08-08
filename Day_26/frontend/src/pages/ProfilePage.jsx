@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react';
-import { Card, Form, Input, Button, Avatar, Typography, message, Divider, Tag, Upload } from 'antd';
+import { Card, Form, Input, Button, Avatar, Typography, message, Divider, Tag, Upload, Descriptions } from 'antd';
 import { UserOutlined, EditOutlined, SaveOutlined, CloseOutlined, UploadOutlined } from '@ant-design/icons';
 import { useDispatch, useSelector } from 'react-redux';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { updateUser, fetchMe } from '../api/queries';
 import api from '../api/api';
-import { setAuth } from '../store/slices/authSlice';
+import { updateUserProfile } from '../store/slices/authSlice';
 import DashboardLayout from '../components/DashboardLayout';
+import { ROLE_COLORS } from '../constants/roleColors';
 
 const { Title, Text } = Typography;
 
@@ -15,15 +16,22 @@ const resolveProfileImage = (image) => {
   if (image.startsWith('http')) return image;
   try {
     return `${new URL(api.defaults.baseURL).origin}${image}`;
-  } catch (e) {
+  } catch {
     return image;
   }
+};
+
+const getFallbackRoleColor = (roleName) => {
+  const match = ROLE_COLORS.find(
+    (c) => c.label.toLowerCase() === roleName?.toLowerCase()
+  );
+  return match ? match.value : "#722ed1";
 };
 
 function ProfilePage() {
   const dispatch = useDispatch();
   const queryClient = useQueryClient();
-  const { user, token, refreshToken, theme } = useSelector((state) => state.auth);
+  const { user, theme } = useSelector((state) => state.auth);
   const isDark = theme === "dark";
   const { data: fetchedUser, isLoading: isUserLoading, isError: isUserError } = useQuery({
     queryKey: ['me'],
@@ -34,27 +42,24 @@ function ProfilePage() {
   const profileUser = fetchedUser || user;
   const [editing, setEditing] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
-  const [savedImage, setSavedImage] = useState(() => resolveProfileImage(profileUser?.profileImage || user?.profileImage || null));
-  const [previewImage, setPreviewImage] = useState(() => resolveProfileImage(profileUser?.profileImage || user?.profileImage || null));
+  const [savedImage, setSavedImage] = useState(() => resolveProfileImage(profileUser?.user?.profileImage || user?.profileImage || null));
+  const [previewImage, setPreviewImage] = useState(() => resolveProfileImage(profileUser?.user?.profileImage || user?.profileImage || null));
   const [form] = Form.useForm();
 
   useEffect(() => {
-    const nextImage = resolveProfileImage(profileUser?.profileImage || user?.profileImage || null);
+    const nextImage = resolveProfileImage(profileUser?.user?.profileImage || user?.profileImage || null);
     setSavedImage(nextImage);
     setPreviewImage(nextImage);
-  }, [profileUser?.profileImage, user?.profileImage]);
+  }, [profileUser?.user?.profileImage, user?.profileImage]);
 
-  const roleColor = {
-    Admin: 'red',
-    Manager: 'orange',
-    Member: 'blue',
-  };
+  const roleName = typeof profileUser?.role === 'object' ? profileUser.role?.name : (profileUser?.role || 'Member');
+  const roleColor = typeof profileUser?.role === 'object' && profileUser.role?.color ? profileUser.role.color : getFallbackRoleColor(roleName);
 
   const onEditClick = () => {
     form.setFieldsValue({
-      name: profileUser?.name || '',
-      email: profileUser?.email || '',
-      username: profileUser?.username || '',
+      name: profileUser?.user?.name || '',
+      email: profileUser?.user?.email || '',
+      username: profileUser?.user?.username || '',
     });
     setSelectedFile(null);
     setPreviewImage(savedImage);
@@ -69,19 +74,19 @@ function ProfilePage() {
   };
 
   const profileMutation = useMutation({
-    mutationFn: (payload) => updateUser({ id: profileUser?._id || user?._id, payload }),
+    mutationFn: (payload) => updateUser({ id: profileUser?.user?._id || user?._id, payload }),
     onSuccess: (updatedUser) => {
-      dispatch(
-        setAuth({
-          user: updatedUser,
-          token,
-          refreshToken,
-        })
-      );
+      dispatch(updateUserProfile(updatedUser));
       const nextImage = resolveProfileImage(updatedUser?.profileImage || null);
       setSavedImage(nextImage);
       setPreviewImage(nextImage);
-      queryClient.setQueryData(['me'], updatedUser);
+      queryClient.setQueryData(['me'], (old) => {
+        if (!old) return old;
+        return {
+          ...old,
+          user: updatedUser,
+        };
+      });
       queryClient.invalidateQueries(['me']);
       message.success('Profile updated successfully');
       setEditing(false);
@@ -92,7 +97,7 @@ function ProfilePage() {
   });
 
   const onFinish = (values) => {
-    const id = profileUser?._id || user?._id;
+    const id = profileUser?.user?._id || user?._id;
     if (!id) {
       message.error('User not found');
       return;
@@ -124,13 +129,13 @@ function ProfilePage() {
               src={previewImage}
               style={{ backgroundColor: '#C76A34', fontSize: 28 }}
             >
-              {!previewImage && (profileUser?.name?.charAt(0)?.toUpperCase() || 'U')}
+              {!previewImage && (profileUser?.user?.name?.charAt(0)?.toUpperCase() || 'U')}
             </Avatar>
             <div>
-              <div className="text-xl font-semibold text-[#2E2A27]">{profileUser?.name || 'Unknown'}</div>
-              <div className="text-[#A74E2B] text-sm">@{profileUser?.username || 'user'}</div>
-              <Tag color={roleColor[profileUser?.role] || 'default'} className="mt-1">
-                {profileUser?.role || 'Member'}
+              <div className="text-xl font-semibold text-[#2E2A27]">{profileUser?.user?.name || 'Unknown'}</div>
+              <div className="text-[#A74E2B] text-sm">@{profileUser?.user?.username || 'user'}</div>
+              <Tag color={roleColor} className="mt-1">
+                {roleName}
               </Tag>
             </div>
           </div>
@@ -146,34 +151,42 @@ function ProfilePage() {
               <p>Unable to load profile data.</p>
             </div>
           ) : !editing ? (
-            <div className="space-y-3">
-              <div className="flex justify-between">
-                <Text type="secondary">Full Name</Text>
-                <Text strong>{profileUser?.name || '-'}</Text>
-              </div>
-              <div className="flex justify-between">
-                <Text type="secondary">Email</Text>
-                <Text strong>{profileUser?.email || '-'}</Text>
-              </div>
-              <div className="flex justify-between">
-                <Text type="secondary">Username</Text>
-                <Text strong>@{profileUser?.username || '-'}</Text>
-              </div>
-              <div className="flex justify-between">
-                <Text type="secondary">Role</Text>
-                <Tag color={roleColor[profileUser?.role] || 'default'}>{profileUser?.role || 'Member'}</Tag>
-              </div>
-
-              <div className="pt-4">
-                <Button
-                  type="primary"
-                  icon={<EditOutlined />}
-                  onClick={onEditClick}
-                  style={{ backgroundColor: '#C76A34', borderColor: '#C76A34' }}
-                >
-                  Edit Profile
-                </Button>
-              </div>
+            <div className="space-y-4">
+              <Descriptions
+                title="User Profile"
+                column={2}
+                bordered
+                items={[
+                  {
+                    key: '1',
+                    label: 'Full Name',
+                    children: <Text strong>{profileUser?.user?.name || '-'}</Text>,
+                  },
+                  {
+                    key: '2',
+                    label: 'Email',
+                    children: <Text strong>{profileUser?.user?.email || '-'}</Text>,
+                  },
+                  {
+                    key: '3',
+                    label: 'Username',
+                    children: <Text strong>@{profileUser?.user?.username || '-'}</Text>,
+                  },
+                  {
+                    key: '4',
+                    label: 'Role',
+                    children: <Tag color={roleColor}>{roleName}</Tag>,
+                  },
+                ]}
+              />
+              <Button
+                type="primary"
+                icon={<EditOutlined />}
+                onClick={onEditClick}
+                style={{ backgroundColor: '#C76A34', borderColor: '#C76A34' }}
+              >
+                Edit Profile
+              </Button>
             </div>
           ) : (
             <Form form={form} layout="vertical" onFinish={onFinish}>

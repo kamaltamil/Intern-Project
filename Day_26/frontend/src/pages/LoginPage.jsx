@@ -1,10 +1,10 @@
-import { Card, Typography, message } from 'antd';
-import { useDispatch, useSelector } from 'react-redux';
-import { useNavigate, Link, Navigate } from 'react-router-dom';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { setAuth } from '../store/slices/authSlice';
-import { loginUser } from '../api/queries';
-import CustomForm from '../components/CustomForm';
+import { Card, Typography, message } from "antd";
+import { useDispatch, useSelector } from "react-redux";
+import { useNavigate, Link, Navigate } from "react-router-dom";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { setAuth } from "../store/slices/authSlice";
+import { loginUser } from "../api/queries";
+import CustomForm from "../components/CustomForm";
 
 const { Title, Text } = Typography;
 
@@ -16,82 +16,109 @@ function LoginPage() {
 
   const loginMutation = useMutation({
     mutationFn: loginUser,
+
     onSuccess: (data) => {
-      const { user, token, refreshToken } = data || {};
+      const { user, token, refreshToken, role, permissions } = data || {};
+
       if (!user || !token) {
-        message.error('Invalid login response from backend');
+        message.error("Invalid login response from server");
         return;
       }
+
+      // Clear cached queries (stale data from previous session)
       queryClient.clear();
-      dispatch(setAuth({ user, token, refreshToken }));
-      message.success('Login successful');
-      navigate('/');
+
+      // Store full auth state including role and permissions.
+      // This is what powers the RBAC sidebar, route guards, and UI gates.
+      dispatch(
+        setAuth({
+          user,
+          token,
+          refreshToken,
+          role,
+          permissions: permissions || [],
+        })
+      );
+
+      message.success("Login successful");
+      navigate("/");
     },
+
     onError: (error) => {
-      message.error(error?.response?.data?.message || 'Invalid credentials');
+      message.error(
+        error?.response?.data?.message || "Invalid credentials"
+      );
     },
   });
 
   const onFinish = (values) => {
-    loginMutation.mutate({ identifier: values.email, password: values.password });
+    loginMutation.mutate({
+      identifier: values.email,
+      password: values.password,
+    });
   };
 
+  // Already logged in — redirect to dashboard
   if (token) {
     return <Navigate to="/" replace />;
   }
 
   const loginForm = [
-      {
-        type: "input",
-        label: "Email or Username",
-        name: "email",
-        placeholder: "Enter your email or username",
-        rules: [
-          {
-            required: true,
-            message: "Email or username is required",
-          },
-        ],
-      },
-      {
-        type: "password",
-        label: "Password",
-        name: "password",
-        placeholder: "Enter your password",
-        rules: [
-          {
-            required: true,
-            message: "Password is required",
-          },
-        ],
-      },
-      {
-        type: "submit",
-        label: "Sign In",
-        buttonProps: {
-          type: "primary",
-          htmlType: "submit",
-          block: true,
-          size: "large",
-          loading: loginMutation.isPending,
-          style: {
-            backgroundColor: "#C76A34",
-            borderColor: "#C76A34",
-          },
+    {
+      type: "input",
+      label: "Email or Username",
+      name: "email",
+      placeholder: "Enter your email or username",
+      rules: [
+        {
+          required: true,
+          message: "Email or username is required",
+        },
+      ],
+    },
+    {
+      type: "password",
+      label: "Password",
+      name: "password",
+      placeholder: "Enter your password",
+      rules: [
+        {
+          required: true,
+          message: "Password is required",
+        },
+      ],
+    },
+    {
+      type: "submit",
+      label: "Sign In",
+      buttonProps: {
+        type: "primary",
+        htmlType: "submit",
+        block: true,
+        size: "large",
+        loading: loginMutation.isPending,
+        style: {
+          backgroundColor: "#C76A34",
+          borderColor: "#C76A34",
         },
       },
-    ];
+    },
+  ];
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#F8F4EE] p-4">
       <Card className="w-full max-w-md rounded-2xl shadow-md border border-[#ECE6DF]">
-        <Title level={3} className="!text-[#2E2A27]">Sign In</Title>
-        <Text className="text-[#A74E2B]">Welcome back to HotelPro Dashboard</Text>
+        <Title level={3} className="!text-[#2E2A27]">
+          Sign In
+        </Title>
+        <Text className="text-[#A74E2B]">
+          Welcome back to HotelPro Dashboard
+        </Text>
 
         <CustomForm form={loginForm} onFinish={onFinish} />
-        
+
         <div className="text-center mt-4 text-sm text-gray-500">
-          Don't have an account?{' '}
+          Don't have an account?{" "}
           <Link to="/signup" className="text-[#C76A34] font-medium">
             Create one
           </Link>

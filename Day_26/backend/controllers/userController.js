@@ -1,223 +1,206 @@
 const {
-    registerUser,
-    getAllUsers,
-    getAllMembers,
-    getUserById,
-    updateUser,
-    deleteUser,
-    loginUser,
-    logoutUser,
-    refreshAccessToken,
-} = require('../services/userService');
+  getAllUsers,
+  getUserById: getUserByIdService,
+  createUser: createUserService,
+  updateUser: updateUserService,
+  deleteUser: deleteUserService,
+} = require("../services/userService");
 
-const { hasPermission } = require('../services/permissionService');
-
-const createUser = async (req, res) => {
-    try {
-        const {
-            name,
-            username,
-            email,
-            password,
-            role
-        } = req.body;
-        const result = await registerUser({ name, email, username, password, role});
-
-        return res.status(201).json({
-            message: 'User created successfully',
-            ...result,
-        });
-    } catch (error) {
-        const statusCode = error?.code === 11000 || error?.statusCode === 409 ? 409 : 500;
-
-        return res.status(statusCode).json({
-            message: statusCode === 409 ? 'User already exists' : 'Error creating user',
-            error: error.message,
-        });
-    }
-};
+/*
+|--------------------------------------------------------------------------
+| GET ALL USERS
+|--------------------------------------------------------------------------
+|
+| Requires: users.view = true
+| Scope: Filtered by requesting user's role.manageableRoles
+|
+*/
 
 const listUsers = async (req, res) => {
-    try {
-        // Route already confirmed the caller has 'users:view'. Roles that can also
-        // delete users (full user management, e.g. Admin) see everyone; roles with
-        // view-only access (e.g. Manager) see the member roster.
-        const canManageUsers = req.permissions?.users?.delete;
-        const users = canManageUsers ? await getAllUsers() : await getAllMembers();
+  try {
+    const users = await getAllUsers(req.user);
 
-        return res.status(200).json(users);
-    } catch (error) {
-        return res.status(500).json({ message: 'Error fetching users', error: error.message });
-    }
+    return res.status(200).json(users);
+  } catch (error) {
+    console.error("List users error:", error);
+
+    return res.status(error.statusCode || 500).json({
+      message: error.message || "Error fetching users",
+    });
+  }
 };
 
-const getSingleUser = async (req, res) => {
-    try {
-        const requestedId = req.params.id;
-        const requestingUserId = req.user?.userId || req.user?.sub;
-        const isSelf = requestingUserId === requestedId;
 
-        // Viewing your own record needs 'profile:view'; viewing someone else's
-        // needs 'users:view' — both are permissions an Admin assigns per role.
-        const allowed = isSelf
-            ? await hasPermission(req.user?.role, 'profile', 'view')
-            : await hasPermission(req.user?.role, 'users', 'view');
+/*
+|--------------------------------------------------------------------------
+| GET USER BY ID
+|--------------------------------------------------------------------------
+|
+| Requires: users.view = true
+|
+*/
 
-        if (!allowed) {
-            return res.status(403).json({ message: 'Forbidden' });
-        }
+const getUserById = async (req, res) => {
+  try {
+    const { id } = req.params;
 
-        const user = await getUserById(requestedId);
-        if (!user) {
-            return res.status(404).json({ message: 'User not found' });
-        }
+    const user = await getUserByIdService(id);
 
-        if (user.profileImage && process.env.BASE_URL) {
-            user.profileImage = `${process.env.BASE_URL}${user.profileImage}`;
-        }
-
-        return res.status(200).json(user);
-    } catch (error) {
-        return res.status(500).json({ message: 'Error fetching user', error: error.message });
+    if (!user) {
+      return res.status(404).json({
+        message: "User not found",
+      });
     }
+
+    return res.status(200).json(user);
+  } catch (error) {
+    console.error("Get user error:", error);
+
+    return res.status(error.statusCode || 500).json({
+      message: error.message || "Error fetching user",
+    });
+  }
 };
 
-const getMe = async (req, res) => {
-    try {
-        const userId = req.user?.userId || req.user?.sub;
-        if (!userId) {
-            return res.status(401).json({ message: 'Unauthorized' });
-        }
 
-        const user = await getUserById(userId);
+/*
+|--------------------------------------------------------------------------
+| CREATE USER
+|--------------------------------------------------------------------------
+|
+| Requires: users.create = true
+| Scope: Target role must be in requesting user's manageableRoles
+|
+*/
 
-        if (!user) {
-            return res.status(404).json({ message: 'User not found' });
-        }
+const createUser = async (req, res) => {
+  try {
+    const { name, email, username, password, role } = req.body;
 
-        return res.status(200).json(user);
-    } catch (error) {
-        return res.status(500).json({ message: 'Error fetching current user', error: error.message });
+    if (!name || !email || !username || !password || !role) {
+      return res.status(400).json({
+        message: "Name, email, username, password and role are required",
+      });
     }
+
+    const createdBy = req.user?._id || null;
+
+    const user = await createUserService({
+      name,
+      email,
+      username,
+      password,
+      role,
+      createdBy,
+      requestingUser: req.user,
+    });
+
+    return res.status(201).json({
+      message: "User created successfully",
+      user,
+    });
+  } catch (error) {
+    console.error("Create user error:", error);
+
+    const statusCode = error.statusCode || 500;
+
+    return res.status(statusCode).json({
+      message: error.message || "Error creating user",
+    });
+  }
 };
 
-const patchUser = async (req, res) => {
-    try {
-        const requestingUserId = req.user?.userId || req.user?.sub;
-        const targetId = req.params.id;
-        const isSelf = requestingUserId === targetId;
 
-        // Updating your own profile needs 'profile:update'; updating someone
-        // else's needs 'users:update' — both configurable per role by an Admin.
-        const allowed = isSelf
-            ? await hasPermission(req.user?.role, 'profile', 'update')
-            : await hasPermission(req.user?.role, 'users', 'update');
+/*
+|--------------------------------------------------------------------------
+| UPDATE USER
+|--------------------------------------------------------------------------
+|
+| Requires: users.update = true
+| Scope: Target user & new role must be in requesting user's manageableRoles
+|
+*/
 
-        if (!allowed) {
-            return res.status(403).json({ message: 'Forbidden' });
-        }
+const updateUser = async (req, res) => {
+  try {
+    const { id } = req.params;
 
-        // Reassigning a user's role is a role-management action
-        if (req.body.role && !(await hasPermission(req.user?.role, 'roles', 'update'))) {
-            return res.status(403).json({ message: 'You do not have permission to change roles' });
-        }
+    const { name, email, username, password, role, isActive } = req.body;
 
-        if (req.file) {
-            req.body.profileImage = `/uploads/profile/${req.file.filename}`;
-        }
-        const user = await updateUser(targetId, req.body);
+    const updateData = {};
 
-        if (!user) {
-            return res.status(404).json({ message: 'User not found' });
-        }
+    if (name !== undefined) updateData.name = name;
+    if (email !== undefined) updateData.email = email;
+    if (username !== undefined) updateData.username = username;
+    if (password !== undefined && password !== "") updateData.password = password;
+    if (role !== undefined) updateData.role = role;
+    if (isActive !== undefined) updateData.isActive = isActive;
 
-        if (user.profileImage && process.env.BASE_URL) {
-            user.profileImage = `${process.env.BASE_URL}${user.profileImage}`;
-        }
-
-        return res.status(200).json({ message: 'User updated successfully', user });
-    } catch (error) {
-        return res.status(500).json({ message: 'Error updating user', error: error.message });
+    if (req.file) {
+      updateData.profileImage = `/uploads/profile/${req.file.filename}`;
     }
+
+    const user = await updateUserService(id, updateData, req.user);
+
+    if (!user) {
+      return res.status(404).json({
+        message: "User not found",
+      });
+    }
+
+    return res.status(200).json({
+      message: "User updated successfully",
+      user,
+    });
+  } catch (error) {
+    console.error("Update user error:", error);
+
+    const statusCode = error.statusCode || 500;
+
+    return res.status(statusCode).json({
+      message: error.message || "Error updating user",
+    });
+  }
 };
 
-const removeUser = async (req, res) => {
-    try {
-        const deletedUser = await deleteUser(req.params.id);
 
-        if (!deletedUser) {
-            return res.status(404).json({ message: 'User not found' });
-        }
+/*
+|--------------------------------------------------------------------------
+| DELETE USER
+|--------------------------------------------------------------------------
+|
+| Requires: users.delete = true
+| Scope: Target user's role must be in requesting user's manageableRoles
+|
+*/
 
-        return res.status(200).json({ message: 'User deleted successfully', user: deletedUser });
-    } catch (error) {
-        return res.status(500).json({ message: 'Error deleting user', error: error.message });
-    }
+const deleteUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const currentUserId = req.user?._id;
+
+    await deleteUserService(id, currentUserId, req.user);
+
+    return res.status(200).json({
+      message: "User deleted successfully",
+    });
+  } catch (error) {
+    console.error("Delete user error:", error);
+
+    const statusCode = error.statusCode || 500;
+
+    return res.status(statusCode).json({
+      message: error.message || "Error deleting user",
+    });
+  }
 };
 
-const login = async (req, res) => {
-    try {
-        const { identifier, email, username, password } = req.body;
-        const result = await loginUser({
-            identifier: identifier || email || username,
-            password,
-        });
-
-        return res.status(200).json({
-            message: 'Login successful',
-            ...result,
-        });
-    } catch (error) {
-        const statusCode = error?.statusCode || 500;
-        return res.status(statusCode).json({
-            message: statusCode === 401 ? 'Invalid credentials' : 'Error logging in',
-            error: error.message,
-        });
-    }
-};
-
-const logout = async (req, res) => {
-    try {
-        const { userId } = req.body;
-        const user = await logoutUser(userId);
-
-        if (!user) {
-            return res.status(404).json({ message: 'User not found' });
-        }
-
-        return res.status(200).json({ message: 'Logout successful' });
-    } catch (error) {
-        return res.status(500).json({ message: 'Error logging out', error: error.message });
-    }
-};
-
-const refreshToken = async (req, res) => {
-    try {
-        const { refreshToken: incomingRefreshToken } = req.body;
-
-        if (!incomingRefreshToken) {
-            return res.status(400).json({ message: 'Refresh token is required' });
-        }
-
-        const result = await refreshAccessToken(incomingRefreshToken);
-        return res.status(200).json(result);
-    } catch (error) {
-        const statusCode = error?.name === 'TokenExpiredError' ? 401 : 500;
-        return res.status(statusCode).json({
-            message: 'Unable to refresh token',
-            error: error.message,
-        });
-    }
-};
 
 module.exports = {
-    createUser,
-    listUsers,
-    getSingleUser,
-    getMe,
-    patchUser,
-    removeUser,
-    login,
-    logout,
-    refreshToken,
+  listUsers,
+  getUserById,
+  createUser,
+  updateUser,
+  deleteUser,
 };

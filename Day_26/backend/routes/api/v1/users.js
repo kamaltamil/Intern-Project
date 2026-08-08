@@ -1,50 +1,88 @@
-const express = require('express');
+const express = require("express");
+
 const router = express.Router();
 
 const {
-  createUser,
   listUsers,
-  getSingleUser,
-  patchUser,
-  removeUser,
-  login,
-  logout,
-  getMe,
-  refreshToken
-} = require('../../../controllers/userController');
+  getUserById,
+  createUser,
+  updateUser,
+  deleteUser,
+} = require("../../../controllers/userController");
 
-const { authenticateToken } = require('../../../middleware/auth');
-const { requirePermission } = require('../../../middleware/permission');
+const {
+  requirePermission,
+} = require("../../../middleware/permissionMiddleware");
 
-const upload = require('../../../middleware/profileUpload')
+const profileUpload = require("../../../middleware/profileUpload");
 
-// Public routes (no auth needed)
-router.post('/login', login);
-router.post('/logout', logout);
-router.post('/', createUser);
-router.post("/refresh-token", refreshToken);
+/*
+|--------------------------------------------------------------------------
+| USER ROUTES
+|--------------------------------------------------------------------------
+|
+| Every route requires:
+|   1. Valid JWT (authenticateToken)
+|   2. Required RBAC permission (requirePermission)
+|
+| Permission structure:
+|   users.view   — list + get
+|   users.create — create
+|   users.update — update
+|   users.delete — delete
+|
+|--------------------------------------------------------------------------
+*/
 
-// Protected routes (auth required)
-router.get('/me', authenticateToken, getMe);
+/* -------------------------------------------------------------------------- */
+/*                               GET ALL USERS                                */
+/* -------------------------------------------------------------------------- */
 
-// Viewing the full user list is a permissioned action (managing other users)
-router.get('/', authenticateToken, requirePermission('users', 'view'), listUsers);
-// Fetching a single user: self-access or 'users' view permission (checked in controller)
-router.get('/:id', authenticateToken, getSingleUser);
+router.get(
+  "/",
+  requirePermission("users", "view"),
+  listUsers
+);
 
-// Users can update their own profile ('profile' permission), Admin/roles with
-// 'users' update permission can update anyone (checked in controller)
-router.patch('/:id', authenticateToken,
-  (req, res, next) => {
-    upload.single('profileImage')(req, res, (err) => {
-        if (err) {
-            return res.status(400).json({ message: err.message });
-        }
-        next();
-    });
-}, patchUser);
+/* -------------------------------------------------------------------------- */
+/*                              GET USER BY ID                                */
+/* -------------------------------------------------------------------------- */
 
-// Deleting a user is a permissioned action
-router.delete('/:id', authenticateToken, requirePermission('users', 'delete'), removeUser);
+router.get(
+  "/:id",
+  requirePermission("users", "view"),
+  getUserById
+);
+
+/* -------------------------------------------------------------------------- */
+/*                               CREATE USER                                  */
+/* -------------------------------------------------------------------------- */
+
+router.post(
+  "/",
+  requirePermission("users", "create"),
+  createUser
+);
+
+/* -------------------------------------------------------------------------- */
+/*                               UPDATE USER                                  */
+/* -------------------------------------------------------------------------- */
+
+router.patch(
+  "/:id",
+  requirePermission("users", "update"),
+  profileUpload.single("profileImage"),
+  updateUser
+);
+
+/* -------------------------------------------------------------------------- */
+/*                               DELETE USER                                  */
+/* -------------------------------------------------------------------------- */
+
+router.delete(
+  "/:id",
+  requirePermission("users", "delete"),
+  deleteUser
+);
 
 module.exports = router;

@@ -6,7 +6,7 @@ const {
     getAllRooms
 } = require('../../../controllers/roomsController');
 
-const { requirePermission } = require('../../../middleware/permission');
+const { requirePermission } = require('../../../middleware/permissionMiddleware');
 
 // authenticateToken is already applied at the mount point in api.js
 // Anyone signed in can browse rooms (needed to make a booking)

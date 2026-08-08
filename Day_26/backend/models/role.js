@@ -1,6 +1,16 @@
 const mongoose = require('mongoose');
 const MODULES = require('../constants/modules');
 
+const actionSchema = new mongoose.Schema(
+    {
+        view: { type: Boolean, default: false },
+        create: { type: Boolean, default: false },
+        update: { type: Boolean, default: false },
+        delete: { type: Boolean, default: false },
+    },
+    { _id: false }
+);
+
 const permissionSchema = new mongoose.Schema(
     {
         resource: {
@@ -9,12 +19,10 @@ const permissionSchema = new mongoose.Schema(
             enum: Object.values(MODULES),
             trim: true,
         },
-        actions: {
-            view: { type: Boolean, default: false },
-            create: { type: Boolean, default: false },
-            update: { type: Boolean, default: false },
-            delete: { type: Boolean, default: false },
-        }
+        action: {
+            type: actionSchema,
+            default: () => ({ view: false, create: false, update: false, delete: false }),
+        },
     },
     { _id: false }
 );
@@ -40,22 +48,24 @@ const roleSchema = new mongoose.Schema(
             default: '#722ed1',
             trim: true,
         },
-        // Seeded roles (Admin/Manager/Member) — protected from rename/delete
         isSystem: {
             type: Boolean,
             default: false,
         },
-        // Auto-assigned to new signups (exactly one role should have this true)
         isDefault: {
             type: Boolean,
             default: false,
         },
-        // Embedded directly on the role — no more separate RolePermissions
-        // collection or populate() needed to read/write permissions.
         permissions: {
             type: [permissionSchema],
             default: [],
         },
+        manageableRoles: [
+            {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'Role',
+            },
+        ],
     },
     { timestamps: true }
 );

@@ -150,7 +150,7 @@ function TopHeader() {
                 {user?.name || "User"}
               </span>
               <span className="text-xs" style={{ color: "#C76A34" }}>
-                {user?.role || "Member"}
+                {typeof user?.role === "object" ? user.role?.name : user?.role || "Member"}
               </span>
             </div>
             <DownOutlined

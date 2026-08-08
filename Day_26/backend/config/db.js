@@ -1,9 +1,14 @@
 const mongoose = require("mongoose");
+// const seedRolesAndAdmin = require("../seed");
 
 const connectDB = async () => {
     try  {
         await mongoose.connect(process.env.MONGO_URI);
         console.log("✅ MongoDB Connected");
+
+        // Auto-seed system roles and test users on startup.
+        // Uses upsert — safe to run multiple times, never creates duplicates.
+        // await seedRolesAndAdmin();
     } catch (error) {
         console.error("❌ MongoDB Connection Failed");
         console.error(error.message);

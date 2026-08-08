@@ -13,7 +13,9 @@ function ManagerDashboardPage() {
     error,
   } = useQuery({ queryKey: ["users"], queryFn: fetchUsers });
 
-  const members = users.filter((item) => item.role === "Member");
+  const getRoleName = (r) => (typeof r === "object" ? r?.name : r) || "";
+
+  const members = users.filter((item) => getRoleName(item.role) === "Member");
 
   if (isLoading) {
     return (
@@ -61,7 +63,11 @@ function ManagerDashboardPage() {
           columns={[
             { title: "Name", dataIndex: "name" },
             { title: "Email", dataIndex: "email" },
-            { title: "Role", dataIndex: "role" },
+            {
+              title: "Role",
+              dataIndex: "role",
+              render: (role) => getRoleName(role) || "Member",
+            },
           ]}
           pagination={{ pageSize: 5 }}
         />
