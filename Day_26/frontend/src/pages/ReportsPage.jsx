@@ -1,16 +1,20 @@
 import { Typography, Card } from "antd";
 import DashboardLayout from "../components/DashboardLayout";
+import { useSelector } from "react-redux";
 
 const { Title, Text } = Typography;
 
 function ReportsPage() {
+  const { theme } = useSelector((state) => state.auth);
+  const isDark = theme === "dark";
+
   return (
     <DashboardLayout>
       <div className="p-4 space-y-4">
-        <Title level={3} className="!mb-1">
+        <Title level={3} className="!mb-1" style={{ color: isDark ? "#f0f0f0" : "#2E2A27" }}>
           Reports
         </Title>
-        <Text type="secondary">
+        <Text className="text-gray-400 text-sm">
           Analytics and reporting metrics.
         </Text>
         <Card className="mt-4">

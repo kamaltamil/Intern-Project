@@ -45,7 +45,7 @@ import { resolveProfileImage } from "../utils/image";
 import { usePermission } from "../hooks/usePermission";
 import { ROLE_COLORS } from "../constants/roleColors";
 
-const { Title } = Typography;
+const { Title, Text } = Typography;
 const { Option } = Select;
 
 const getFallbackRoleColor = (roleName) => {
@@ -354,9 +354,9 @@ function UsersManagementPage() {
             <Title level={4} className="!mb-0" style={{ color: isDark ? "#f0f0f0" : "#2E2A27" }}>
               User Management
             </Title>
-            <p className="text-gray-400 text-sm">
+            <Text className="text-gray-400 text-sm">
               Manage system users and assign roles.
-            </p>
+            </Text>
           </div>
 
           <Space>

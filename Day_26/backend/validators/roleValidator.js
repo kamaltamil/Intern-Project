@@ -1,7 +1,7 @@
 const MODULE_LIST = require('../constants/modules');
 
 const VALID_MODULES = Object.values(MODULE_LIST);
-const VALID_ACTIONS = ['view', 'create', 'update', 'delete'];
+const VALID_ACTIONS = new Set(['view', 'create', 'update', 'delete']);
 
 /**
  * Validates the `permissions` array on role create / assign-permissions
@@ -31,7 +31,7 @@ const validatePermissionsPayload = (req, res, next) => {
 
         const action = entry.action || {};
         for (const key of Object.keys(action)) {
-            if (!VALID_ACTIONS.includes(key)) {
+            if (!VALID_ACTIONS.has(key)) {
                 return res.status(400).json({ message: `Invalid permission action: ${key}` });
             }
             if (typeof action[key] !== 'boolean') {
