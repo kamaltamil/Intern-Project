@@ -33,6 +33,8 @@ describe('express app', () => {
     expect(res.status).toHaveBeenCalledWith(418);
     expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ message: 'teapot' }));
   });
+  test('error handler uses 500 when status is missing', () => {const stack=app._router?.stack || app.router?.stack || [];const layer=stack.find((l)=>l.handle&&l.handle.length===4);const res={status:jest.fn().mockReturnThis(),json:jest.fn()};layer.handle({message:'no status'},{app:{get:()=> 'test'}},res,jest.fn());expect(res.status).toHaveBeenCalledWith(500);expect(res.json).toHaveBeenCalledWith({message:'no status',error:{}});});
+
   test("error handler returns full error in development", () => {
   const stack = app._router?.stack || app.router?.stack || [];
 

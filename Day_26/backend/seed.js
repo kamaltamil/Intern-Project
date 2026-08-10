@@ -404,6 +404,7 @@ module.exports.runSeed = runSeed;
 /*                          Execute When Run Directly                         */
 /* -------------------------------------------------------------------------- */
 
+/* istanbul ignore next -- process entrypoint is exercised through runSeed in Jest */
 if (require.main === module) {
   runSeed();
 }

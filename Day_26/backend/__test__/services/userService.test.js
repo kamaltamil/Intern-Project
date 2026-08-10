@@ -632,6 +632,8 @@ test("update accepts manageable new role", async () => {
   expect(user.role).toBe(id2);
 });
 
+test('update resolves manageable new role by name', async () => {const user={_id:id1,role:id2,save:jest.fn()};const returned={id:id1};User.findById.mockResolvedValueOnce(user).mockReturnValueOnce(query(returned));Role.findOne.mockReturnValueOnce(leanQuery({name:'Manager',manageableRoles:[id2]})).mockReturnValueOnce(leanQuery({_id:id2,name:'Member'}));await expect(svc.updateUser(id1,{role:'Member'},{role:'Manager'})).resolves.toEqual(returned);expect(user.role).toBe(id2);});
+
 test("delete succeeds when manager manages user's role", async () => {
   const member = {
     role: {

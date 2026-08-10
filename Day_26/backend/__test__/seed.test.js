@@ -228,7 +228,7 @@ describe("seed", () => {
   /*                         Missing Seed Roles                             */
   /* ---------------------------------------------------------------------- */
 
-  test("returns when required seed roles are missing", async () => {
+  test("returns when required seed roles are missing", async () => {const errorSpy=jest.spyOn(console,'error').mockImplementation(()=>{});
     Role.find.mockResolvedValue([]);
 
     Role.findOne.mockImplementation(async () => null);
@@ -237,6 +237,8 @@ describe("seed", () => {
 
     expect(User.create).not.toHaveBeenCalled();
     expect(User.findOne).not.toHaveBeenCalled();
+    expect(errorSpy).toHaveBeenCalledWith('  ❌ Roles not found during user seeding');
+    errorSpy.mockRestore();
   });
 
   /* ---------------------------------------------------------------------- */

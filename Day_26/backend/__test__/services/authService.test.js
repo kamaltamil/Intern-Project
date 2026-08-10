@@ -65,6 +65,7 @@ describe("authService", () => {
     Role.findOne.mockReturnValue(chain(role));
     await expect(svc.getRoleDocument(id)).resolves.toBe(role);
   });
+  test('normalizes legacy actions permission field', async () => {Role.findOne.mockReturnValue(chain({name:'Member',permissions:[{resource:'users',actions:{view:true,delete:true}}]}));await expect(svc.getRolePermissions('Member')).resolves.toEqual([{resource:'users',action:{view:true,create:false,update:false,delete:true}}]);});
   test("gets normalized role permissions", async () => {
     Role.findOne.mockReturnValue(chain(role));
     await expect(svc.getRolePermissions("Member")).resolves.toEqual([
@@ -146,6 +147,7 @@ describe("authService", () => {
       statusCode: 401,
     });
   });
+  test('login uses default role color when missing', async () => {const noColorRole={...role,color:undefined};const noColorUser={...user,role:noColorRole};User.findOne.mockReturnValue({populate:jest.fn().mockResolvedValue(noColorUser)});bcrypt.compare.mockResolvedValue(true);await expect(svc.loginUser('john','password')).resolves.toMatchObject({user:{roleColor:'#722ed1'}});});
   test("login succeeds and stores tokens", async () => {
     User.findOne.mockReturnValue({
       populate: jest.fn().mockResolvedValue(user),
@@ -280,6 +282,8 @@ describe("authService", () => {
     });
   });
 
+  test('refresh uses default role color path', async () => {const refreshToken=svc.createRefreshToken('u');const noColorRole={...role,color:undefined};const noColorUser={...user,role:noColorRole,refreshToken:'stored'};User.findById.mockReturnValue({populate:jest.fn().mockResolvedValue(noColorUser)});bcrypt.compare.mockResolvedValue(true);await expect(svc.refreshAccessToken(refreshToken)).resolves.toMatchObject({role:'Member'});});
+
   test("refresh resolves role when populated role is missing", async () => {
     const refreshToken = svc.createRefreshToken("u");
 
@@ -301,6 +305,8 @@ describe("authService", () => {
       role: "Member",
     });
   });
+
+  test('profile uses default role color when missing', async () => {const noColorRole={...role,color:undefined};const noColorUser={...user,role:noColorRole};User.findById.mockReturnValue(chain(noColorUser));await expect(svc.getProfile('u')).resolves.toMatchObject({user:{roleColor:'#722ed1'}});});
 
   test("profile resolves role when populated role is missing", async () => {
     const userWithoutRoleName = {
