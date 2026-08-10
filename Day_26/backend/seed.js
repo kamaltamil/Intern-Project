@@ -19,7 +19,9 @@ const createPermissions = ({
     const override = overrides[resource] || {};
 
     const rawCreate = override.create !== undefined ? override.create : create;
+
     const rawUpdate = override.update !== undefined ? override.update : update;
+
     const rawDelete = override.delete !== undefined ? override.delete : remove;
 
     const rawView =
@@ -47,17 +49,57 @@ const ensureSingleDefaultRole = async () => {
   const defaultRoles = await Role.find({ isDefault: true });
 
   if (defaultRoles.length > 1) {
-    console.log(`  ⚠️ Multiple default roles detected (${defaultRoles.length}). Fixing...`);
-    const primary = defaultRoles.find((r) => r.name === "Member") || defaultRoles[0];
-    await Role.updateMany({ _id: { $ne: primary._id } }, { isDefault: false });
-    await Role.updateOne({ _id: primary._id }, { isDefault: true });
-    console.log(`  ✓ Sanitized: "${primary.name}" is now the sole default role.`);
+    console.log(
+      `  ⚠️ Multiple default roles detected (${defaultRoles.length}). Fixing...`,
+    );
+
+    const primary =
+      defaultRoles.find((role) => role.name === "Member") || defaultRoles[0];
+
+    await Role.updateMany(
+      {
+        _id: {
+          $ne: primary._id,
+        },
+      },
+      {
+        isDefault: false,
+      },
+    );
+
+    await Role.updateOne(
+      {
+        _id: primary._id,
+      },
+      {
+        isDefault: true,
+      },
+    );
+
+    console.log(
+      `  ✓ Sanitized: "${primary.name}" is now the sole default role.`,
+    );
   } else if (defaultRoles.length === 0) {
-    console.log("  ⚠️ No default role found in database. Assigning 'Member' as default...");
-    const memberRole = (await Role.findOne({ name: "Member" })) || (await Role.findOne());
+    console.log(
+      "  ⚠️ No default role found in database. Assigning 'Member' as default...",
+    );
+
+    const memberRole =
+      (await Role.findOne({ name: "Member" })) || (await Role.findOne());
+
     if (memberRole) {
-      await Role.updateOne({ _id: memberRole._id }, { isDefault: true });
-      console.log(`  ✓ Sanitized: "${memberRole.name}" assigned as default role.`);
+      await Role.updateOne(
+        {
+          _id: memberRole._id,
+        },
+        {
+          isDefault: true,
+        },
+      );
+
+      console.log(
+        `  ✓ Sanitized: "${memberRole.name}" assigned as default role.`,
+      );
     }
   }
 };
@@ -96,18 +138,48 @@ const seedRoles = async () => {
         update: false,
         delete: false,
         overrides: {
-          [MODULES.USERS]:    { view: true, create: false, update: false, delete: false },
-          [MODULES.BOOKINGS]: { view: true, create: true, update: true, delete: false },
-          [MODULES.APPROVAL]: { view: true, create: true, update: true, delete: false },
-          [MODULES.REPORTS]:  { view: true, create: true, update: false, delete: false },
-          [MODULES.PROFILE]:  { view: true, create: false, update: true, delete: false },
+          [MODULES.USERS]: {
+            view: true,
+            create: false,
+            update: false,
+            delete: false,
+          },
+
+          [MODULES.BOOKINGS]: {
+            view: true,
+            create: true,
+            update: true,
+            delete: false,
+          },
+
+          [MODULES.APPROVAL]: {
+            view: true,
+            create: true,
+            update: true,
+            delete: false,
+          },
+
+          [MODULES.REPORTS]: {
+            view: true,
+            create: true,
+            update: false,
+            delete: false,
+          },
+
+          [MODULES.PROFILE]: {
+            view: true,
+            create: false,
+            update: true,
+            delete: false,
+          },
         },
       }),
     },
 
     {
       name: "Member",
-      description: "Default user — can view dashboard, manage own bookings and profile",
+      description:
+        "Default user — can view dashboard, manage own bookings and profile",
       color: "#1677ff",
       isSystem: true,
       isDefault: true,
@@ -117,9 +189,26 @@ const seedRoles = async () => {
         update: false,
         delete: false,
         overrides: {
-          [MODULES.DASHBOARD]: { view: true, create: false, update: false, delete: false },
-          [MODULES.BOOKINGS]:  { view: true, create: true, update: false, delete: false },
-          [MODULES.PROFILE]:   { view: true, create: false, update: true, delete: false },
+          [MODULES.DASHBOARD]: {
+            view: true,
+            create: false,
+            update: false,
+            delete: false,
+          },
+
+          [MODULES.BOOKINGS]: {
+            view: true,
+            create: true,
+            update: false,
+            delete: false,
+          },
+
+          [MODULES.PROFILE]: {
+            view: true,
+            create: false,
+            update: true,
+            delete: false,
+          },
         },
       }),
     },
@@ -127,28 +216,49 @@ const seedRoles = async () => {
 
   for (const roleData of rolesData) {
     await Role.updateOne(
-      { name: roleData.name },
-      { $set: roleData },
-      { upsert: true }
+      {
+        name: roleData.name,
+      },
+      {
+        $set: roleData,
+      },
+      {
+        upsert: true,
+      },
     );
 
     console.log(`  ✓ Role "${roleData.name}" upserted`);
   }
 
-  // Fetch populated role documents to assign manageableRoles ObjectIds
-  const adminRole = await Role.findOne({ name: "Admin" });
-  const managerRole = await Role.findOne({ name: "Manager" });
-  const memberRole = await Role.findOne({ name: "Member" });
+  /*
+   * Fetch roles again after upsert so we have their MongoDB ObjectIds.
+   */
+  const adminRole = await Role.findOne({
+    name: "Admin",
+  });
 
-  const allRoleIds = (await Role.find({}, "_id")).map((r) => r._id);
+  const managerRole = await Role.findOne({
+    name: "Manager",
+  });
+
+  const memberRole = await Role.findOne({
+    name: "Member",
+  });
+
+  const allRoleIds = (await Role.find({}, "_id")).map((role) => role._id);
 
   if (adminRole) {
     adminRole.manageableRoles = allRoleIds;
     await adminRole.save();
   }
 
+  /*
+   * Only assign Member when Member role actually exists.
+   * This prevents `memberRole._id` from throwing an exception.
+   */
   if (managerRole) {
-    managerRole.manageableRoles = [memberRole._id];
+    managerRole.manageableRoles = memberRole ? [memberRole._id] : [];
+
     await managerRole.save();
   }
 
@@ -159,7 +269,9 @@ const seedRoles = async () => {
 
   await ensureSingleDefaultRole();
 
-  console.log("System roles seeded and manageableRoles assigned successfully.\n");
+  console.log(
+    "System roles seeded and manageableRoles assigned successfully.\n",
+  );
 };
 
 /* -------------------------------------------------------------------------- */
@@ -169,9 +281,17 @@ const seedRoles = async () => {
 const seedTestUsers = async () => {
   console.log("Seeding test users...");
 
-  const adminRole = await Role.findOne({ name: "Admin" });
-  const managerRole = await Role.findOne({ name: "Manager" });
-  const memberRole = await Role.findOne({ name: "Member" });
+  const adminRole = await Role.findOne({
+    name: "Admin",
+  });
+
+  const managerRole = await Role.findOne({
+    name: "Manager",
+  });
+
+  const memberRole = await Role.findOne({
+    name: "Member",
+  });
 
   if (!adminRole || !managerRole || !memberRole) {
     console.error("  ❌ Roles not found during user seeding");
@@ -189,6 +309,7 @@ const seedTestUsers = async () => {
       role: adminRole._id,
       isActive: true,
     },
+
     {
       name: "manager",
       username: "manager",
@@ -197,6 +318,7 @@ const seedTestUsers = async () => {
       role: managerRole._id,
       isActive: true,
     },
+
     {
       name: "member",
       username: "member",
@@ -208,7 +330,9 @@ const seedTestUsers = async () => {
   ];
 
   for (const userData of testUsers) {
-    const existing = await User.findOne({ email: userData.email });
+    const existing = await User.findOne({
+      email: userData.email,
+    });
 
     if (existing) {
       existing.name = userData.name;
@@ -216,11 +340,18 @@ const seedTestUsers = async () => {
       existing.role = userData.role;
       existing.password = userData.password;
       existing.isActive = true;
+
       await existing.save();
-      console.log(`  ✓ User "${userData.email}" updated (Role ID: ${userData.role})`);
+
+      console.log(
+        `  ✓ User "${userData.email}" updated (Role ID: ${userData.role})`,
+      );
     } else {
       await User.create(userData);
-      console.log(`  ✓ User "${userData.email}" created (Role ID: ${userData.role})`);
+
+      console.log(
+        `  ✓ User "${userData.email}" created (Role ID: ${userData.role})`,
+      );
     }
   }
 
@@ -236,18 +367,43 @@ const seedRolesAndAdmin = async () => {
   await seedTestUsers();
 };
 
+/* -------------------------------------------------------------------------- */
+/*                              Standalone Runner                             */
+/* -------------------------------------------------------------------------- */
+
+/*
+ * This function is separated from the `require.main` block so Jest can
+ * directly test both the successful and failed database connection paths.
+ */
+const runSeed = async () => {
+  require("dotenv").config();
+
+  const connectDB = require("./config/db");
+
+  try {
+    await connectDB();
+
+    console.log("Seeding process started...");
+
+    await seedRolesAndAdmin();
+
+    console.log("Seeding completed successfully.");
+
+    process.exit(0);
+  } catch (error) {
+    console.error("Seeding failed:", error);
+
+    process.exit(1);
+  }
+};
+
 module.exports = seedRolesAndAdmin;
+module.exports.runSeed = runSeed;
+
+/* -------------------------------------------------------------------------- */
+/*                          Execute When Run Directly                         */
+/* -------------------------------------------------------------------------- */
 
 if (require.main === module) {
-  require("dotenv").config();
-  const connectDB = require("./config/db");
-  connectDB().then(async () => {
-    console.log("Seeding process started...");
-    await seedRolesAndAdmin();
-    console.log("Seeding completed successfully.");
-    process.exit(0);
-  }).catch((err) => {
-    console.error("Seeding failed:", err);
-    process.exit(1);
-  });
+  runSeed();
 }
