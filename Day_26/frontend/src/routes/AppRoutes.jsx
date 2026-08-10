@@ -1,45 +1,30 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { lazy, Suspense } from "react";
+import React, { lazy, Suspense } from "react";
+
+import { Routes, Route, Navigate } from "react-router-dom";
+
 import { Spin } from "antd";
 
 const LoginPage = lazy(() => import("../pages/LoginPage"));
+
 const SignupPage = lazy(() => import("../pages/SignupPage"));
 
-const UsersManagementPage = lazy(() =>
-  import("../pages/UsersManagementPage")
-);
+const UsersManagementPage = lazy(() => import("../pages/UsersManagementPage"));
 
-const RoleManagementPage = lazy(() =>
-  import("../pages/RoleManagementPage")
-);
+const RoleManagementPage = lazy(() => import("../pages/RoleManagementPage"));
 
-const BookingPage = lazy(() =>
-  import("../pages/BookingPage")
-);
+const BookingPage = lazy(() => import("../pages/BookingPage"));
 
-const ProfilePage = lazy(() =>
-  import("../pages/ProfilePage")
-);
+const ProfilePage = lazy(() => import("../pages/ProfilePage"));
 
-const ReportsPage = lazy(() =>
-  import("../pages/ReportsPage")
-);
+const ReportsPage = lazy(() => import("../pages/ReportsPage"));
 
-const ApprovalPage = lazy(() =>
-  import("../pages/ApprovalPage")
-);
+const ApprovalPage = lazy(() => import("../pages/ApprovalPage"));
 
-const UnauthorizedPage = lazy(() =>
-  import("../pages/UnauthorizedPage")
-);
+const UnauthorizedPage = lazy(() => import("../pages/UnauthorizedPage"));
 
-const ProtectedRoute = lazy(() =>
-  import("./ProtectedRoute")
-);
+const ProtectedRoute = lazy(() => import("./ProtectedRoute"));
 
-const DashboardHome = lazy(() =>
-  import("./DashboardHome")
-);
+const DashboardHome = lazy(() => import("./DashboardHome"));
 
 const Loader = (
   <div className="flex items-center justify-center min-h-screen">
@@ -49,129 +34,98 @@ const Loader = (
 
 function AppRoutes() {
   return (
-    <BrowserRouter>
-      <Suspense fallback={Loader}>
-        <Routes>
+    <Suspense fallback={Loader}>
+      <Routes>
+        {/* Public Routes */}
 
-          {/* Public */}
+        <Route path="/login" element={<LoginPage />} />
 
-          <Route
-            path="/login"
-            element={<LoginPage />}
-          />
+        <Route path="/signup" element={<SignupPage />} />
 
-          <Route
-            path="/signup"
-            element={<SignupPage />}
-          />
+        <Route path="/unauthorized" element={<UnauthorizedPage />} />
 
-          <Route
-            path="/unauthorized"
-            element={<UnauthorizedPage />}
-          />
+        {/* Dashboard */}
 
-          {/* Dashboard */}
+        <Route
+          path="/"
+          element={
+            <ProtectedRoute>
+              <DashboardHome />
+            </ProtectedRoute>
+          }
+        />
 
-          <Route
-            path="/"
-            element={
-              <ProtectedRoute>
-                <DashboardHome />
-              </ProtectedRoute>
-            }
-          />
+        {/* Profile */}
 
-          {/* Profile */}
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <ProfilePage />
+            </ProtectedRoute>
+          }
+        />
 
-          <Route
-            path="/profile"
-            element={
-              <ProtectedRoute>
-                <ProfilePage />
-              </ProtectedRoute>
-            }
-          />
+        {/* Users */}
 
-          {/* Users */}
+        <Route
+          path="/users"
+          element={
+            <ProtectedRoute resource="users" action="view">
+              <UsersManagementPage />
+            </ProtectedRoute>
+          }
+        />
 
-          <Route
-            path="/users"
-            element={
-              <ProtectedRoute
-                resource="users"
-                action="view"
-              >
-                <UsersManagementPage />
-              </ProtectedRoute>
-            }
-          />
+        {/* Roles */}
 
-          {/* Roles */}
+        <Route
+          path="/roles"
+          element={
+            <ProtectedRoute resource="roles" action="view">
+              <RoleManagementPage />
+            </ProtectedRoute>
+          }
+        />
 
-          <Route
-            path="/roles"
-            element={
-              <ProtectedRoute
-                resource="roles"
-                action="view"
-              >
-                <RoleManagementPage />
-              </ProtectedRoute>
-            }
-          />
+        {/* Bookings */}
 
-          {/* Bookings */}
+        <Route
+          path="/bookings"
+          element={
+            <ProtectedRoute resource="bookings" action="view">
+              <BookingPage />
+            </ProtectedRoute>
+          }
+        />
 
-          <Route
-            path="/bookings"
-            element={
-              <ProtectedRoute
-                resource="bookings"
-                action="view"
-              >
-                <BookingPage />
-              </ProtectedRoute>
-            }
-          />
+        {/* Reports */}
 
-          {/* Reports */}
+        <Route
+          path="/reports"
+          element={
+            <ProtectedRoute resource="reports" action="view">
+              <ReportsPage />
+            </ProtectedRoute>
+          }
+        />
 
-          <Route
-            path="/reports"
-            element={
-              <ProtectedRoute
-                resource="reports"
-                action="view"
-              >
-                <ReportsPage />
-              </ProtectedRoute>
-            }
-          />
+        {/* Booking Approval */}
 
-          {/* Booking Approval */}
+        <Route
+          path="/approval"
+          element={
+            <ProtectedRoute resource="approval" action="view">
+              <ApprovalPage />
+            </ProtectedRoute>
+          }
+        />
 
-          <Route
-            path="/approval"
-            element={
-              <ProtectedRoute
-                resource="approval"
-                action="view"
-              >
-                <ApprovalPage />
-              </ProtectedRoute>
-            }
-          />
+        {/* Unknown Route */}
 
-          {/* Catch All */}
-
-          <Route
-            path="*"
-            element={<Navigate to="/" replace />}
-          />
-
-        </Routes>
-      </Suspense>
-    </BrowserRouter>
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </Suspense>
   );
 }
 

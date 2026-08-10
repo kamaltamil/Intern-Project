@@ -1,29 +1,52 @@
 import React from "react";
-import { render, screen } from "@testing-library/react";
-import { Provider } from "react-redux";
+import { screen } from "@testing-library/react";
 import { configureStore } from "@reduxjs/toolkit";
-import { MemoryRouter } from "react-router-dom";
-import authReducer from "../../store/slices/authSlice";
 
-jest.mock("../../components/DashboardLayout", () => ({children}) => <div>{children}</div>);
-jest.mock("../../components/CustomCard", () => ({title,value}) => <div>{title}:{value}</div>);
-jest.mock("../../components/CustomTable", () => () => <div>Booking Table</div>);
-jest.mock("../../components/booking/BookingModal", () => () => <div>Booking Modal</div>);
-jest.mock("../../components/booking/BookingDetailsModal", () => () => <div>Details Modal</div>);
-jest.mock("../../components/booking/BookingStats", () => () => []);
-jest.mock("../../api/queries", () => ({
- fetchRooms: jest.fn().mockResolvedValue([]),
- fetchBookings: jest.fn().mockResolvedValue([]),
- createBooking: jest.fn().mockResolvedValue({}),
-}));
 import BookingPage from "../../pages/BookingPage";
+import authReducer from "../../store/slices/authSlice";
+import bookingReducer from "../../store/slices/bookingSlice";
 
-const store = configureStore({
- reducer:{auth:authReducer},
- preloadedState:{auth:{user:null,token:"t",refreshToken:null,role:"Member",permissions:[],theme:"light",loading:false,error:null}}
-});
+import {
+  renderWithProviders,
+} from "../utils/testUtils";
 
-test("renders booking page", async () => {
- render(<Provider store={store}><MemoryRouter><BookingPage /></MemoryRouter></Provider>);
- expect(await screen.findByText(/booking/i)).toBeInTheDocument();
+const createTestStore = () =>
+  configureStore({
+    reducer: {
+      auth: authReducer,
+      booking: bookingReducer,
+    },
+    preloadedState: {
+      auth: {
+        user: {
+          name: "Kamal",
+          username: "kamal",
+          email: "kamal@example.com",
+          role: "Admin",
+        },
+        token: "test-token",
+        refreshToken: null,
+        role: "Admin",
+        theme: "light",
+        permissions: [],
+        loading: false,
+        error: null,
+      },
+      booking: {},
+    },
+  });
+
+describe("BookingPage", () => {
+  test("renders booking page", async () => {
+    const store = createTestStore();
+
+    renderWithProviders(<BookingPage />, {
+      store,
+      route: "/bookings",
+    });
+
+    expect(
+      await screen.findByText(/booking/i)
+    ).toBeInTheDocument();
+  });
 });

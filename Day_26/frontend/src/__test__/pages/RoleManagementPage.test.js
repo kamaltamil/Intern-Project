@@ -1,27 +1,49 @@
 import React from "react";
-import { render, screen } from "@testing-library/react";
-import { Provider } from "react-redux";
+import { screen } from "@testing-library/react";
 import { configureStore } from "@reduxjs/toolkit";
-import { MemoryRouter } from "react-router-dom";
+
+import RoleManagementPage from "../../pages/RoleManagementPage";
 import authReducer from "../../store/slices/authSlice";
 
-jest.mock("../../components/DashboardLayout", () => ({children}) => <div>{children}</div>);
-jest.mock("../../components/PermissionGate", () => ({children}) => <>{children}</>);
-jest.mock("../../hooks/usePermission", () => ({usePermission: () => ({canView:true,canCreate:true,canUpdate:true,canDelete:true})}));
-jest.mock("../../api/queries", () => ({
- fetchRoles: jest.fn().mockResolvedValue([]),
- createRole: jest.fn().mockResolvedValue({}),
- updateRole: jest.fn().mockResolvedValue({}),
- deleteRole: jest.fn().mockResolvedValue({}),
-}));
-import RoleManagementPage from "../../pages/RoleManagementPage";
+import {
+  renderWithProviders,
+} from "../utils/testUtils";
 
-const store = configureStore({
- reducer:{auth:authReducer},
- preloadedState:{auth:{user:null,token:"t",refreshToken:null,role:"Admin",permissions:[{resource:"roles",action:{view:true,create:true,update:true,delete:true}}],theme:"light",loading:false,error:null}}
-});
+const createTestStore = () =>
+  configureStore({
+    reducer: {
+      auth: authReducer,
+    },
+    preloadedState: {
+      auth: {
+        user: {
+          name: "Kamal",
+          username: "kamal",
+          email: "kamal@example.com",
+          role: "Admin",
+        },
+        token: "test-token",
+        refreshToken: null,
+        role: "Admin",
+        theme: "light",
+        permissions: [],
+        loading: false,
+        error: null,
+      },
+    },
+  });
 
-test("renders role management page", async () => {
- render(<Provider store={store}><MemoryRouter><RoleManagementPage /></MemoryRouter></Provider>);
- expect(await screen.findByText(/role management/i)).toBeInTheDocument();
+describe("RoleManagementPage", () => {
+  test("renders role management page", async () => {
+    const store = createTestStore();
+
+    renderWithProviders(<RoleManagementPage />, {
+      store,
+      route: "/roles",
+    });
+
+    expect(
+      await screen.findByText(/role management/i)
+    ).toBeInTheDocument();
+  });
 });
