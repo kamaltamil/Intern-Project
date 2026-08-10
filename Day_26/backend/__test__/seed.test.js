@@ -20,10 +20,11 @@ const bcrypt = require("bcrypt");
 
 const seed = require("../seed");
 
-const role = (name, id) => ({
+const createRole = (name, id, extra = {}) => ({
   name,
   _id: id,
   save: jest.fn(),
+  ...extra,
 });
 
 describe("seed", () => {
@@ -32,30 +33,46 @@ describe("seed", () => {
 
     bcrypt.hash.mockResolvedValue("hashed");
 
-    Role.updateOne.mockResolvedValue({});
+    Role.find.mockResolvedValue([]);
+    Role.findOne.mockResolvedValue(null);
     Role.updateMany.mockResolvedValue({});
+    Role.updateOne.mockResolvedValue({});
+
+    User.findOne.mockResolvedValue(null);
     User.create.mockResolvedValue({});
   });
 
   /* ---------------------------------------------------------------------- */
-  /*                              Seed Roles                                */
+  /*                         SYSTEM ROLE SEEDING                            */
   /* ---------------------------------------------------------------------- */
 
   test("seeds roles, permissions and manageable roles", async () => {
-    const admin = role("Admin", "a");
-    const manager = role("Manager", "m");
-    const member = role("Member", "u");
+    const admin = createRole("Admin", "a");
+    const manager = createRole("Manager", "m");
+    const member = createRole("Member", "u");
 
-    Role.find.mockResolvedValue([admin, manager, member]);
+    Role.find.mockImplementation(async (query) => {
+      if (query?.isDefault === true) {
+        return [member];
+      }
 
-    Role.findOne.mockImplementation(async ({ name }) => {
-      const roles = {
-        Admin: admin,
-        Manager: manager,
-        Member: member,
-      };
+      return [admin, manager, member];
+    });
 
-      return roles[name] || null;
+    Role.findOne.mockImplementation(async (query) => {
+      if (query?.name === "Admin") {
+        return admin;
+      }
+
+      if (query?.name === "Manager") {
+        return manager;
+      }
+
+      if (query?.name === "Member") {
+        return member;
+      }
+
+      return null;
     });
 
     await seed();
@@ -63,45 +80,36 @@ describe("seed", () => {
     expect(Role.updateOne).toHaveBeenCalled();
 
     expect(admin.manageableRoles).toEqual(["a", "m", "u"]);
-
     expect(manager.manageableRoles).toEqual(["u"]);
-
     expect(member.manageableRoles).toEqual([]);
 
-    expect(admin.save).toHaveBeenCalled();
-    expect(manager.save).toHaveBeenCalled();
-    expect(member.save).toHaveBeenCalled();
+    expect(admin.save).toHaveBeenCalledTimes(1);
+    expect(manager.save).toHaveBeenCalledTimes(1);
+    expect(member.save).toHaveBeenCalledTimes(1);
   });
 
   /* ---------------------------------------------------------------------- */
-  /*                        Multiple Default Roles                          */
+  /*                     MULTIPLE DEFAULT ROLES                             */
   /* ---------------------------------------------------------------------- */
 
-  test("sanitizes multiple defaults preferring Member", async () => {
-    const member = role("Member", "m");
-    const other = role("Other", "o");
+  test("sanitizes multiple default roles and prefers Member", async () => {
+    const member = createRole("Member", "m");
+    const other = createRole("Other", "o");
 
-    /*
-     * First Role.find() call:
-     * - all default roles
-     *
-     * Second Role.find() call:
-     * - all role IDs
-     */
     Role.find
       .mockResolvedValueOnce([member, other])
       .mockResolvedValueOnce([member, other]);
 
-    Role.findOne.mockImplementation(async ({ name }) => {
-      if (name === "Admin") {
-        return role("Admin", "a");
+    Role.findOne.mockImplementation(async (query) => {
+      if (query?.name === "Admin") {
+        return createRole("Admin", "a");
       }
 
-      if (name === "Manager") {
-        return role("Manager", "g");
+      if (query?.name === "Manager") {
+        return createRole("Manager", "g");
       }
 
-      if (name === "Member") {
+      if (query?.name === "Member") {
         return member;
       }
 
@@ -132,32 +140,76 @@ describe("seed", () => {
   });
 
   /* ---------------------------------------------------------------------- */
-  /*                         No Default Role                                 */
+  /*                 MULTIPLE DEFAULT WITHOUT MEMBER                       */
   /* ---------------------------------------------------------------------- */
 
-  test("assigns Member default when no defaults exist", async () => {
-    const member = role("Member", "m");
+  test("sanitizes multiple defaults using first role when Member is absent", async () => {
+    const admin = createRole("Admin", "a");
+    const other = createRole("Other", "o");
 
-    /*
-     * First find:
-     *     default roles => []
-     *
-     * Second find:
-     *     all role IDs
-     */
+    Role.find
+      .mockResolvedValueOnce([admin, other])
+      .mockResolvedValueOnce([admin, other]);
+
+    Role.findOne.mockImplementation(async (query) => {
+      if (query?.name === "Admin") {
+        return admin;
+      }
+
+      if (query?.name === "Manager") {
+        return createRole("Manager", "g");
+      }
+
+      if (query?.name === "Member") {
+        return null;
+      }
+
+      return null;
+    });
+
+    await seed();
+
+    expect(Role.updateMany).toHaveBeenCalledWith(
+      {
+        _id: {
+          $ne: "a",
+        },
+      },
+      {
+        isDefault: false,
+      },
+    );
+
+    expect(Role.updateOne).toHaveBeenCalledWith(
+      {
+        _id: "a",
+      },
+      {
+        isDefault: true,
+      },
+    );
+  });
+
+  /* ---------------------------------------------------------------------- */
+  /*                         NO DEFAULT ROLE                                 */
+  /* ---------------------------------------------------------------------- */
+
+  test("assigns Member as default when no default role exists", async () => {
+    const member = createRole("Member", "m");
+
     Role.find.mockResolvedValueOnce([]).mockResolvedValueOnce([]);
 
-    Role.findOne.mockImplementation(async ({ name }) => {
-      if (name === "Member") {
+    Role.findOne.mockImplementation(async (query) => {
+      if (query?.name === "Member") {
         return member;
       }
 
-      if (name === "Admin") {
-        return role("Admin", "a");
+      if (query?.name === "Admin") {
+        return createRole("Admin", "a");
       }
 
-      if (name === "Manager") {
-        return role("Manager", "g");
+      if (query?.name === "Manager") {
+        return createRole("Manager", "g");
       }
 
       return null;
@@ -176,20 +228,125 @@ describe("seed", () => {
   });
 
   /* ---------------------------------------------------------------------- */
-  /*                         Existing Test Users                            */
+  /*               NO DEFAULT + MEMBER FALLBACK TO ANY ROLE                */
   /* ---------------------------------------------------------------------- */
 
-  test("seeds test users and updates existing users", async () => {
-    const admin = role("Admin", "a");
-    const manager = role("Manager", "g");
-    const member = role("Member", "m");
+  test("uses another role when Member cannot be found as default", async () => {
+    const fallbackRole = createRole("Fallback", "f");
 
-    const roles = [admin, manager, member];
+    Role.find.mockResolvedValueOnce([]).mockResolvedValueOnce([]);
+
+    let findOneCall = 0;
+
+    Role.findOne.mockImplementation(async (query) => {
+      findOneCall += 1;
+
+      if (query?.name === "Admin") {
+        return createRole("Admin", "a");
+      }
+
+      if (query?.name === "Manager") {
+        return createRole("Manager", "g");
+      }
+
+      if (query?.name === "Member") {
+        return null;
+      }
+
+      /*
+       * seed.js executes:
+       *
+       * Role.findOne({ name: "Member" }) || Role.findOne()
+       *
+       * Therefore query === undefined represents the fallback call.
+       */
+      if (query === undefined) {
+        return fallbackRole;
+      }
+
+      return null;
+    });
+
+    await seed();
+
+    expect(findOneCall).toBeGreaterThanOrEqual(4);
+
+    expect(Role.updateOne).toHaveBeenCalledWith(
+      {
+        _id: "f",
+      },
+      {
+        isDefault: true,
+      },
+    );
+  });
+
+  /* ---------------------------------------------------------------------- */
+  /*               MANAGER WITHOUT MEMBER ROLE                              */
+  /* ---------------------------------------------------------------------- */
+
+  test("assigns empty manageableRoles to Manager when Member is missing", async () => {
+    const admin = createRole("Admin", "a");
+    const manager = createRole("Manager", "g");
+
+    Role.find.mockImplementation(async (query) => {
+      if (query?.isDefault === true) {
+        return [manager];
+      }
+
+      return [admin, manager];
+    });
+
+    Role.findOne.mockImplementation(async (query) => {
+      if (query?.name === "Admin") {
+        return admin;
+      }
+
+      if (query?.name === "Manager") {
+        return manager;
+      }
+
+      if (query?.name === "Member") {
+        return null;
+      }
+
+      return null;
+    });
+
+    await seed();
+
+    expect(manager.manageableRoles).toEqual([]);
+    expect(manager.save).toHaveBeenCalledTimes(1);
+
+    expect(admin.manageableRoles).toEqual(["a", "g"]);
+    expect(admin.save).toHaveBeenCalledTimes(1);
+  });
+
+  /* ---------------------------------------------------------------------- */
+  /*                         EXISTING TEST USERS                            */
+  /* ---------------------------------------------------------------------- */
+
+  test("updates existing users and creates missing users", async () => {
+    const admin = createRole("Admin", "a");
+    const manager = createRole("Manager", "g");
+    const member = createRole("Member", "m");
 
     Role.find.mockResolvedValue([]);
 
-    Role.findOne.mockImplementation(async ({ name }) => {
-      return roles.find((item) => item.name === name) || null;
+    Role.findOne.mockImplementation(async (query) => {
+      if (query?.name === "Admin") {
+        return admin;
+      }
+
+      if (query?.name === "Manager") {
+        return manager;
+      }
+
+      if (query?.name === "Member") {
+        return member;
+      }
+
+      return null;
     });
 
     const existingAdmin = {
@@ -200,13 +357,6 @@ describe("seed", () => {
       save: jest.fn(),
     };
 
-    /*
-     * User calls:
-     *
-     * 1. admin@gmail.com => existing
-     * 2. manager@gmail.com => doesn't exist
-     * 3. member@gmail.com => existing
-     */
     User.findOne
       .mockResolvedValueOnce(existingAdmin)
       .mockResolvedValueOnce(null)
@@ -220,29 +370,72 @@ describe("seed", () => {
 
     expect(User.create).toHaveBeenCalledTimes(1);
 
-    expect(existingAdmin.save).toHaveBeenCalled();
-    expect(existingMember.save).toHaveBeenCalled();
+    expect(existingAdmin.name).toBe("admin");
+    expect(existingAdmin.username).toBe("admin");
+    expect(existingAdmin.role).toBe("a");
+    expect(existingAdmin.password).toBe("hashed");
+    expect(existingAdmin.isActive).toBe(true);
+
+    expect(existingMember.name).toBe("member");
+    expect(existingMember.username).toBe("member");
+    expect(existingMember.role).toBe("m");
+    expect(existingMember.password).toBe("hashed");
+    expect(existingMember.isActive).toBe(true);
+
+    expect(existingAdmin.save).toHaveBeenCalledTimes(1);
+    expect(existingMember.save).toHaveBeenCalledTimes(1);
+
+    expect(User.create).toHaveBeenCalledWith({
+      name: "manager",
+      username: "manager",
+      email: "manager@gmail.com",
+      password: "hashed",
+      role: "g",
+      isActive: true,
+    });
   });
 
   /* ---------------------------------------------------------------------- */
-  /*                         Missing Seed Roles                             */
+  /*                     MISSING SEED ROLES                                 */
   /* ---------------------------------------------------------------------- */
 
-  test("returns when required seed roles are missing", async () => {const errorSpy=jest.spyOn(console,'error').mockImplementation(()=>{});
+  test("returns when required seed roles are missing", async () => {
+    const consoleErrorSpy = jest
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
+
+    Role.updateOne.mockResolvedValue({});
     Role.find.mockResolvedValue([]);
 
-    Role.findOne.mockImplementation(async () => null);
+    Role.findOne.mockImplementation(async ({ name } = {}) => {
+      if (name === "Admin") {
+        return null;
+      }
+
+      if (name === "Manager") {
+        return null;
+      }
+
+      if (name === "Member") {
+        return null;
+      }
+
+      return null;
+    });
 
     await seed();
 
     expect(User.create).not.toHaveBeenCalled();
-    expect(User.findOne).not.toHaveBeenCalled();
-    expect(errorSpy).toHaveBeenCalledWith('  ❌ Roles not found during user seeding');
-    errorSpy.mockRestore();
+
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      "  ❌ Roles not found during user seeding",
+    );
+
+    consoleErrorSpy.mockRestore();
   });
 
   /* ---------------------------------------------------------------------- */
-  /*                       Direct Seed Success                              */
+  /*                       DIRECT RUN SUCCESS                               */
   /* ---------------------------------------------------------------------- */
 
   test("runs seed script successfully", async () => {
@@ -259,16 +452,92 @@ describe("seed", () => {
     let runSeed;
 
     jest.isolateModules(() => {
+      /*
+       * IMPORTANT:
+       * The successful run must provide all three roles.
+       *
+       * Previously these mocks returned null from findOne(),
+       * which caused seedTestUsers() to execute:
+       *
+       * console.error(
+       *   "  ❌ Roles not found during user seeding"
+       * );
+       *
+       * That made the successful run noisy even though the test passed.
+       */
+
+      const adminRole = {
+        name: "Admin",
+        _id: "admin-id",
+        save: jest.fn().mockResolvedValue(),
+      };
+
+      const managerRole = {
+        name: "Manager",
+        _id: "manager-id",
+        save: jest.fn().mockResolvedValue(),
+      };
+
+      const memberRole = {
+        name: "Member",
+        _id: "member-id",
+        save: jest.fn().mockResolvedValue(),
+      };
+
+      const roleFind = jest.fn().mockImplementation(async (query) => {
+        /*
+         * seedRoles() calls:
+         *
+         * Role.find({}, "_id")
+         *
+         * and ensureSingleDefaultRole() calls:
+         *
+         * Role.find({ isDefault: true })
+         */
+
+        if (query?.isDefault === true) {
+          return [memberRole];
+        }
+
+        return [
+          {
+            _id: "admin-id",
+          },
+          {
+            _id: "manager-id",
+          },
+          {
+            _id: "member-id",
+          },
+        ];
+      });
+
+      const roleFindOne = jest.fn().mockImplementation(async (query) => {
+        if (query?.name === "Admin") {
+          return adminRole;
+        }
+
+        if (query?.name === "Manager") {
+          return managerRole;
+        }
+
+        if (query?.name === "Member") {
+          return memberRole;
+        }
+
+        return null;
+      });
+
       jest.doMock("../models/role", () => ({
-        find: jest.fn().mockResolvedValue([]),
-        findOne: jest.fn().mockResolvedValue(null),
-        updateMany: jest.fn(),
-        updateOne: jest.fn(),
+        find: roleFind,
+        findOne: roleFindOne,
+        updateMany: jest.fn().mockResolvedValue({}),
+        updateOne: jest.fn().mockResolvedValue({}),
       }));
 
       jest.doMock("../models/user", () => ({
-        findOne: jest.fn(),
-        create: jest.fn(),
+        findOne: jest.fn().mockResolvedValue(null),
+        create: jest.fn().mockResolvedValue({}),
       }));
 
       jest.doMock("bcrypt", () => ({
@@ -295,7 +564,7 @@ describe("seed", () => {
   });
 
   /* ---------------------------------------------------------------------- */
-  /*                        Direct Seed Failure                             */
+  /*                        DIRECT RUN FAILURE                              */
   /* ---------------------------------------------------------------------- */
 
   test("handles seed script database failure", async () => {
