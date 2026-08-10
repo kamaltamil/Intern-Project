@@ -1,0 +1,20 @@
+jest.mock('../../models/rooms', () => ({ findById: jest.fn() }));
+jest.mock('../../models/booking', () => ({ findOne: jest.fn(), create: jest.fn(), find: jest.fn(), findById: jest.fn(), findByIdAndUpdate: jest.fn(), findByIdAndDelete: jest.fn() }));
+jest.mock('../../models/user', () => ({ find: jest.fn() }));
+jest.mock('../../models/role', () => ({ findOne: jest.fn() }));
+const Room=require('../../models/rooms'), Booking=require('../../models/booking'), User=require('../../models/user'), Role=require('../../models/role');
+const svc=require('../../services/bookingService');
+const chain=(value)=>{ const p={populate:jest.fn(),sort:jest.fn()}; p.populate.mockReturnValue(p); p.sort.mockResolvedValue(value); return p; };
+describe('bookingService',()=>{
+ beforeEach(()=>jest.clearAllMocks());
+ test('rejects invalid date range',async()=>await expect(svc.varifyAndBookRoom({roomId:'r',userId:'u',startDate:'2026-02-02',endDate:'2026-02-01'})).rejects.toThrow('Invalid date range'));
+ test('rejects missing room',async()=>{Room.findById.mockResolvedValue(null); await expect(svc.varifyAndBookRoom({roomId:'r',userId:'u',startDate:'2026-02-01',endDate:'2026-02-02'})).rejects.toThrow('Room not found')});
+ test('rejects already booked room',async()=>{Room.findById.mockResolvedValue({}); Booking.findOne.mockResolvedValue({}); await expect(svc.varifyAndBookRoom({roomId:'r',userId:'u',startDate:'2026-02-01',endDate:'2026-02-02'})).rejects.toThrow('Room is already booked')});
+ test('books available room',async()=>{Room.findById.mockResolvedValue({}); Booking.findOne.mockResolvedValue(null); Booking.create.mockResolvedValue({_id:'b'}); const populated={populate:jest.fn()}; populated.populate.mockReturnValueOnce(populated).mockResolvedValueOnce('booking'); Booking.findById.mockReturnValue(populated); await expect(svc.varifyAndBookRoom({roomId:'r',userId:'u',startDate:'2026-02-01',endDate:'2026-02-02'})).resolves.toBe('booking'); expect(Booking.create).toHaveBeenCalled();});
+ test.each([['getAllBookings',()=>Booking.find.mockReturnValue(chain(['b']))],['getBookingsByUserId',()=>Booking.find.mockReturnValue(chain(['b']))]])('returns %s',async(name,setup)=>{setup(); const args=name==='getBookingsByUserId'?['u']:[]; await expect(svc[name](...args)).resolves.toEqual(['b']);});
+ test('member bookings handles missing role',async()=>{Role.findOne.mockResolvedValue(null); Booking.find.mockReturnValue(chain([])); await expect(svc.getMemberBookings()).resolves.toEqual([])});
+ test('member bookings uses member ids',async()=>{Role.findOne.mockResolvedValue({_id:'r'}); User.find.mockReturnValue({distinct:jest.fn().mockResolvedValue(['u'])}); Booking.find.mockReturnValue(chain(['b'])); await expect(svc.getMemberBookings()).resolves.toEqual(['b']); expect(Booking.find).toHaveBeenCalledWith({user:{$in:['u']}})});
+ test('wraps fetch/update/delete errors',async()=>{Booking.find.mockImplementation(()=>{throw new Error('db')}); await expect(svc.getAllBookings()).rejects.toThrow('Error fetching bookings: db'); Booking.find.mockReturnValue(chainError('db')); await expect(svc.getBookingsByUserId('u')).rejects.toThrow('Error fetching bookings: db'); Booking.findByIdAndUpdate.mockImplementation(()=>{throw new Error('db')}); await expect(svc.updateBooking('b',{})).rejects.toThrow('Error updating booking: db'); Booking.findByIdAndDelete.mockRejectedValue(new Error('db')); await expect(svc.deleteBooking('b')).rejects.toThrow('Error deleting booking: db');});
+ test('updates and deletes booking',async()=>{const updated={populate:jest.fn()}; updated.populate.mockReturnValueOnce(updated).mockResolvedValueOnce({id:'b'}); Booking.findByIdAndUpdate.mockReturnValue(updated); await expect(svc.updateBooking('b',{bookingStatus:'Booked'})).resolves.toEqual({id:'b'}); Booking.findByIdAndDelete.mockResolvedValue({id:'b'}); await expect(svc.deleteBooking('b')).resolves.toEqual({id:'b'});});
+});
+function chainError(msg){const p={populate:jest.fn(),sort:jest.fn()}; p.populate.mockReturnValue(p); p.sort.mockRejectedValue(new Error(msg)); return p;}

@@ -1,0 +1,21 @@
+module.exports = {
+  testEnvironment: 'node',
+  collectCoverage: true,
+  collectCoverageFrom: [
+    'app.js',
+    'bin/www.js',
+    'config/**/*.js',
+    'constants/**/*.js',
+    'controllers/**/*.js',
+    'middleware/**/*.js',
+    'models/**/*.js',
+    'routes/**/*.js',
+    'services/**/*.js',
+    'validators/**/*.js',
+    'seed.js',
+  ],
+  coverageDirectory: 'coverage',
+  coverageReporters: ['text', 'text-summary', 'lcov'],
+  testMatch: ['**/__test__/**/*.test.js'],
+  clearMocks: true,
+};

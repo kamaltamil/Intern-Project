@@ -37,3 +37,8 @@ body {
 .custom-scroll-table .ant-table-body::-webkit-scrollbar-track {
   background: transparent;
 }
+
+.ant-pagination.ant-table-pagination.ant-table-pagination-end.css-dev-only-do-not-override-149w44n.css-var-root{
+  margin: 0%;
+  margin-top: 16px;
+}

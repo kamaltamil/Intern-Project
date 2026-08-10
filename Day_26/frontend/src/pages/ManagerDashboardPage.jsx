@@ -1,9 +1,10 @@
-import { Row, Col, Skeleton, Alert } from "antd";
+import { Row, Col, Skeleton, Alert, Avatar } from "antd";
 import { useQuery } from "@tanstack/react-query";
 import { fetchUsers } from "../api/queries";
 import DashboardLayout from "../components/DashboardLayout";
 import CustomCard from "../components/CustomCard";
 import CustomTable from "../components/CustomTable";
+import { resolveProfileImage } from "../utils/image";
 
 function ManagerDashboardPage() {
   const {
@@ -61,7 +62,25 @@ function ManagerDashboardPage() {
         <CustomTable
           dataSource={members}
           columns={[
-            { title: "Name", dataIndex: "name" },
+            {
+              title: "Name",
+              dataIndex: "name",
+              render: (name, record) => {
+                return (
+                  <div className="flex items-center gap-2">
+                    <Avatar
+                      src={resolveProfileImage(record.profileImage)}
+                      style={{ backgroundColor: "#C76A34" }}
+                    >
+                      {!record.profileImage &&
+                        (record.name?.charAt(0)?.toUpperCase() || "U")}
+                    </Avatar>
+
+                    <span>{name}</span>
+                  </div>
+                );
+              },
+            },
             { title: "Email", dataIndex: "email" },
             {
               title: "Role",

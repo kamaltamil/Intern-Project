@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { useSelector } from 'react-redux';
 import { Row, Col, Skeleton, Alert, Button, Tag, Form, Input, Avatar } from 'antd';
 import { TeamOutlined, UserOutlined, CrownOutlined, DollarOutlined } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
@@ -21,8 +20,6 @@ const getFallbackRoleColor = (roleName) => {
 function AdminDashboardPage() {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
-  const { theme } = useSelector((state) => state.auth);
-  const isDark = theme === "dark";
 
   const {
     data: users = [],
@@ -84,7 +81,6 @@ function AdminDashboardPage() {
 
   const searchInput = () => (
     <div className="flex justify-between items-center gap-2">
-        <h5 className="font-semibold" style={{ color: isDark ? "#f0f0f0" : "#2E2A27" }}>Users</h5>
         <Form>
           <Form.Item className="mb-0 ml-auto">
             <Input.Search
@@ -96,6 +92,13 @@ function AdminDashboardPage() {
             />
           </Form.Item>
         </Form>
+        <Button
+          type="primary"
+          style={{ backgroundColor: '#C76A34', borderColor: '#C76A34' }}
+          onClick={() => navigate('/users')}
+        >
+          Manage All Users
+        </Button>
     </div>
   );
  
@@ -138,19 +141,9 @@ function AdminDashboardPage() {
         </Row>
 
        <CustomTable
-          title="Recent Users"
-          extraHeader={
-            <Button
-              type="primary"
-              style={{ backgroundColor: '#C76A34', borderColor: '#C76A34' }}
-              onClick={() => navigate('/users')}
-            >
-              Manage All Users
-            </Button>
-          }
           dataSource={searchQuery ? filteredUsers : safeUsers.slice(0, 5)}
           columns={columns}
-          pagination={false}
+          pagination={{pageSize: 3}}
           tableTitleRender={() => searchInput()}
         />
       </div>

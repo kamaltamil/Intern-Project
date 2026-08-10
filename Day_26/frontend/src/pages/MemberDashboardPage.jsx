@@ -5,8 +5,7 @@ import CustomCard from "../components/CustomCard";
 import { TeamOutlined, UserOutlined } from "@ant-design/icons";
 
 function MemberDashboardPage() {
-  const { user, theme } = useSelector((state) => state.auth);
-  const isDark = theme === "dark";
+  const { user } = useSelector((state) => state.auth);
 
 
   if (!user) {
@@ -42,7 +41,7 @@ function MemberDashboardPage() {
         </Row>
 
         <Card className="rounded-2xl border border-[#ECE6DF] shadow-sm">
-          <div className="text-lg font-semibold" style={{ color: isDark ? "#f0f0f0" : "#2E2A27" }}>
+          <div className="text-lg font-semibold">
             Member Summary
           </div>
           <p className="text-[#A74E2B] mt-2">
