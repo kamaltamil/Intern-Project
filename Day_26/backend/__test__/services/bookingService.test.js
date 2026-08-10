@@ -16,5 +16,31 @@ describe('bookingService',()=>{
  test('member bookings uses member ids',async()=>{Role.findOne.mockResolvedValue({_id:'r'}); User.find.mockReturnValue({distinct:jest.fn().mockResolvedValue(['u'])}); Booking.find.mockReturnValue(chain(['b'])); await expect(svc.getMemberBookings()).resolves.toEqual(['b']); expect(Booking.find).toHaveBeenCalledWith({user:{$in:['u']}})});
  test('wraps fetch/update/delete errors',async()=>{Booking.find.mockImplementation(()=>{throw new Error('db')}); await expect(svc.getAllBookings()).rejects.toThrow('Error fetching bookings: db'); Booking.find.mockReturnValue(chainError('db')); await expect(svc.getBookingsByUserId('u')).rejects.toThrow('Error fetching bookings: db'); Booking.findByIdAndUpdate.mockImplementation(()=>{throw new Error('db')}); await expect(svc.updateBooking('b',{})).rejects.toThrow('Error updating booking: db'); Booking.findByIdAndDelete.mockRejectedValue(new Error('db')); await expect(svc.deleteBooking('b')).rejects.toThrow('Error deleting booking: db');});
  test('updates and deletes booking',async()=>{const updated={populate:jest.fn()}; updated.populate.mockReturnValueOnce(updated).mockResolvedValueOnce({id:'b'}); Booking.findByIdAndUpdate.mockReturnValue(updated); await expect(svc.updateBooking('b',{bookingStatus:'Booked'})).resolves.toEqual({id:'b'}); Booking.findByIdAndDelete.mockResolvedValue({id:'b'}); await expect(svc.deleteBooking('b')).resolves.toEqual({id:'b'});});
+ test("member bookings wraps database errors", async () => {
+  Role.findOne.mockRejectedValue(new Error("db"));
+
+  await expect(
+    svc.getMemberBookings()
+  ).rejects.toThrow(
+    "Error fetching bookings: db"
+  );
+});
+test("member bookings handles distinct query error", async () => {
+  Role.findOne.mockResolvedValue({
+    _id: "member-role",
+  });
+
+  User.find.mockReturnValue({
+    distinct: jest.fn().mockRejectedValue(
+      new Error("db")
+    ),
+  });
+
+  await expect(
+    svc.getMemberBookings()
+  ).rejects.toThrow(
+    "Error fetching bookings: db"
+  );
+});
 });
 function chainError(msg){const p={populate:jest.fn(),sort:jest.fn()}; p.populate.mockReturnValue(p); p.sort.mockRejectedValue(new Error(msg)); return p;}

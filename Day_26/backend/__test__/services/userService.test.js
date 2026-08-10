@@ -282,33 +282,65 @@ describe("userService", () => {
     ).rejects.toMatchObject({ statusCode: 409 });
   });
 
- test("update rejects duplicate email", async () => {
-  const user = {
-    _id: id1,
-    role: id2,
-    save: jest.fn(),
-  };
+  test("update rejects duplicate email", async () => {
+    const user = {
+      _id: id1,
+      role: id2,
+      save: jest.fn(),
+    };
 
-  // IMPORTANT:
-  // updateUser() uses User.findById(...).populate(...)
-  User.findById.mockReturnValue({
-    populate: jest.fn().mockResolvedValue(user),
+    User.findById.mockResolvedValue(user);
+
+    User.findOne.mockResolvedValue({
+      _id: id2,
+      email: "existing@example.com",
+    });
+
+    await expect(
+      svc.updateUser(id1, {
+        email: "existing@example.com",
+      })
+    ).rejects.toMatchObject({
+      statusCode: 409,
+      message: "Email already exists",
+    });
+
+    expect(User.findOne).toHaveBeenCalledWith({
+      email: "existing@example.com",
+      _id: { $ne: id1 },
+    });
+
+    expect(user.save).not.toHaveBeenCalled();
   });
 
-  // Existing email found => duplicate
-  User.findOne.mockResolvedValue({
-    _id: id2,
-    email: "e",
-  });
+  test("update accepts a unique email", async () => {
+    const user = {
+      _id: id1,
+      role: id2,
+      email: "old@example.com",
+      save: jest.fn(),
+    };
 
-  await expect(
-    svc.updateUser(id1, {
-      email: "e",
-    })
-  ).rejects.toMatchObject({
-    statusCode: 409,
+    const updatedUser = {
+      _id: id1,
+      email: "new@example.com",
+    };
+
+    User.findById
+      .mockResolvedValueOnce(user)
+      .mockReturnValueOnce(query(updatedUser));
+
+    User.findOne.mockResolvedValue(null);
+
+    await expect(
+      svc.updateUser(id1, {
+        email: " NEW@EXAMPLE.COM ",
+      })
+    ).resolves.toEqual(updatedUser);
+
+    expect(user.email).toBe("new@example.com");
+    expect(user.save).toHaveBeenCalled();
   });
-});
 
   test("update rejects a missing role", async () => {
     const user = { _id: id1, role: id2, save: jest.fn() };
@@ -389,4 +421,275 @@ describe("userService", () => {
     await expect(svc.deleteUser(id1)).resolves.toBe(true);
     expect(User.findByIdAndDelete).toHaveBeenCalledWith(id1);
   });
+
+  test("resolves role directly from populated role object", async () => {
+  const role = {
+    _id: id1,
+    name: "Manager",
+    permissions: [],
+  };
+
+  User.find.mockReturnValue(query([]));
+
+  await expect(
+    svc.getAllUsers({
+      role,
+    })
+  ).resolves.toEqual([]);
+
+  expect(User.find).not.toHaveBeenCalledWith({
+    role: {
+      $in: expect.anything(),
+    },
+  });
+});
+
+test("returns empty users for invalid role reference", async () => {
+  await expect(
+    svc.getAllUsers({
+      role: 12345,
+    })
+  ).resolves.toEqual([]);
+
+  expect(User.find).not.toHaveBeenCalled();
+});
+
+test("returns empty users when manageableRoles is undefined", async () => {
+  Role.findById.mockReturnValue(
+    leanQuery({
+      name: "Manager",
+    })
+  );
+
+  await expect(
+    svc.getAllUsers({
+      role: id1,
+    })
+  ).resolves.toEqual([]);
+
+  expect(User.find).not.toHaveBeenCalled();
+});
+
+test("admin can create user with any role", async () => {
+  const role = {
+    _id: id2,
+    name: "Member",
+  };
+
+  Role.findById.mockReturnValue(
+    leanQuery(role)
+  );
+
+  Role.findOne.mockReturnValue(
+    leanQuery({
+      name: "Admin",
+      manageableRoles: [],
+    })
+  );
+
+  User.findOne.mockResolvedValue(null);
+
+  User.create.mockResolvedValue({
+    _id: id1,
+  });
+
+  User.findById.mockReturnValue(
+    query({
+      id: id1,
+    })
+  );
+
+  await expect(
+    svc.createUser({
+      name: "John",
+      email: "john@example.com",
+      username: "john",
+      password: "password",
+      role: id2,
+      requestingUser: {
+        role: "Admin",
+      },
+    })
+  ).resolves.toEqual({
+    id: id1,
+  });
+});
+
+test("creates user when role is supplied by name", async () => {
+  const role = {
+    _id: id2,
+    name: "Member",
+  };
+
+  Role.findOne.mockReturnValue(
+    leanQuery(role)
+  );
+
+  User.findOne.mockResolvedValue(null);
+
+  User.create.mockResolvedValue({
+    _id: id1,
+  });
+
+  User.findById.mockReturnValue(
+    query({
+      id: id1,
+    })
+  );
+
+  await expect(
+    svc.createUser({
+      name: "John",
+      email: "john@example.com",
+      username: "john",
+      password: "password",
+      role: "Member",
+    })
+  ).resolves.toEqual({
+    id: id1,
+  });
+});
+
+test("update rejects new role that manager cannot assign", async () => {
+  const user = {
+    _id: id1,
+    role: id2,
+    save: jest.fn(),
+  };
+
+  User.findById.mockResolvedValue(user);
+
+  Role.findOne.mockReturnValue(
+    leanQuery({
+      name: "Manager",
+      manageableRoles: [id2],
+    })
+  );
+
+  Role.findById.mockReturnValue(
+    leanQuery({
+      _id: id1,
+      name: "Admin",
+    })
+  );
+
+  await expect(
+    svc.updateUser(
+      id1,
+      {
+        role: id1,
+      },
+      {
+        role: "Manager",
+      }
+    )
+  ).rejects.toMatchObject({
+    statusCode: 403,
+  });
+});
+
+test("update accepts manageable new role", async () => {
+  const user = {
+    _id: id1,
+    role: id2,
+    save: jest.fn(),
+  };
+
+  const returnedUser = {
+    id: id1,
+  };
+
+  User.findById
+    .mockResolvedValueOnce(user)
+    .mockReturnValueOnce(query(returnedUser));
+
+  Role.findOne.mockReturnValue(
+    leanQuery({
+      name: "Manager",
+      manageableRoles: [id2],
+    })
+  );
+
+  Role.findById.mockReturnValue(
+    leanQuery({
+      _id: id2,
+      name: "Member",
+    })
+  );
+
+  await expect(
+    svc.updateUser(
+      id1,
+      {
+        role: id2,
+      },
+      {
+        role: "Manager",
+      }
+    )
+  ).resolves.toEqual(returnedUser);
+
+  expect(user.role).toBe(id2);
+});
+
+test("delete succeeds when manager manages user's role", async () => {
+  const member = {
+    role: {
+      _id: id2,
+      name: "Member",
+    },
+  };
+
+  User.findById.mockReturnValue({
+    populate: jest.fn().mockResolvedValue(member),
+  });
+
+  Role.findOne.mockReturnValue(
+    leanQuery({
+      name: "Manager",
+      manageableRoles: [id2],
+    })
+  );
+
+  User.findByIdAndDelete.mockResolvedValue(member);
+
+  await expect(
+    svc.deleteUser(
+      id1,
+      null,
+      {
+        role: "Manager",
+      }
+    )
+  ).resolves.toBe(true);
+
+  expect(User.findByIdAndDelete)
+    .toHaveBeenCalledWith(id1);
+});
+
+test("delete handles admin role stored as string", async () => {
+  const admin = {
+    role: "Admin",
+  };
+
+  User.findById.mockReturnValue({
+    populate: jest.fn().mockResolvedValue(admin),
+  });
+
+  Role.findOne.mockResolvedValue({
+    _id: id2,
+  });
+
+  User.countDocuments.mockResolvedValue(2);
+  User.findByIdAndDelete.mockResolvedValue(admin);
+
+  await expect(
+    svc.deleteUser(id1)
+  ).resolves.toBe(true);
+
+  expect(User.countDocuments)
+    .toHaveBeenCalledWith({
+      role: id2,
+    });
+});
 });

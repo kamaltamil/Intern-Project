@@ -16,4 +16,100 @@ describe('roleService',()=>{beforeEach(()=>jest.clearAllMocks());
  test('delete role validations and success',async()=>{Role.findById.mockResolvedValue(null); await expect(svc.deleteRole('r')).rejects.toMatchObject({statusCode:404}); Role.findById.mockResolvedValue({...baseRole,isSystem:true}); await expect(svc.deleteRole('r')).rejects.toMatchObject({statusCode:400}); Role.findById.mockResolvedValue({...baseRole}); User.countDocuments.mockResolvedValue(2); await expect(svc.deleteRole('r')).rejects.toMatchObject({statusCode:400});});
  test('deletes role and promotes next default',async()=>{const r={...baseRole,isDefault:true}; const next={save:jest.fn()}; Role.findById.mockResolvedValue(r); User.countDocuments.mockResolvedValue(0); Role.findOne.mockResolvedValue(next); Role.updateMany.mockResolvedValue({}); Role.findByIdAndDelete.mockResolvedValue(r); await expect(svc.deleteRole('r')).resolves.toBe(true); expect(next.isDefault).toBe(true); expect(Role.findByIdAndDelete).toHaveBeenCalledWith('r');});
  test('default role and permissions',async()=>{const r={permissions:[{resource:'users'}],isDefault:true,save:jest.fn()}; Role.findOne.mockResolvedValue(r); await expect(svc.getDefaultRole()).resolves.toBe(r); await expect(svc.getDefaultPermissions()).resolves.toEqual(r.permissions); Role.findOne.mockReset(); Role.findOne.mockResolvedValue(null); await expect(svc.getDefaultRole()).resolves.toBeNull(); await expect(svc.getDefaultPermissions()).resolves.toEqual([]);});
+ test("updates non-system role name successfully", async () => {
+  const role = {
+    ...baseRole,
+    name: "OldRole",
+    isSystem: false,
+    save: jest.fn(),
+  };
+
+  Role.findById
+    .mockResolvedValueOnce(role)
+    .mockReturnValueOnce({
+      populate: jest.fn().mockResolvedValue(role),
+    });
+
+  Role.findOne.mockResolvedValue(null);
+
+  await expect(
+    svc.updateRole("r1", {
+      name: "NewRole",
+    })
+  ).resolves.toBe(role);
+
+  expect(role.name).toBe("NewRole");
+  expect(role.save).toHaveBeenCalled();
+});
+
+test("keeps non-default role when isDefault is false", async () => {
+  const role = {
+    ...baseRole,
+    isDefault: false,
+    save: jest.fn(),
+  };
+
+  Role.findById
+    .mockResolvedValueOnce(role)
+    .mockReturnValueOnce({
+      populate: jest.fn().mockResolvedValue(role),
+    });
+
+  await expect(
+    svc.updateRole("r1", {
+      isDefault: false,
+    })
+  ).resolves.toBe(role);
+
+  expect(role.isDefault).toBe(false);
+});
+
+test("delete non-default role without another default", async () => {
+  const role = {
+    ...baseRole,
+    isDefault: false,
+  };
+
+  Role.findById.mockResolvedValue(role);
+  User.countDocuments.mockResolvedValue(0);
+  Role.updateMany.mockResolvedValue({});
+  Role.findOne.mockResolvedValue(null);
+  Role.findByIdAndDelete.mockResolvedValue(role);
+
+  await expect(
+    svc.deleteRole("r1")
+  ).resolves.toBe(true);
+
+  expect(Role.findByIdAndDelete).toHaveBeenCalledWith("r1");
+});
+
+test("getDefaultRole falls back to any role when Member does not exist", async () => {
+  const fallbackRole = {
+    _id: "fallback-id",
+    name: "CustomRole",
+    isDefault: false,
+    permissions: [],
+    save: jest.fn(),
+  };
+
+  Role.findOne
+    .mockResolvedValueOnce(null) // no default role
+    .mockResolvedValueOnce(null) // Member not found
+    .mockResolvedValueOnce(fallbackRole); // generic fallback
+
+  await expect(svc.getDefaultRole()).resolves.toBe(fallbackRole);
+
+  expect(Role.findOne).toHaveBeenNthCalledWith(1, {
+    isDefault: true,
+  });
+
+  expect(Role.findOne).toHaveBeenNthCalledWith(2, {
+    name: "Member",
+  });
+
+  expect(Role.findOne).toHaveBeenNthCalledWith(3);
+
+  expect(fallbackRole.isDefault).toBe(true);
+  expect(fallbackRole.save).toHaveBeenCalled();
+});
 });

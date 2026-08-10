@@ -33,4 +33,40 @@ describe('express app', () => {
     expect(res.status).toHaveBeenCalledWith(418);
     expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ message: 'teapot' }));
   });
+  test("error handler returns full error in development", () => {
+  const stack = app._router?.stack || app.router?.stack || [];
+
+  const layer = stack.find(
+    (l) => l.handle && l.handle.length === 4
+  );
+
+  expect(layer).toBeTruthy();
+
+  const error = {
+    status: 400,
+    message: "development error",
+  };
+
+  const res = {
+    status: jest.fn().mockReturnThis(),
+    json: jest.fn(),
+  };
+
+  const req = {
+    app: {
+      get: jest.fn().mockReturnValue("development"),
+    },
+  };
+
+  layer.handle(error, req, res, jest.fn());
+
+  expect(req.app.get).toHaveBeenCalledWith("env");
+
+  expect(res.status).toHaveBeenCalledWith(400);
+
+  expect(res.json).toHaveBeenCalledWith({
+    message: "development error",
+    error,
+  });
+});
 });
