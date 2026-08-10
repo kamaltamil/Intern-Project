@@ -1,10 +1,11 @@
-import { Row, Col, Skeleton, Alert, Button, Layout } from 'antd';
+import { Row, Col, Skeleton, Alert } from 'antd';
 import { TeamOutlined, UserOutlined, CrownOutlined, DollarOutlined } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
 import { fetchUsers } from '../api/queries';
 import DashboardLayout from '../components/DashboardLayout';
 import { useNavigate } from 'react-router-dom';
 import CustomCard from '../components/CustomCard';
+import LandingBanner from '../components/LandingBanner';
 
 function AdminDashboardPage() {
   const navigate = useNavigate();
@@ -56,38 +57,14 @@ function AdminDashboardPage() {
           ))}
         </Row>
 
-        {/* Landing image, replaces the recent-users table */}
-<div
-  className="relative rounded-2xl overflow-hidden shadow-sm
-             h-48 sm:h-64 md:h-80 lg:h-96"
->
-  <img
-    src="/landing/landing.jpg"
-    alt="Hotel lobby"
-    className="w-full h-full object-cover"
-  />
-  <div
-    className="absolute inset-0 flex flex-col justify-center items-start p-4 sm:p-6 md:p-8"
-    style={{
-      background:
-        'linear-gradient(90deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.15) 55%, rgba(0,0,0,0) 100%)',
-    }}
-  >
-    <h2 className="text-white text-xl sm:text-2xl md:text-3xl font-semibold mb-2">
-      HotelPro Admin Console
-    </h2>
-    <p className="text-white/90 mb-4 max-w-md text-sm sm:text-base">
-      Oversee rooms, bookings, staff roles, and revenue — all in one place.
-    </p>
-    <Button
-      type="primary"
-      style={{ backgroundColor: '#C76A34', borderColor: '#C76A34' }}
-      onClick={() => navigate('/users')}
-    >
-      Manage All Users
-    </Button>
-  </div>
-</div>
+        <LandingBanner
+          image="/landing/admin-hero.jpg"
+          alt="Hotel lobby"
+          title="HotelPro Admin Console"
+          subtitle="Oversee rooms, bookings, staff roles, and revenue — all in one place."
+          actionLabel="Manage All Users"
+          onAction={() => navigate('/users')}
+        />
       </div>
     </DashboardLayout>
   );

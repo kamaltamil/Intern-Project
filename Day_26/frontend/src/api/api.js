@@ -10,13 +10,18 @@ const api = axios.create({
 });
 
 /* -------------------------------------------------------------------------- */
-/*                          Auth Route Helpers                                */
+/*                              Auth Helpers                                  */
 /* -------------------------------------------------------------------------- */
 
-/**
- * Routes that should NOT trigger a token refresh attempt.
- * Prevents infinite loops on auth failures.
- */
+const getAuthState = () => {
+  const state = store.getState();
+
+  return state?.auth || {
+    token: null,
+    refreshToken: null,
+  };
+};
+
 const isAuthRoute = (url = "") => {
   return [
     "/users/login",
@@ -27,93 +32,113 @@ const isAuthRoute = (url = "") => {
 };
 
 /* -------------------------------------------------------------------------- */
-/*                          Request Interceptor                               */
+/*                         Request Interceptor                                */
 /* -------------------------------------------------------------------------- */
 
-api.interceptors.request.use((config) => {
-  const token = store.getState().auth.token;
+api.interceptors.request.use(
+  (config) => {
+    const { token } = getAuthState();
 
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
+    if (token) {
+      config.headers = config.headers || {};
+      config.headers.Authorization = `Bearer ${token}`;
+    }
 
-  return config;
-});
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
 
 /* -------------------------------------------------------------------------- */
-/*                          Response Interceptor                              */
+/*                         Refresh Management                                 */
 /* -------------------------------------------------------------------------- */
 
 let isRefreshing = false;
 let refreshPromise = null;
 
+const refreshAccessToken = async () => {
+  const { refreshToken } = getAuthState();
+
+  if (!refreshToken) {
+    store.dispatch(logout());
+    return null;
+  }
+
+  try {
+    const response = await api.post("/users/refresh", {
+      refreshToken,
+    });
+
+    const data = response?.data || {};
+
+    if (!data.token) {
+      store.dispatch(logout());
+      return null;
+    }
+
+    store.dispatch(
+      setTokens({
+        token: data.token,
+        refreshToken: data.refreshToken || refreshToken,
+        role: data.role,
+        permissions: data.permissions || [],
+      })
+    );
+
+    return data.token;
+  } catch (error) {
+    console.error("Token refresh failed:", error);
+
+    store.dispatch(logout());
+
+    return null;
+  }
+};
+
+/* -------------------------------------------------------------------------- */
+/*                         Response Interceptor                               */
+/* -------------------------------------------------------------------------- */
+
 api.interceptors.response.use(
   (response) => response,
+
   async (error) => {
-    const originalRequest = error.config;
+    const originalRequest = error?.config;
+
+    if (!originalRequest) {
+      throw error;
+    }
 
     const shouldRefresh =
       !originalRequest._retry &&
       !isAuthRoute(originalRequest.url) &&
-      error.response?.status === 401;
+      error?.response?.status === 401;
 
-    if (shouldRefresh) {
-      originalRequest._retry = true;
-
-      if (!isRefreshing) {
-        isRefreshing = true;
-
-        refreshPromise = (async () => {
-          const { refreshToken } = store.getState().auth;
-
-          if (!refreshToken) {
-            store.dispatch(logout());
-            return null;
-          }
-
-          try {
-            const response = await api.post("/users/refresh", {
-              refreshToken,
-            });
-
-            const data = response.data || {};
-
-            /*
-             * Store the new tokens AND updated role/permissions
-             * so RBAC stays in sync after silent token rotation.
-             */
-            store.dispatch(
-              setTokens({
-                token: data.token,
-                refreshToken: data.refreshToken,
-                role: data.role,
-                permissions: data.permissions,
-              })
-            );
-
-            return data.token;
-          } catch (refreshError) {
-            console.error("Token refresh failed:", refreshError);
-            store.dispatch(logout());
-            return null;
-          } finally {
-            isRefreshing = false;
-            refreshPromise = null;
-          }
-        })();
-      }
-
-      const newToken = await refreshPromise;
-
-      if (!newToken) {
-        throw error;
-      }
-
-      originalRequest.headers.Authorization = `Bearer ${newToken}`;
-      return api(originalRequest);
+    if (!shouldRefresh) {
+      throw error;
     }
 
-    throw error;
+    originalRequest._retry = true;
+
+    if (!isRefreshing) {
+      isRefreshing = true;
+
+      refreshPromise = refreshAccessToken().finally(() => {
+        isRefreshing = false;
+        refreshPromise = null;
+      });
+    }
+
+    const newToken = await refreshPromise;
+
+    if (!newToken) {
+      throw error;
+    }
+
+    originalRequest.headers = originalRequest.headers || {};
+    originalRequest.headers.Authorization = `Bearer ${newToken}`;
+
+    return api.request(originalRequest);
   }
 );
 
