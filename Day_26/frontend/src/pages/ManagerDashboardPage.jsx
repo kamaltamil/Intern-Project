@@ -1,10 +1,11 @@
-import { Row, Col, Skeleton, Alert, Avatar } from "antd";
+import { Row, Col, Skeleton, Alert, Avatar, Tag } from "antd";
 import { useQuery } from "@tanstack/react-query";
 import { fetchUsers } from "../api/queries";
 import DashboardLayout from "../components/DashboardLayout";
 import CustomCard from "../components/CustomCard";
 import CustomTable from "../components/CustomTable";
 import { resolveProfileImage } from "../utils/image";
+import { ROLE_COLORS } from "../constants/roleColors";
 
 function ManagerDashboardPage() {
   const {
@@ -15,6 +16,13 @@ function ManagerDashboardPage() {
   } = useQuery({ queryKey: ["users"], queryFn: fetchUsers });
 
   const getRoleName = (r) => (typeof r === "object" ? r?.name : r) || "";
+
+  const getFallbackRoleColor = (roleName) => {
+    const match = ROLE_COLORS.find(
+      (c) => c.label.toLowerCase() === roleName?.toLowerCase()
+    );
+    return match ? match.value : "#722ed1";
+  };
 
   const members = users.filter((item) => getRoleName(item.role) === "Member");
 
@@ -83,9 +91,13 @@ function ManagerDashboardPage() {
             },
             { title: "Email", dataIndex: "email" },
             {
-              title: "Role",
-              dataIndex: "role",
-              render: (role) => getRoleName(role) || "Member",
+              title: 'Role',
+              dataIndex: 'role',
+              render: (role) => {
+                const name = getRoleName(role);
+                const color = typeof role === 'object' && role?.color ? role.color : getFallbackRoleColor(name);
+                return <Tag color={color}>{name || 'Member'}</Tag>;
+              },
             },
           ]}
           pagination={{ pageSize: 5 }}

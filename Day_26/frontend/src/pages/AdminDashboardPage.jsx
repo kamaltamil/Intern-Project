@@ -1,25 +1,13 @@
-import { useState } from 'react';
-import { Row, Col, Skeleton, Alert, Button, Tag, Form, Input, Avatar } from 'antd';
+import { Row, Col, Skeleton, Alert, Button, Layout } from 'antd';
 import { TeamOutlined, UserOutlined, CrownOutlined, DollarOutlined } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
 import { fetchUsers } from '../api/queries';
 import DashboardLayout from '../components/DashboardLayout';
 import { useNavigate } from 'react-router-dom';
 import CustomCard from '../components/CustomCard';
-import CustomTable from '../components/CustomTable';
-import { resolveProfileImage } from "../utils/image";
-import { ROLE_COLORS } from "../constants/roleColors";
-
-const getFallbackRoleColor = (roleName) => {
-  const match = ROLE_COLORS.find(
-    (c) => c.label.toLowerCase() === roleName?.toLowerCase()
-  );
-  return match ? match.value : "#722ed1";
-};
 
 function AdminDashboardPage() {
   const navigate = useNavigate();
-  const [searchQuery, setSearchQuery] = useState('');
 
   const {
     data: users = [],
@@ -28,80 +16,12 @@ function AdminDashboardPage() {
     error,
   } = useQuery({ queryKey: ['users'], queryFn: fetchUsers });
 
-  // Defensive: never let a bad/failed response crash the page
   const safeUsers = Array.isArray(users) ? users : [];
-
   const getRoleName = (r) => (typeof r === 'object' ? r?.name : r) || '';
-
-  const filteredUsers = safeUsers.filter((user) => {
-    const query = searchQuery.toLowerCase();
-    const roleName = getRoleName(user.role);
-    return (
-      user.name?.toLowerCase().includes(query) ||
-      user.email?.toLowerCase().includes(query) ||
-      roleName.toLowerCase().includes(query)
-    );
-  });
-
   const totalManagers = safeUsers.filter((item) => getRoleName(item.role) === 'Manager').length;
   const totalMembers = safeUsers.filter((item) => getRoleName(item.role) === 'Member').length;
   const revenue = safeUsers.length * 125;
 
-  const columns = [
-    {
-      title: "Name",
-      dataIndex: "name",
-      render: (name, record) => {
-        return (
-          <div className="flex items-center gap-2">
-            <Avatar
-              src={resolveProfileImage(record.profileImage)}
-              style={{ backgroundColor: "#C76A34" }}
-            >
-              {!record.profileImage &&
-                (record.name?.charAt(0)?.toUpperCase() || "U")}
-            </Avatar>
-
-            <span>{name}</span>
-          </div>
-        );
-      },
-    },
-    { title: 'Email', dataIndex: 'email' },
-    {
-      title: 'Role',
-      dataIndex: 'role',
-      render: (role) => {
-        const name = getRoleName(role);
-        const color = typeof role === 'object' && role?.color ? role.color : getFallbackRoleColor(name);
-        return <Tag color={color}>{name || 'Member'}</Tag>;
-      },
-    },
-  ];
-
-  const searchInput = () => (
-    <div className="flex justify-between items-center gap-2">
-        <Form>
-          <Form.Item className="mb-0 ml-auto">
-            <Input.Search
-              placeholder="Search by name, email or role..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onSearch={(val) => setSearchQuery(val)}
-              allowClear
-            />
-          </Form.Item>
-        </Form>
-        <Button
-          type="primary"
-          style={{ backgroundColor: '#C76A34', borderColor: '#C76A34' }}
-          onClick={() => navigate('/users')}
-        >
-          Manage All Users
-        </Button>
-    </div>
-  );
- 
   if (isLoading) {
     return (
       <DashboardLayout>
@@ -121,31 +41,53 @@ function AdminDashboardPage() {
   const dashboardStats = [
     { title: 'Total Users', value: safeUsers.length, icon: <TeamOutlined /> },
     { title: 'Total Managers', value: totalManagers, icon: <CrownOutlined /> },
-    { title: 'Total Members', value: totalMembers, icon: <UserOutlined />},
-    { title: 'Revenue', value: revenue, icon: <DollarOutlined />},
+    { title: 'Total Members', value: totalMembers, icon: <UserOutlined /> },
+    { title: 'Revenue', value: revenue, icon: <DollarOutlined /> },
   ];
 
   return (
     <DashboardLayout>
       <div className="space-y-4">
         <Row gutter={[16, 16]}>
-           {dashboardStats.map((stat) => (
+          {dashboardStats.map((stat) => (
             <Col xs={24} sm={12} lg={6} key={stat.title}>
-              <CustomCard
-                title={stat.title}
-                value={stat.value}
-                icon={stat.icon}
-              />
+              <CustomCard title={stat.title} value={stat.value} icon={stat.icon} />
             </Col>
           ))}
         </Row>
 
-       <CustomTable
-          dataSource={searchQuery ? filteredUsers : safeUsers.slice(0, 5)}
-          columns={columns}
-          pagination={{pageSize: 3}}
-          tableTitleRender={() => searchInput()}
-        />
+        {/* Landing image, replaces the recent-users table */}
+<div
+  className="relative rounded-2xl overflow-hidden shadow-sm
+             h-48 sm:h-64 md:h-80 lg:h-96"
+>
+  <img
+    src="/landing/landing.jpg"
+    alt="Hotel lobby"
+    className="w-full h-full object-cover"
+  />
+  <div
+    className="absolute inset-0 flex flex-col justify-center items-start p-4 sm:p-6 md:p-8"
+    style={{
+      background:
+        'linear-gradient(90deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.15) 55%, rgba(0,0,0,0) 100%)',
+    }}
+  >
+    <h2 className="text-white text-xl sm:text-2xl md:text-3xl font-semibold mb-2">
+      HotelPro Admin Console
+    </h2>
+    <p className="text-white/90 mb-4 max-w-md text-sm sm:text-base">
+      Oversee rooms, bookings, staff roles, and revenue — all in one place.
+    </p>
+    <Button
+      type="primary"
+      style={{ backgroundColor: '#C76A34', borderColor: '#C76A34' }}
+      onClick={() => navigate('/users')}
+    >
+      Manage All Users
+    </Button>
+  </div>
+</div>
       </div>
     </DashboardLayout>
   );
