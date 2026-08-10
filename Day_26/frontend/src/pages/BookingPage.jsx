@@ -79,8 +79,8 @@ function BookingPage() {
     onError: (error) => {
       message.error(
         error?.response?.data?.message ||
-        error?.response?.data?.error ||
-        "Booking failed",
+          error?.response?.data?.error ||
+          "Booking failed",
       );
     },
   });
@@ -130,7 +130,11 @@ function BookingPage() {
           <div className="flex items-center gap-2">
             <CalendarOutlined className="text-2xl text-[#C76A34]" />
 
-            <Title level={4} className="!mb-0" style={{ color: isDark ? "#f0f0f0" : "#2E2A27" }}>
+            <Title
+              level={4}
+              className="!mb-0"
+              style={{ color: isDark ? "#f0f0f0" : "#2E2A27" }}
+            >
               {pageTitle}
             </Title>
           </div>
@@ -164,17 +168,17 @@ function BookingPage() {
 
         <div className="space-y-4">
           <Row gutter={[16, 16]}>
-           {stats.map((stat) => (
-             <Col xs={24} sm={12} lg={6} key={stat.title}>
-              <CustomCard
-                title={stat.title}
-                value={stat.value}
-                icon={stat.icon}
-                color={stat.color}
-              />
-            </Col>
-          ))}
-        </Row>
+            {stats.map((stat) => (
+              <Col xs={24} sm={12} lg={6} key={stat.title}>
+                <CustomCard
+                  title={stat.title}
+                  value={stat.value}
+                  icon={stat.icon}
+                  color={stat.color}
+                />
+              </Col>
+            ))}
+          </Row>
         </div>
 
         {/* ---------- Table ---------- */}

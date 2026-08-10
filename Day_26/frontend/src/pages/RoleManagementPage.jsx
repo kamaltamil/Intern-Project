@@ -556,7 +556,7 @@ function RoleManagementPage() {
         okText={editingRole ? "Save Changes" : "Create Role"}
         width={820}
         style={{ top: 20 }}
-        destroyOnClose
+        destroyOnHidden
         confirmLoading={createMutation.isPending || updateMutation.isPending}
         okButtonProps={{
           style: {

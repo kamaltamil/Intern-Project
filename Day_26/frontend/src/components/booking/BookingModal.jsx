@@ -110,7 +110,7 @@ const BookingModal = ({
   return (
     <Modal
       open={open}
-      destroyOnClose
+      destroyOnHidden
       width={550}
       onCancel={() => {
         form.resetFields();
