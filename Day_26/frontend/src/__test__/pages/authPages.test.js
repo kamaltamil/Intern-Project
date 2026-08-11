@@ -1,3 +1,22 @@
+import React from "react";
+import {
+  render,
+  screen,
+  fireEvent,
+  waitFor,
+} from "@testing-library/react";
+import { Provider } from "react-redux";
+import { configureStore } from "@reduxjs/toolkit";
+import {
+  QueryClient,
+  QueryClientProvider,
+} from "@tanstack/react-query";
+import { MemoryRouter } from "react-router-dom";
+
+import authReducer from "../../store/slices/authSlice";
+import LoginPage from "../../pages/LoginPage";
+import SignupPage from "../../pages/SignupPage";
+
 jest.mock("../../api/queries", () => ({
   loginUser: jest.fn().mockResolvedValue({
     user: {
@@ -17,51 +36,6 @@ jest.mock("../../api/queries", () => ({
     message: "Account created successfully",
   }),
 }));
-
-jest.mock("@tanstack/react-query", () => {
-  const React = require("react");
-  return {
-    QueryClient: jest.fn(function(options) {
-      this.defaultOptions = options?.defaultOptions;
-      this.invalidateQueries = jest.fn();
-    }),
-    QueryClientProvider: ({ children }) => React.createElement(React.Fragment, null, children),
-    useQuery: jest.fn(() => ({
-      data: null,
-      isLoading: false,
-      isError: false,
-      error: null,
-    })),
-    useMutation: jest.fn(() => ({
-      mutate: jest.fn(),
-      isPending: false,
-      error: null,
-      data: null,
-    })),
-    useQueryClient: jest.fn(() => ({
-      invalidateQueries: jest.fn(),
-    })),
-  };
-});
-
-import React from "react";
-import {
-  render,
-  screen,
-  fireEvent,
-  waitFor,
-} from "@testing-library/react";
-import { Provider } from "react-redux";
-import { configureStore } from "@reduxjs/toolkit";
-import {
-  QueryClient,
-  QueryClientProvider,
-} from "@tanstack/react-query";
-import { MemoryRouter } from "react-router-dom";
-
-import authReducer from "../../store/slices/authSlice";
-import LoginPage from "../../pages/LoginPage";
-import SignupPage from "../../pages/SignupPage";
 
 const createTestStore = () =>
   configureStore({

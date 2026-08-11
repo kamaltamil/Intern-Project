@@ -27,20 +27,18 @@ body {
   border-radius: 50%;
 }
 
-/* Custom Scrollbar */
-.my-custom-table .ant-table-body::-webkit-scrollbar {
+.custom-scroll-table .ant-table-body::-webkit-scrollbar {
   width: 6px;
 }
-.my-custom-table .ant-table-body::-webkit-scrollbar-thumb {
+.custom-scroll-table .ant-table-body::-webkit-scrollbar-thumb {
   background-color: var(--primary);
   border-radius: 4px;
 }
-.my-custom-table .ant-table-body::-webkit-scrollbar-track {
+.custom-scroll-table .ant-table-body::-webkit-scrollbar-track {
   background: transparent;
 }
 
-/* Pagination Spacing */
-.my-custom-table .ant-table-pagination {
-  margin: 0px !important;
-  margin-top: 16px !important;
+.ant-pagination.ant-table-pagination.ant-table-pagination-end.css-dev-only-do-not-override-149w44n.css-var-root{
+  margin: 0%;
+  margin-top: 16px;
 }

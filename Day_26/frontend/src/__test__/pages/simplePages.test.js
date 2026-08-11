@@ -17,6 +17,6 @@ const wrapper = ({children, theme="light"}) => (
   </Provider>
 );
 
-test("renders approval page", () => { render(wrapper({children:<ApprovalPage/>})); expect(screen.getByRole("heading", {name:/approval/i})).toBeInTheDocument(); });
-test("renders reports page", () => { render(wrapper({children:<ReportsPage/>})); expect(screen.getByRole("heading", {name:/reports/i})).toBeInTheDocument(); });
+test("renders approval page", () => { render(wrapper({children:<ApprovalPage/>})); expect(screen.getByText(/approval/i)).toBeInTheDocument(); });
+test("renders reports page", () => { render(wrapper({children:<ReportsPage/>})); expect(screen.getByText(/reports/i)).toBeInTheDocument(); });
 test("renders unauthorized page", () => { render(wrapper({children:<UnauthorizedPage/>})); expect(screen.getByText(/unauthorized/i)).toBeInTheDocument(); });

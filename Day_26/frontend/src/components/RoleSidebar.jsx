@@ -9,10 +9,9 @@ import {
   TagsOutlined,
   CrownOutlined,
 } from "@ant-design/icons";
-import { useSelector, useDispatch } from "react-redux";
+import { useSelector } from "react-redux";
 import { useNavigate, useLocation } from "react-router-dom";
 import { hasPermission } from "../utils/hasPermission";
-import { setSidebarCollapsed } from "../store/slices/dashboardSlice";
 
 const { Sider } = Layout;
 
@@ -73,11 +72,9 @@ const ALL_MODULES = [
 
 function RoleSidebar() {
   const { permissions, theme } = useSelector((state) => state.auth);
-  const { sidebarCollapsed } = useSelector((state) => state.dashboard);
   const navigate = useNavigate();
   const location = useLocation();
 
-  const dispatch = useDispatch();
   const isDark = theme === "dark";
 
   /* ---------- Build menu items based 100% on DB permissions ---------- */
@@ -116,9 +113,8 @@ function RoleSidebar() {
 
   return (
     <Sider
-      collapsible 
-      collapsed={sidebarCollapsed} 
-      onCollapse={(value) => dispatch(setSidebarCollapsed(value))}
+      breakpoint="lg"
+      collapsible={true}
       style={{
         background: isDark ? "#1a1a2e" : "#ffffff",
         borderRight: `1px solid ${isDark ? "#2d2d44" : "#ECE6DF"}`,

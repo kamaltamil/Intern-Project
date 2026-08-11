@@ -6,7 +6,6 @@ const initialState = {
   users: [],
   loading: false,
   error: null,
-  sidebarCollapsed: false,
 };
 
 const dashboardSlice = createSlice({
@@ -31,10 +30,6 @@ const dashboardSlice = createSlice({
       state.loading = false;
       state.error = action.payload;
     },
-
-    setSidebarCollapsed: (state, action) => {
-      state.sidebarCollapsed = action.payload;
-    },
   },
 });
 
@@ -42,7 +37,6 @@ export const {
   startDashboardLoading,
   setDashboardData,
   setDashboardError,
-  setSidebarCollapsed,
 } = dashboardSlice.actions;
 
 export default dashboardSlice.reducer;
