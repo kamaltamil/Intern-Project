@@ -2,7 +2,6 @@ import { useState } from "react";
 import {
   Alert,
   Button,
-  Card,
   Checkbox,
   Col,
   Dropdown,
@@ -35,6 +34,7 @@ import { usePermission } from "../hooks/usePermission";
 import { fetchRoles, createRole, updateRole, deleteRole } from "../api/queries";
 import { ROLE_COLORS } from "../constants/roleColors";
 import { useSelector } from "react-redux";
+import CustomTable from "../components/CustomTable";
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -531,16 +531,15 @@ function RoleManagementPage() {
           </PermissionGate>
         </div>
 
+      </div>
         {/* Roles Table */}
-        <Card>
-          <Table
+          <CustomTable
             rowKey="_id"
             columns={columns}
             dataSource={roles}
             pagination={{ pageSize: 8 }}
           />
-        </Card>
-      </div>
+          
 
       {/* ---------------------------------------------------------------- */}
       {/*              Create / Edit Modal (Non-Scrollable)                */}
