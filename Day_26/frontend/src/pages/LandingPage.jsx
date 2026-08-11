@@ -12,15 +12,23 @@ function LandingPage() {
   return (
     <div className="min-h-screen overflow-x-hidden bg-[#F8F4EE] text-[#2E2A27]">
       <Navbar />
+
       <main>
         <HeroSection />
+
         <BookingSearch />
+
         <AboutSection />
+
         <ServicesSection />
+
         <FeaturedRooms />
+
         <ExperienceSection />
+
         <BookingCTA />
       </main>
+
       <Footer />
     </div>
   );
