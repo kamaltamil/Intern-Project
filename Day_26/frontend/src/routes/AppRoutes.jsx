@@ -1,54 +1,139 @@
-import React, { lazy, Suspense } from "react";
+import React, {
+  lazy,
+  Suspense,
+} from "react";
 
-import { Routes, Route, Navigate } from "react-router-dom";
+import {
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
 
-import { Spin } from "antd";
+import {
+  Spin,
+} from "antd";
 
-const LoginPage = lazy(() => import("../pages/LoginPage"));
+const LoginPage = lazy(
+  () => import("../pages/LoginPage")
+);
 
-const SignupPage = lazy(() => import("../pages/SignupPage"));
+const SignupPage = lazy(
+  () => import("../pages/SignupPage")
+);
 
-const UsersManagementPage = lazy(() => import("../pages/UsersManagementPage"));
+const UsersManagementPage =
+  lazy(
+    () =>
+      import(
+        "../pages/UsersManagementPage"
+      )
+  );
 
-const RoleManagementPage = lazy(() => import("../pages/RoleManagementPage"));
+const RoleManagementPage =
+  lazy(
+    () =>
+      import(
+        "../pages/RoleManagementPage"
+      )
+  );
 
-const BookingPage = lazy(() => import("../pages/BookingPage"));
+const BookingPage = lazy(
+  () =>
+    import("../pages/BookingPage")
+);
 
-const ProfilePage = lazy(() => import("../pages/ProfilePage"));
+const RoomManagementPage =
+  lazy(
+    () =>
+      import(
+        "../pages/RoomManagementPage"
+      )
+  );
 
-const ReportsPage = lazy(() => import("../pages/ReportsPage"));
+const ProfilePage = lazy(
+  () =>
+    import("../pages/ProfilePage")
+);
 
-const ApprovalPage = lazy(() => import("../pages/ApprovalPage"));
+const ReportsPage = lazy(
+  () =>
+    import("../pages/ReportsPage")
+);
 
-const UnauthorizedPage = lazy(() => import("../pages/UnauthorizedPage"));
+const ApprovalPage = lazy(
+  () =>
+    import("../pages/ApprovalPage")
+);
 
-const ProtectedRoute = lazy(() => import("./ProtectedRoute"));
+const UnauthorizedPage =
+  lazy(
+    () =>
+      import(
+        "../pages/UnauthorizedPage"
+      )
+  );
 
-const DashboardHome = lazy(() => import("./DashboardHome"));
+const ProtectedRoute =
+  lazy(
+    () =>
+      import("./ProtectedRoute")
+  );
 
-const PublicHome = lazy(() => import("./PublicHome"));
+const DashboardHome =
+  lazy(
+    () =>
+      import("./DashboardHome")
+  );
+
+const PublicHome =
+  lazy(
+    () =>
+      import("./PublicHome")
+  );
 
 const Loader = (
-  <div className="flex items-center justify-center min-h-screen">
+  <div className="flex min-h-screen items-center justify-center">
     <Spin size="large" />
   </div>
 );
 
 function AppRoutes() {
   return (
-    <Suspense fallback={Loader}>
+    <Suspense
+      fallback={Loader}
+    >
       <Routes>
-        {/* Public Routes */}
+        {/* Public */}
 
-        <Route path="/login" element={<LoginPage />} />
+        <Route
+          path="/login"
+          element={
+            <LoginPage />
+          }
+        />
 
-        <Route path="/signup" element={<SignupPage />} />
+        <Route
+          path="/signup"
+          element={
+            <SignupPage />
+          }
+        />
 
-        <Route path="/unauthorized" element={<UnauthorizedPage />} />
+        <Route
+          path="/unauthorized"
+          element={
+            <UnauthorizedPage />
+          }
+        />
 
-        {/* Public Landing / Authenticated Dashboard */}
+        <Route
+          path="/"
+          element={
+            <PublicHome />
+          }
+        />
 
-        <Route path="/" element={<PublicHome />} />
+        {/* Dashboard */}
 
         <Route
           path="/dashboard"
@@ -75,7 +160,10 @@ function AppRoutes() {
         <Route
           path="/users"
           element={
-            <ProtectedRoute resource="users" action="view">
+            <ProtectedRoute
+              resource="users"
+              action="view"
+            >
               <UsersManagementPage />
             </ProtectedRoute>
           }
@@ -86,7 +174,10 @@ function AppRoutes() {
         <Route
           path="/roles"
           element={
-            <ProtectedRoute resource="roles" action="view">
+            <ProtectedRoute
+              resource="roles"
+              action="view"
+            >
               <RoleManagementPage />
             </ProtectedRoute>
           }
@@ -97,8 +188,25 @@ function AppRoutes() {
         <Route
           path="/bookings"
           element={
-            <ProtectedRoute resource="bookings" action="view">
+            <ProtectedRoute
+              resource="bookings"
+              action="view"
+            >
               <BookingPage />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Rooms */}
+
+        <Route
+          path="/rooms"
+          element={
+            <ProtectedRoute
+              resource="rooms"
+              action="view"
+            >
+              <RoomManagementPage />
             </ProtectedRoute>
           }
         />
@@ -108,26 +216,40 @@ function AppRoutes() {
         <Route
           path="/reports"
           element={
-            <ProtectedRoute resource="reports" action="view">
+            <ProtectedRoute
+              resource="reports"
+              action="view"
+            >
               <ReportsPage />
             </ProtectedRoute>
           }
         />
 
-        {/* Booking Approval */}
+        {/* Approval */}
 
         <Route
           path="/approval"
           element={
-            <ProtectedRoute resource="approval" action="view">
+            <ProtectedRoute
+              resource="approval"
+              action="view"
+            >
               <ApprovalPage />
             </ProtectedRoute>
           }
         />
 
-        {/* Unknown Route */}
+        {/* Unknown */}
 
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route
+          path="*"
+          element={
+            <Navigate
+              to="/"
+              replace
+            />
+          }
+        />
       </Routes>
     </Suspense>
   );

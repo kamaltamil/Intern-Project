@@ -12,7 +12,7 @@ function ProtectedRoute({
   /* ---------------- No Login ---------------- */
 
   if (!token) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/" replace />;
   }
 
   /* ---------- Routes without permission requirement ---------- */

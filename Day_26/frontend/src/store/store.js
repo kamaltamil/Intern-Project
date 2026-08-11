@@ -1,12 +1,22 @@
-import { configureStore, combineReducers } from '@reduxjs/toolkit';
-import { persistStore, persistReducer, createMigrate } from 'redux-persist';
-import storage from 'redux-persist/lib/storage';
+import {
+  configureStore,
+  combineReducers,
+} from "@reduxjs/toolkit";
 
-import authReducer from './slices/authSlice';
-import dashboardReducer from './slices/dashboardSlice';
-import bookingReducer from './slices/bookingSlice';
-import userReducer from './slices/userSlice';
-import roleReducer from './slices/roleSlice';
+import {
+  persistStore,
+  persistReducer,
+  createMigrate,
+} from "redux-persist";
+
+import storage from "redux-persist/lib/storage";
+
+import authReducer from "./slices/authSlice";
+import dashboardReducer from "./slices/dashboardSlice";
+import bookingReducer from "./slices/bookingSlice";
+import userReducer from "./slices/userSlice";
+import roleReducer from "./slices/roleSlice";
+import roomReducer from "./slices/roomSlice";
 
 const rootReducer = combineReducers({
   auth: authReducer,
@@ -14,11 +24,13 @@ const rootReducer = combineReducers({
   booking: bookingReducer,
   user: userReducer,
   role: roleReducer,
+  room: roomReducer,
 });
 
 const migrations = {
   1: (state) => ({
     ...state,
+
     auth: {
       ...state?.auth,
       refreshToken: null,
@@ -31,22 +43,39 @@ const migrations = {
 };
 
 const persistConfig = {
-  key: 'hotel-dashboard-auth',
+  key: "hotel-dashboard-auth",
   version: 1,
   storage,
-  whitelist: ['auth', 'user', 'dashboard', 'role'],
-  migrate: createMigrate(migrations, { debug: false }),
+
+  whitelist: [
+    "auth",
+    "user",
+    "dashboard",
+    "role",
+  ],
+
+  migrate: createMigrate(
+    migrations,
+    {
+      debug: false,
+    }
+  ),
 };
 
-const persistedRootReducer = persistReducer(persistConfig, rootReducer);
+const persistedRootReducer =
+  persistReducer(
+    persistConfig,
+    rootReducer
+  );
 
 export const store = configureStore({
   reducer: persistedRootReducer,
+
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       serializableCheck: false,
     }),
 });
 
-
-export const persistor = persistStore(store);
+export const persistor =
+  persistStore(store);

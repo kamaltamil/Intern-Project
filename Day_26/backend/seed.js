@@ -18,16 +18,28 @@ const createPermissions = ({
   return Object.values(MODULES).map((resource) => {
     const override = overrides[resource] || {};
 
-    const rawCreate = override.create !== undefined ? override.create : create;
+    const rawCreate =
+      override.create !== undefined
+        ? override.create
+        : create;
 
-    const rawUpdate = override.update !== undefined ? override.update : update;
+    const rawUpdate =
+      override.update !== undefined
+        ? override.update
+        : update;
 
-    const rawDelete = override.delete !== undefined ? override.delete : remove;
+    const rawDelete =
+      override.delete !== undefined
+        ? override.delete
+        : remove;
 
     const rawView =
       override.view !== undefined
         ? override.view
-        : view || rawCreate || rawUpdate || rawDelete;
+        : view ||
+          rawCreate ||
+          rawUpdate ||
+          rawDelete;
 
     return {
       resource,
@@ -46,7 +58,9 @@ const createPermissions = ({
 /* -------------------------------------------------------------------------- */
 
 const ensureSingleDefaultRole = async () => {
-  const defaultRoles = await Role.find({ isDefault: true });
+  const defaultRoles = await Role.find({
+    isDefault: true,
+  });
 
   if (defaultRoles.length > 1) {
     console.log(
@@ -54,7 +68,9 @@ const ensureSingleDefaultRole = async () => {
     );
 
     const primary =
-      defaultRoles.find((role) => role.name === "Member") || defaultRoles[0];
+      defaultRoles.find(
+        (role) => role.name === "Member",
+      ) || defaultRoles[0];
 
     await Role.updateMany(
       {
@@ -85,7 +101,9 @@ const ensureSingleDefaultRole = async () => {
     );
 
     const memberRole =
-      (await Role.findOne({ name: "Member" })) || (await Role.findOne());
+      (await Role.findOne({
+        name: "Member",
+      })) || (await Role.findOne());
 
     if (memberRole) {
       await Role.updateOne(
@@ -112,12 +130,22 @@ const seedRoles = async () => {
   console.log("Seeding system roles...");
 
   const rolesData = [
+    /* ---------------------------------------------------------------------- */
+    /*                                ADMIN                                   */
+    /* ---------------------------------------------------------------------- */
+
     {
       name: "Admin",
-      description: "System Administrator — full access to all modules",
+
+      description:
+        "System Administrator — full access to all modules",
+
       color: "#f5222d",
+
       isSystem: true,
+
       isDefault: false,
+
       permissions: createPermissions({
         view: true,
         create: true,
@@ -126,18 +154,36 @@ const seedRoles = async () => {
       }),
     },
 
+    /* ---------------------------------------------------------------------- */
+    /*                               MANAGER                                  */
+    /* ---------------------------------------------------------------------- */
+
     {
       name: "Manager",
-      description: "Hotel Manager — can view all, manage bookings and reports",
+
+      description:
+        "Hotel Manager — can view all, manage bookings and reports",
+
       color: "#fa8c16",
+
       isSystem: true,
+
       isDefault: false,
+
       permissions: createPermissions({
         view: true,
+
         create: false,
+
         update: false,
+
         delete: false,
+
         overrides: {
+          /* -------------------------------------------------------------- */
+          /* User Management                                                */
+          /* -------------------------------------------------------------- */
+
           [MODULES.USERS]: {
             view: true,
             create: false,
@@ -145,12 +191,20 @@ const seedRoles = async () => {
             delete: false,
           },
 
+          /* -------------------------------------------------------------- */
+          /* Bookings                                                       */
+          /* -------------------------------------------------------------- */
+
           [MODULES.BOOKINGS]: {
             view: true,
             create: true,
             update: true,
             delete: false,
           },
+
+          /* -------------------------------------------------------------- */
+          /* Booking Approval                                               */
+          /* -------------------------------------------------------------- */
 
           [MODULES.APPROVAL]: {
             view: true,
@@ -159,6 +213,10 @@ const seedRoles = async () => {
             delete: false,
           },
 
+          /* -------------------------------------------------------------- */
+          /* Reports                                                        */
+          /* -------------------------------------------------------------- */
+
           [MODULES.REPORTS]: {
             view: true,
             create: true,
@@ -166,35 +224,74 @@ const seedRoles = async () => {
             delete: false,
           },
 
+          /* -------------------------------------------------------------- */
+          /* Profile                                                        */
+          /* -------------------------------------------------------------- */
+
           [MODULES.PROFILE]: {
             view: true,
             create: false,
             update: true,
             delete: false,
           },
+
+          /* -------------------------------------------------------------- */
+          /* Rooms                                                          */
+          /* -------------------------------------------------------------- */
+
+          [MODULES.ROOMS]: {
+            view: true,
+            create: false,
+            update: false,
+            delete: false,
+          },
         },
       }),
     },
 
+    /* ---------------------------------------------------------------------- */
+    /*                                MEMBER                                  */
+    /* ---------------------------------------------------------------------- */
+
     {
       name: "Member",
+
       description:
         "Default user — can view dashboard, manage own bookings and profile",
+
       color: "#1677ff",
+
       isSystem: true,
+
       isDefault: true,
+
       permissions: createPermissions({
         view: false,
+
         create: false,
+
         update: false,
+
         delete: false,
+
         overrides: {
+          /* -------------------------------------------------------------- */
+          /* Dashboard                                                      */
+          /* -------------------------------------------------------------- */
+
           [MODULES.DASHBOARD]: {
             view: true,
             create: false,
             update: false,
             delete: false,
           },
+
+          /* -------------------------------------------------------------- */
+          /* Bookings                                                       */
+          /* -------------------------------------------------------------- */
+          /*
+           * Member can create their own booking.
+           */
 
           [MODULES.BOOKINGS]: {
             view: true,
@@ -203,16 +300,41 @@ const seedRoles = async () => {
             delete: false,
           },
 
+          /* -------------------------------------------------------------- */
+          /* Profile                                                        */
+          /* -------------------------------------------------------------- */
+
           [MODULES.PROFILE]: {
             view: true,
             create: false,
             update: true,
             delete: false,
           },
+
+          /* -------------------------------------------------------------- */
+          /* Rooms                                                          */
+          /* -------------------------------------------------------------- */
+          /*
+           * Member does not manage rooms.
+           *
+           * Rooms are managed by Admin.
+           * Member uses the Booking module to book rooms.
+           */
+
+          [MODULES.ROOMS]: {
+            view: false,
+            create: false,
+            update: false,
+            delete: false,
+          },
         },
       }),
     },
   ];
+
+  /* ---------------------------------------------------------------------- */
+  /*                         Upsert System Roles                            */
+  /* ---------------------------------------------------------------------- */
 
   for (const roleData of rolesData) {
     await Role.updateOne(
@@ -227,12 +349,15 @@ const seedRoles = async () => {
       },
     );
 
-    console.log(`  ✓ Role "${roleData.name}" upserted`);
+    console.log(
+      `  ✓ Role "${roleData.name}" upserted`,
+    );
   }
 
-  /*
-   * Fetch roles again after upsert so we have their MongoDB ObjectIds.
-   */
+  /* ---------------------------------------------------------------------- */
+  /*                    Fetch Roles After Upsert                            */
+  /* ---------------------------------------------------------------------- */
+
   const adminRole = await Role.findOne({
     name: "Admin",
   });
@@ -245,27 +370,49 @@ const seedRoles = async () => {
     name: "Member",
   });
 
-  const allRoleIds = (await Role.find({}, "_id")).map((role) => role._id);
+  /* ---------------------------------------------------------------------- */
+  /*                       Assign Manageable Roles                          */
+  /* ---------------------------------------------------------------------- */
+
+  const allRoleIds = (
+    await Role.find({}, "_id")
+  ).map((role) => role._id);
+
+  /* ---------------------------------------------------------------------- */
+  /*                                ADMIN                                   */
+  /* ---------------------------------------------------------------------- */
 
   if (adminRole) {
     adminRole.manageableRoles = allRoleIds;
+
     await adminRole.save();
   }
 
-  /*
-   * Only assign Member when Member role actually exists.
-   * This prevents `memberRole._id` from throwing an exception.
-   */
+  /* ---------------------------------------------------------------------- */
+  /*                               MANAGER                                  */
+  /* ---------------------------------------------------------------------- */
+
   if (managerRole) {
-    managerRole.manageableRoles = memberRole ? [memberRole._id] : [];
+    managerRole.manageableRoles = memberRole
+      ? [memberRole._id]
+      : [];
 
     await managerRole.save();
   }
 
+  /* ---------------------------------------------------------------------- */
+  /*                               MEMBER                                   */
+  /* ---------------------------------------------------------------------- */
+
   if (memberRole) {
     memberRole.manageableRoles = [];
+
     await memberRole.save();
   }
+
+  /* ---------------------------------------------------------------------- */
+  /*                       Ensure One Default Role                          */
+  /* ---------------------------------------------------------------------- */
 
   await ensureSingleDefaultRole();
 
@@ -293,41 +440,80 @@ const seedTestUsers = async () => {
     name: "Member",
   });
 
-  if (!adminRole || !managerRole || !memberRole) {
-    console.error("  ❌ Roles not found during user seeding");
+  if (
+    !adminRole ||
+    !managerRole ||
+    !memberRole
+  ) {
+    console.error(
+      "  ❌ Roles not found during user seeding",
+    );
+
     return;
   }
 
-  const hashedPassword = await bcrypt.hash("12345", 10);
+  const hashedPassword =
+    await bcrypt.hash("12345", 10);
 
   const testUsers = [
+    /* -------------------------------------------------------------------- */
+    /* Admin                                                                */
+    /* -------------------------------------------------------------------- */
+
     {
       name: "admin",
+
       username: "admin",
+
       email: "admin@gmail.com",
+
       password: hashedPassword,
+
       role: adminRole._id,
+
       isActive: true,
     },
+
+    /* -------------------------------------------------------------------- */
+    /* Manager                                                              */
+    /* -------------------------------------------------------------------- */
 
     {
       name: "manager",
+
       username: "manager",
+
       email: "manager@gmail.com",
+
       password: hashedPassword,
+
       role: managerRole._id,
+
       isActive: true,
     },
 
+    /* -------------------------------------------------------------------- */
+    /* Member                                                               */
+    /* -------------------------------------------------------------------- */
+
     {
       name: "member",
+
       username: "member",
+
       email: "member@gmail.com",
+
       password: hashedPassword,
+
       role: memberRole._id,
+
       isActive: true,
     },
   ];
+
+  /* ---------------------------------------------------------------------- */
+  /*                         Upsert Test Users                              */
+  /* ---------------------------------------------------------------------- */
 
   for (const userData of testUsers) {
     const existing = await User.findOne({
@@ -335,11 +521,20 @@ const seedTestUsers = async () => {
     });
 
     if (existing) {
-      existing.name = userData.name;
-      existing.username = userData.username;
-      existing.role = userData.role;
-      existing.password = userData.password;
-      existing.isActive = true;
+      existing.name =
+        userData.name;
+
+      existing.username =
+        userData.username;
+
+      existing.role =
+        userData.role;
+
+      existing.password =
+        userData.password;
+
+      existing.isActive =
+        true;
 
       await existing.save();
 
@@ -347,7 +542,9 @@ const seedTestUsers = async () => {
         `  ✓ User "${userData.email}" updated (Role ID: ${userData.role})`,
       );
     } else {
-      await User.create(userData);
+      await User.create(
+        userData,
+      );
 
       console.log(
         `  ✓ User "${userData.email}" created (Role ID: ${userData.role})`,
@@ -355,7 +552,9 @@ const seedTestUsers = async () => {
     }
   }
 
-  console.log("Test users seeded successfully.\n");
+  console.log(
+    "Test users seeded successfully.\n",
+  );
 };
 
 /* -------------------------------------------------------------------------- */
@@ -364,6 +563,7 @@ const seedTestUsers = async () => {
 
 const seedRolesAndAdmin = async () => {
   await seedRoles();
+
   await seedTestUsers();
 };
 
@@ -372,39 +572,58 @@ const seedRolesAndAdmin = async () => {
 /* -------------------------------------------------------------------------- */
 
 /*
- * This function is separated from the `require.main` block so Jest can
+ * This function is separated from the require.main block so Jest can
  * directly test both the successful and failed database connection paths.
  */
+
 const runSeed = async () => {
   require("dotenv").config();
 
-  const connectDB = require("./config/db");
+  const connectDB =
+    require("./config/db");
 
   try {
     await connectDB();
 
-    console.log("Seeding process started...");
+    console.log(
+      "Seeding process started...",
+    );
 
     await seedRolesAndAdmin();
 
-    console.log("Seeding completed successfully.");
+    console.log(
+      "Seeding completed successfully.",
+    );
 
     process.exit(0);
   } catch (error) {
-    console.error("Seeding failed:", error);
+    console.error(
+      "Seeding failed:",
+      error,
+    );
 
     process.exit(1);
   }
 };
 
-module.exports = seedRolesAndAdmin;
-module.exports.runSeed = runSeed;
+/* -------------------------------------------------------------------------- */
+/*                                Exports                                     */
+/* -------------------------------------------------------------------------- */
+
+module.exports =
+  seedRolesAndAdmin;
+
+module.exports.runSeed =
+  runSeed;
 
 /* -------------------------------------------------------------------------- */
 /*                          Execute When Run Directly                         */
 /* -------------------------------------------------------------------------- */
 
 /* istanbul ignore next -- process entrypoint is exercised through runSeed in Jest */
-if (require.main === module) {
+
+if (
+  require.main === module
+) {
   runSeed();
 }

@@ -199,5 +199,39 @@ export const createBooking = async (payload) => {
  */
 export const fetchRooms = async () => {
   const response = await api.get("/rooms");
-  return response.data?.rooms || response.data || [];
+
+  return response.data?.rooms ||
+    response.data ||
+    [];
+};
+
+/**
+ * Create room
+ * POST /rooms/new
+ *
+ * Requires:
+ * rooms.create
+ */
+export const createRoom = async (payload) => {
+  const response = await api.post(
+    "/rooms/new",
+    payload
+  );
+
+  return response.data || {};
+};
+
+/**
+ * Delete room
+ * DELETE /rooms/:id
+ *
+ * Requires:
+ * rooms.delete
+ */
+export const deleteRoom = async (id) => {
+  const response = await api.delete(
+    `/rooms/${id}`
+  );
+
+  return response.data || {};
 };

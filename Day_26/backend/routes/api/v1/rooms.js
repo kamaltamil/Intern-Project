@@ -1,17 +1,58 @@
-const express = require('express');
+const express = require("express");
+
 const router = express.Router();
 
 const {
-    createRoom,
-    getAllRooms
-} = require('../../../controllers/roomsController');
+  createRoom,
+  getAllRooms,
+  deleteRoom,
+} = require("../../../controllers/roomsController");
 
-const { requirePermission } = require('../../../middleware/permissionMiddleware');
+const {
+  requirePermission,
+} = require(
+  "../../../middleware/permissionMiddleware"
+);
 
-// authenticateToken is already applied at the mount point in api.js
-// Anyone signed in can browse rooms (needed to make a booking)
-router.get('/', getAllRooms);
-// Adding new room inventory is a permissioned action
-router.post('/new', requirePermission('rooms', 'create'), createRoom);
+/* -------------------------------------------------------------------------- */
+/*                              Get Rooms                                     */
+/* -------------------------------------------------------------------------- */
+
+/*
+ * Any authenticated user can view rooms.
+ *
+ * This is required because members need to
+ * see available rooms before booking.
+ */
+router.get(
+  "/",
+  getAllRooms
+);
+
+/* -------------------------------------------------------------------------- */
+/*                              Create Room                                   */
+/* -------------------------------------------------------------------------- */
+
+router.post(
+  "/new",
+  requirePermission(
+    "rooms",
+    "create"
+  ),
+  createRoom
+);
+
+/* -------------------------------------------------------------------------- */
+/*                              Delete Room                                   */
+/* -------------------------------------------------------------------------- */
+
+router.delete(
+  "/:id",
+  requirePermission(
+    "rooms",
+    "delete"
+  ),
+  deleteRoom
+);
 
 module.exports = router;

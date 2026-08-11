@@ -6,4 +6,5 @@ module.exports = {
   APPROVAL: "approval",
   PROFILE: "profile",
   DASHBOARD: "dashboard",
+  ROOMS: "rooms",
 };

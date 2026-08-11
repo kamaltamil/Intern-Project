@@ -51,6 +51,7 @@ const MODULES = [
   { key: "approval", label: "Booking Approval" },
   { key: "reports", label: "Reports" },
   { key: "profile", label: "Profile" },
+  { key: "rooms", label: "Room Management", },
 ];
 
 const ACTIONS = [
