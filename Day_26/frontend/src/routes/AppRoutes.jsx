@@ -26,6 +26,8 @@ const ProtectedRoute = lazy(() => import("./ProtectedRoute"));
 
 const DashboardHome = lazy(() => import("./DashboardHome"));
 
+const PublicHome = lazy(() => import("./PublicHome"));
+
 const Loader = (
   <div className="flex items-center justify-center min-h-screen">
     <Spin size="large" />
@@ -44,10 +46,12 @@ function AppRoutes() {
 
         <Route path="/unauthorized" element={<UnauthorizedPage />} />
 
-        {/* Dashboard */}
+        {/* Public Landing / Authenticated Dashboard */}
+
+        <Route path="/" element={<PublicHome />} />
 
         <Route
-          path="/"
+          path="/dashboard"
           element={
             <ProtectedRoute>
               <DashboardHome />

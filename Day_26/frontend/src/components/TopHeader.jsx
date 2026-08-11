@@ -19,37 +19,59 @@ function TopHeader() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { user, theme } = useSelector((state) => state.auth);
 
-  const logoutMutation = useMutation({
-    mutationFn: logoutUser,
-    onSettled: () => {
-      queryClient.clear();
-      dispatch(logout());
-      navigate("/login");
-    },
-    onError: () => {
-      queryClient.clear();
-      dispatch(logout());
-      navigate("/login");
-    },
-  });
+  const { user, theme } = useSelector((state) => state.auth);
 
   const isDark = theme === "dark";
 
+  // --------------------------------------------------
+  // Complete logout process
+  // --------------------------------------------------
+  const finishLogout = () => {
+    // Clear all React Query cached data
+    queryClient.clear();
+
+    // Clear authentication data from Redux
+    dispatch(logout());
+
+    // Redirect to public landing page
+    navigate("/", { replace: true });
+  };
+
+  // --------------------------------------------------
+  // Logout API mutation
+  // --------------------------------------------------
+  const logoutMutation = useMutation({
+    mutationFn: logoutUser,
+
+    // Whether API succeeds or fails, logout locally
+    // and redirect to landing page.
+    onSettled: () => {
+      finishLogout();
+    },
+  });
+
+  // --------------------------------------------------
+  // Handle Logout
+  // --------------------------------------------------
   const handleLogout = () => {
     if (user?._id) {
       logoutMutation.mutate(user._id);
     } else {
-      dispatch(logout());
-      navigate("/login");
+      finishLogout();
     }
   };
 
+  // --------------------------------------------------
+  // Theme Toggle
+  // --------------------------------------------------
   const toggleTheme = () => {
     dispatch(setTheme(isDark ? "light" : "dark"));
   };
 
+  // --------------------------------------------------
+  // Dropdown Menu
+  // --------------------------------------------------
   const dropdownItems = [
     {
       key: "profile",
@@ -57,12 +79,17 @@ function TopHeader() {
       icon: <UserOutlined />,
       onClick: () => navigate("/profile"),
     },
-    { type: "divider" },
+
+    {
+      type: "divider",
+    },
+
     {
       key: "logout",
-      label: "Logout",
+      label: logoutMutation.isPending ? "Logging out..." : "Logout",
       icon: <LogoutOutlined />,
       danger: true,
+      disabled: logoutMutation.isPending,
       onClick: handleLogout,
     },
   ];
@@ -71,7 +98,9 @@ function TopHeader() {
     <Header
       style={{
         background: isDark ? "#16213e" : "#ffffff",
-        borderBottom: `1px solid ${isDark ? "#2d2d44" : "#ECE6DF"}`,
+        borderBottom: `1px solid ${
+          isDark ? "#2d2d44" : "#ECE6DF"
+        }`,
         padding: "0 20px",
         display: "flex",
         alignItems: "center",
@@ -83,28 +112,53 @@ function TopHeader() {
         flexShrink: 0,
       }}
     >
+      {/* ---------------------------------------------
+          Welcome Message
+      --------------------------------------------- */}
       <div>
         <h2
           className="text-xl font-semibold text-clip"
-          style={{ color: isDark ? "#f0f0f0" : "#2E2A27", margin: 0 }}
+          style={{
+            color: isDark ? "#f0f0f0" : "#2E2A27",
+            margin: 0,
+          }}
         >
           Welcome {user?.name?.split(" ")[0] || "User"}
         </h2>
       </div>
 
+      {/* ---------------------------------------------
+          Right Side
+      --------------------------------------------- */}
       <div className="flex items-center gap-3">
-        {/* Theme Toggle */}
+        {/* -------------------------------------------
+            Theme Toggle
+        ------------------------------------------- */}
         <Tooltip
-          title={isDark ? "Switch to Light mode" : "Switch to Dark mode"}
+          title={
+            isDark
+              ? "Switch to Light mode"
+              : "Switch to Dark mode"
+          }
         >
           <Button
             type="text"
             shape="circle"
             icon={
               isDark ? (
-                <SunOutlined style={{ color: "#facc15", fontSize: 18 }} />
+                <SunOutlined
+                  style={{
+                    color: "#facc15",
+                    fontSize: 18,
+                  }}
+                />
               ) : (
-                <MoonOutlined style={{ color: "#7c3aed", fontSize: 18 }} />
+                <MoonOutlined
+                  style={{
+                    color: "#7c3aed",
+                    fontSize: 18,
+                  }}
+                />
               )
             }
             onClick={toggleTheme}
@@ -120,34 +174,69 @@ function TopHeader() {
           />
         </Tooltip>
 
-        {/* User Dropdown */}
-        <Dropdown menu={{ items: dropdownItems }} placement="bottomRight">
+        {/* -------------------------------------------
+            User Dropdown
+        ------------------------------------------- */}
+        <Dropdown
+          menu={{
+            items: dropdownItems,
+          }}
+          placement="bottomRight"
+        >
           <div
             className="flex items-center gap-2 cursor-pointer px-2 py-1 rounded-lg transition-colors"
             style={{
-              background: isDark ? "#2d2d44" : "transparent",
+              background: isDark
+                ? "#2d2d44"
+                : "transparent",
             }}
           >
+            {/* Profile Image */}
             <Avatar
               src={resolveProfileImage(user?.profileImage)}
-              style={{ backgroundColor: "#C76A34" }}
+              style={{
+                backgroundColor: "#C76A34",
+              }}
             >
               {user?.name?.charAt(0)?.toUpperCase() || "U"}
             </Avatar>
+
+            {/* User Details */}
             <div className="flex flex-col leading-tight">
               <span
                 className="font-medium text-sm"
-                style={{ color: isDark ? "#f0f0f0" : "#2E2A27" }}
+                style={{
+                  color: isDark
+                    ? "#f0f0f0"
+                    : "#2E2A27",
+                }}
               >
                 {user?.name || "User"}
               </span>
-              <span className="text-xs" style={{ color: typeof user?.role === "object" ? (user.role?.color || "#C76A34") : (user?.roleColor || "#C76A34") }}>
-                {typeof user?.role === "object" ? user.role?.name : user?.role || "Member"}
+
+              <span
+                className="text-xs"
+                style={{
+                  color:
+                    typeof user?.role === "object"
+                      ? user.role?.color || "#C76A34"
+                      : user?.roleColor || "#C76A34",
+                }}
+              >
+                {typeof user?.role === "object"
+                  ? user.role?.name
+                  : user?.role || "Member"}
               </span>
             </div>
+
+            {/* Dropdown Icon */}
             <DownOutlined
               className="text-xs"
-              style={{ color: isDark ? "#aaa" : "#9ca3af" }}
+              style={{
+                color: isDark
+                  ? "#aaa"
+                  : "#9ca3af",
+              }}
             />
           </div>
         </Dropdown>
