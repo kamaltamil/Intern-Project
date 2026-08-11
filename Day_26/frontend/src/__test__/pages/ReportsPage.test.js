@@ -11,5 +11,5 @@ jest.mock("../../components/DashboardLayout", () => ({children}) => <div>{childr
 test("renders reports page", () => {
  const store = configureStore({reducer:{auth:authReducer},preloadedState:{auth:{user:null,token:"t",refreshToken:null,role:"Admin",permissions:[],theme:"light",loading:false,error:null}}});
  render(<Provider store={store}><MemoryRouter><ReportsPage /></MemoryRouter></Provider>);
- expect(screen.getByText(/reports/i)).toBeInTheDocument();
+ expect(screen.getByRole("heading", {name:/reports/i})).toBeInTheDocument();
 });

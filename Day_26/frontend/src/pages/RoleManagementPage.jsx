@@ -506,7 +506,7 @@ function RoleManagementPage() {
     <DashboardLayout>
       <div className="p-4">
         {/* Header */}
-        <div className="flex justify-between items-center mb-6">
+        <div className="flex sm:flex-row flex-col items-center justify-between sm:text-start text-center gap-3">
           <div>
             <Title level={3} className="!mb-1" style={{ color: isDark ? "#f0f0f0" : "#2E2A27" }}>
               Role Management
@@ -538,6 +538,7 @@ function RoleManagementPage() {
             columns={columns}
             dataSource={roles}
             pagination={{ pageSize: 8 }}
+            scroll={{ y: 'max(100vh - 280px, 300px)', x: 'max-content' }}
           />
           
 

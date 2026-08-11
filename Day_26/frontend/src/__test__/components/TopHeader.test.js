@@ -1,3 +1,24 @@
+jest.mock("@tanstack/react-query", () => ({
+  useMutation: jest.fn(() => ({
+    mutate: jest.fn(),
+    isPending: false,
+    error: null,
+    data: null,
+  })),
+  useQuery: jest.fn(() => ({
+    data: null,
+    isLoading: false,
+    error: null,
+  })),
+  useQueryClient: jest.fn(() => ({
+    invalidateQueries: jest.fn(),
+  })),
+}));
+
+jest.mock("../../api/queries", () => ({
+  logoutUser: jest.fn(() => Promise.resolve({})),
+}));
+
 import React from "react";
 import {
   screen,
@@ -10,7 +31,7 @@ import authReducer from "../../store/slices/authSlice";
 
 import {
   renderWithProviders,
-} from "../utils/testUtils";
+} from "../utils/testUtils.jsx";
 
 const createTestStore = () =>
   configureStore({

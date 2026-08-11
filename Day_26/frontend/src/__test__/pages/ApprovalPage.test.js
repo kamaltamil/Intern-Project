@@ -12,7 +12,7 @@ test("renders approval content in light and dark themes", () => {
  for (const theme of ["light","dark"]) {
    const store = configureStore({reducer:{auth:authReducer},preloadedState:{auth:{user:null,token:"t",refreshToken:null,role:"Admin",permissions:[],theme,loading:false,error:null}}});
    const {unmount} = render(<Provider store={store}><MemoryRouter><ApprovalPage /></MemoryRouter></Provider>);
-   expect(screen.getByText(/approval/i)).toBeInTheDocument();
+   expect(screen.getByRole("heading", {name:/approval/i})).toBeInTheDocument();
    unmount();
  }
 });

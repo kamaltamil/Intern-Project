@@ -1,6 +1,7 @@
 import React from "react";
 import { render, screen } from "@testing-library/react";
 import { Provider } from "react-redux";
+import { MemoryRouter } from "react-router-dom";
 import { configureStore } from "@reduxjs/toolkit";
 import authReducer from "../../store/slices/authSlice";
 
@@ -19,16 +20,16 @@ const makeStore = (user={name:"Kamal",upcomingBookings:[],bookingHistory:[]}) =>
 });
 
 test("renders admin dashboard", async () => {
- render(<Provider store={makeStore()}><AdminDashboardPage /></Provider>);
+ render(<MemoryRouter><Provider store={makeStore()}><AdminDashboardPage /></Provider></MemoryRouter>);
  expect(await screen.findByText(/admin/i)).toBeInTheDocument();
 });
 
 test("renders manager dashboard", async () => {
- render(<Provider store={makeStore()}><ManagerDashboardPage /></Provider>);
+ render(<MemoryRouter><Provider store={makeStore()}><ManagerDashboardPage /></Provider></MemoryRouter>);
  expect(await screen.findByText(/manager/i)).toBeInTheDocument();
 });
 
 test("renders member dashboard", () => {
- render(<Provider store={makeStore({name:"Kamal",upcomingBookings:[1],bookingHistory:[2]})}><MemberDashboardPage /></Provider>);
+ render(<MemoryRouter><Provider store={makeStore({name:"Kamal",upcomingBookings:[1],bookingHistory:[2]})}><MemberDashboardPage /></Provider></MemoryRouter>);
  expect(screen.getByText(/member/i)).toBeInTheDocument();
 });

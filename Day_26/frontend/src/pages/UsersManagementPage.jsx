@@ -349,7 +349,7 @@ function UsersManagementPage() {
     <DashboardLayout>
       <div className="space-y-4">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex sm:flex-row flex-col items-center justify-between sm:text-start text-center gap-3">
           <div>
             <Title level={4} className="!mb-0" style={{ color: isDark ? "#f0f0f0" : "#2E2A27" }}>
               User Management
@@ -402,6 +402,7 @@ function UsersManagementPage() {
           dataSource={safeUsers}
           columns={columns}
           pagination={{ pageSize: 8, showSizeChanger: false }}
+          scroll={{ y: 'max(100vh - 580px, 300px)', x: 'max-content' }}
         />
 
         {/* ---------- Edit User Modal ---------- */}
