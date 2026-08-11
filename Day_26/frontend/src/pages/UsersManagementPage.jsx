@@ -45,12 +45,12 @@ import { resolveProfileImage } from "../utils/image";
 import { usePermission } from "../hooks/usePermission";
 import { ROLE_COLORS } from "../constants/roleColors";
 
-const { Title, Text } = Typography;
+const { Title } = Typography;
 const { Option } = Select;
 
 const getFallbackRoleColor = (roleName) => {
   const match = ROLE_COLORS.find(
-    (c) => c.label.toLowerCase() === roleName?.toLowerCase()
+    (c) => c.label.toLowerCase() === roleName?.toLowerCase(),
   );
   return match ? match.value : "#722ed1";
 };
@@ -108,9 +108,7 @@ function UsersManagementPage() {
     },
 
     onError: (error) => {
-      message.error(
-        error?.response?.data?.message || "Failed to update user"
-      );
+      message.error(error?.response?.data?.message || "Failed to update user");
     },
   });
 
@@ -126,9 +124,7 @@ function UsersManagementPage() {
     },
 
     onError: (error) => {
-      message.error(
-        error?.response?.data?.message || "Unable to create user"
-      );
+      message.error(error?.response?.data?.message || "Unable to create user");
     },
   });
 
@@ -144,9 +140,7 @@ function UsersManagementPage() {
 
     onError: (error) => {
       setUpdatingId(null);
-      message.error(
-        error?.response?.data?.message || "Failed to delete user"
-      );
+      message.error(error?.response?.data?.message || "Failed to delete user");
     },
   });
 
@@ -228,21 +222,18 @@ function UsersManagementPage() {
     {
       title: "Username",
       dataIndex: "username",
-      render: (username) => (
-        <span className="text-gray-500">@{username}</span>
-      ),
+      render: (username) => <span className="text-gray-500">@{username}</span>,
     },
     {
       title: "Role",
       dataIndex: "role",
       render: (role) => {
         const roleName = typeof role === "object" ? role?.name : role;
-        const color = typeof role === "object" && role?.color ? role.color : getFallbackRoleColor(roleName);
-        return (
-          <Tag color={color}>
-            {roleName || "—"}
-          </Tag>
-        );
+        const color =
+          typeof role === "object" && role?.color
+            ? role.color
+            : getFallbackRoleColor(roleName);
+        return <Tag color={color}>{roleName || "—"}</Tag>;
       },
     },
     {
@@ -301,15 +292,15 @@ function UsersManagementPage() {
   const getRoleName = (r) => (typeof r === "object" ? r?.name : r) || "";
 
   const totalAdmins = safeUsers.filter(
-    (u) => getRoleName(u.role) === "Admin"
+    (u) => getRoleName(u.role) === "Admin",
   ).length;
 
   const totalManagers = safeUsers.filter(
-    (u) => getRoleName(u.role) === "Manager"
+    (u) => getRoleName(u.role) === "Manager",
   ).length;
 
   const totalMembers = safeUsers.filter(
-    (u) => getRoleName(u.role) === "Member"
+    (u) => getRoleName(u.role) === "Member",
   ).length;
 
   const userStats = [
@@ -337,9 +328,7 @@ function UsersManagementPage() {
         <Alert
           type="error"
           showIcon
-          message={
-            usersQueryError?.message || "Unable to fetch users list."
-          }
+          message={usersQueryError?.message || "Unable to fetch users list."}
         />
       </DashboardLayout>
     );
@@ -349,14 +338,18 @@ function UsersManagementPage() {
     <DashboardLayout>
       <div className="space-y-4">
         {/* Header */}
-        <div className="flex sm:flex-row flex-col items-center justify-between sm:text-start text-center gap-3">
+        <div className="flex items-center justify-between">
           <div>
-            <Title level={4} className="!mb-0" style={{ color: isDark ? "#f0f0f0" : "#2E2A27" }}>
+            <Title
+              level={4}
+              className="!mb-0"
+              style={{ color: isDark ? "#f0f0f0" : "#2E2A27" }}
+            >
               User Management
             </Title>
-            <Text className="text-gray-400 text-sm">
+            <p className="text-gray-400 text-sm">
               Manage system users and assign roles.
-            </Text>
+            </p>
           </div>
 
           <Space>
@@ -402,7 +395,6 @@ function UsersManagementPage() {
           dataSource={safeUsers}
           columns={columns}
           pagination={{ pageSize: 8, showSizeChanger: false }}
-          scroll={{ y: 'max(100vh - 580px, 300px)', x: 'max-content' }}
         />
 
         {/* ---------- Edit User Modal ---------- */}

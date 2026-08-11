@@ -2,6 +2,7 @@ import { useState } from "react";
 import {
   Alert,
   Button,
+  Card,
   Checkbox,
   Col,
   Dropdown,
@@ -33,8 +34,6 @@ import PermissionGate from "../components/PermissionGate";
 import { usePermission } from "../hooks/usePermission";
 import { fetchRoles, createRole, updateRole, deleteRole } from "../api/queries";
 import { ROLE_COLORS } from "../constants/roleColors";
-import { useSelector } from "react-redux";
-import CustomTable from "../components/CustomTable";
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -45,16 +44,16 @@ const { Option } = Select;
 
 const MODULES = [
   { key: "dashboard", label: "Dashboard" },
-  { key: "users", label: "User Management" },
-  { key: "roles", label: "Role Management" },
-  { key: "bookings", label: "Bookings" },
-  { key: "approval", label: "Booking Approval" },
-  { key: "reports", label: "Reports" },
-  { key: "profile", label: "Profile" },
+  { key: "users",     label: "User Management" },
+  { key: "roles",     label: "Role Management" },
+  { key: "bookings",  label: "Bookings" },
+  { key: "approval",  label: "Booking Approval" },
+  { key: "reports",   label: "Reports" },
+  { key: "profile",   label: "Profile" },
 ];
 
 const ACTIONS = [
-  { key: "view", label: "View" },
+  { key: "view",   label: "View" },
   { key: "create", label: "Create" },
   { key: "update", label: "Update" },
   { key: "delete", label: "Delete" },
@@ -79,7 +78,7 @@ const createEmptyPermissions = () => {
 const normalizePermissions = (permissions = []) => {
   return MODULES.map((module) => {
     const existing = permissions.find(
-      (permission) => permission.resource === module.key,
+      (permission) => permission.resource === module.key
     );
 
     return {
@@ -135,7 +134,7 @@ const updatePermission = (permissions, resource, action, checked) => {
 function PermissionMatrix({ permissions, setPermissions }) {
   const handlePermissionChange = (resource, action, checked) => {
     setPermissions((current) =>
-      updatePermission(current, resource, action, checked),
+      updatePermission(current, resource, action, checked)
     );
   };
 
@@ -147,11 +146,7 @@ function PermissionMatrix({ permissions, setPermissions }) {
       width: 180,
       render: (resource) => {
         const module = MODULES.find((item) => item.key === resource);
-        return (
-          <Text strong className="text-xs">
-            {module?.label || resource}
-          </Text>
-        );
+        return <Text strong className="text-xs">{module?.label || resource}</Text>;
       },
     },
 
@@ -173,7 +168,7 @@ function PermissionMatrix({ permissions, setPermissions }) {
               handlePermissionChange(
                 record.resource,
                 action.key,
-                event.target.checked,
+                event.target.checked
               )
             }
           />
@@ -214,8 +209,7 @@ function RoleManagementPage() {
 
   const [form] = Form.useForm();
   const queryClient = useQueryClient();
-  const { theme } = useSelector((state) => state.auth);
-  const isDark = theme === "dark";
+
   /* ---------------------------------------------------------------------- */
   /*                              Fetch Roles                               */
   /* ---------------------------------------------------------------------- */
@@ -242,9 +236,7 @@ function RoleManagementPage() {
       closeModal();
     },
     onError: (err) => {
-      message.error(
-        err?.response?.data?.message || err?.message || "Failed to create role",
-      );
+      message.error(err?.response?.data?.message || err?.message || "Failed to create role");
     },
   });
 
@@ -256,9 +248,7 @@ function RoleManagementPage() {
       closeModal();
     },
     onError: (err) => {
-      message.error(
-        err?.response?.data?.message || err?.message || "Failed to update role",
-      );
+      message.error(err?.response?.data?.message || err?.message || "Failed to update role");
     },
   });
 
@@ -269,9 +259,7 @@ function RoleManagementPage() {
       queryClient.invalidateQueries({ queryKey: ["roles"] });
     },
     onError: (err) => {
-      message.error(
-        err?.response?.data?.message || err?.message || "Failed to delete role",
-      );
+      message.error(err?.response?.data?.message || err?.message || "Failed to delete role");
     },
   });
 
@@ -303,7 +291,7 @@ function RoleManagementPage() {
 
     // Extract manageable role IDs
     const mRoleIds = (role.manageableRoles || []).map((r) =>
-      typeof r === "object" ? r._id : r,
+      typeof r === "object" ? r._id : r
     );
     setSelectedManageableRoles(mRoleIds);
 
@@ -321,9 +309,9 @@ function RoleManagementPage() {
   const handleSubmit = async () => {
     try {
       const values = await form.validateFields();
-
+      
       const hasUserView = permissions.some(
-        (p) => p.resource === "users" && p.action?.view,
+        (p) => p.resource === "users" && p.action?.view
       );
 
       const payload = {
@@ -354,7 +342,7 @@ function RoleManagementPage() {
   };
 
   const hasUserViewPermission = permissions.some(
-    (p) => p.resource === "users" && p.action?.view,
+    (p) => p.resource === "users" && p.action?.view
   );
 
   /* ---------------------------------------------------------------------- */
@@ -435,17 +423,14 @@ function RoleManagementPage() {
       title: "Description",
       dataIndex: "description",
       key: "description",
-      render: (description) => (
-        <Text type="secondary">{description || "-"}</Text>
-      ),
+      render: (description) => <Text type="secondary">{description || "-"}</Text>,
     },
     {
       title: "Permissions",
       key: "permissions",
       render: (_, record) => {
         const count =
-          record.permissions?.filter((permission) => permission.action?.view)
-            .length || 0;
+          record.permissions?.filter((permission) => permission.action?.view).length || 0;
         return (
           <Tag color="blue">
             {count} module{count !== 1 ? "s" : ""}
@@ -458,10 +443,7 @@ function RoleManagementPage() {
       key: "actions",
       width: 130,
       render: (_, record) => (
-        <Dropdown
-          menu={{ items: getActionMenuItems(record) }}
-          trigger={["click"]}
-        >
+        <Dropdown menu={{ items: getActionMenuItems(record) }} trigger={["click"]}>
           <Button icon={<MoreOutlined />}>
             Actions <DownOutlined style={{ fontSize: 10 }} />
           </Button>
@@ -488,11 +470,7 @@ function RoleManagementPage() {
         <Alert
           type="error"
           showIcon
-          message={
-            error?.response?.data?.message ||
-            error?.message ||
-            "Unable to load roles"
-          }
+          message={error?.response?.data?.message || error?.message || "Unable to load roles"}
         />
       </DashboardLayout>
     );
@@ -506,12 +484,12 @@ function RoleManagementPage() {
     <DashboardLayout>
       <div className="p-4">
         {/* Header */}
-        <div className="flex sm:flex-row flex-col items-center justify-between sm:text-start text-center gap-3">
+        <div className="flex justify-between items-center mb-6">
           <div>
-            <Title level={3} className="!mb-1" style={{ color: isDark ? "#f0f0f0" : "#2E2A27" }}>
+            <Title level={3} className="!mb-1">
               Role Management
             </Title>
-            <Text className="text-gray-400 text-sm">
+            <Text type="secondary">
               Create roles and control module permissions.
             </Text>
           </div>
@@ -531,32 +509,30 @@ function RoleManagementPage() {
           </PermissionGate>
         </div>
 
-      </div>
         {/* Roles Table */}
-          <CustomTable
+        <Card>
+          <Table
             rowKey="_id"
             columns={columns}
             dataSource={roles}
             pagination={{ pageSize: 8 }}
-            scroll={{ y: 'max(100vh - 280px, 300px)', x: 'max-content' }}
           />
-          
+        </Card>
+      </div>
 
       {/* ---------------------------------------------------------------- */}
       {/*              Create / Edit Modal (Non-Scrollable)                */}
       {/* ---------------------------------------------------------------- */}
 
       <Modal
-        title={
-          editingRole ? `Edit Role — ${editingRole.name}` : "Create New Role"
-        }
+        title={editingRole ? `Edit Role — ${editingRole.name}` : "Create New Role"}
         open={modalOpen}
         onCancel={closeModal}
         onOk={handleSubmit}
         okText={editingRole ? "Save Changes" : "Create Role"}
         width={820}
         style={{ top: 20 }}
-        destroyOnHidden
+        destroyOnClose
         confirmLoading={createMutation.isPending || updateMutation.isPending}
         okButtonProps={{
           style: {
@@ -577,10 +553,7 @@ function RoleManagementPage() {
                   { min: 2, message: "Minimum 2 characters" },
                 ]}
               >
-                <Input
-                  placeholder="Enter role name"
-                  disabled={editingRole?.isSystem}
-                />
+                <Input placeholder="Enter role name" disabled={editingRole?.isSystem} />
               </Form.Item>
             </Col>
 
@@ -620,10 +593,7 @@ function RoleManagementPage() {
           </Row>
 
           <Form.Item name="description" label="Description" className="!mb-3">
-            <Input
-              placeholder="Describe role purpose (optional)"
-              maxLength={150}
-            />
+            <Input placeholder="Describe role purpose (optional)" maxLength={150} />
           </Form.Item>
 
           <div className="mb-2">
@@ -631,8 +601,7 @@ function RoleManagementPage() {
               Module Permissions
             </Text>
             <Text type="secondary" className="block text-xs">
-              View permission is required before Create, Update, or Delete can
-              be assigned.
+              View permission is required before Create, Update, or Delete can be assigned.
             </Text>
           </div>
 
@@ -648,8 +617,7 @@ function RoleManagementPage() {
                 User Management Role Access
               </Text>
               <Text type="secondary" className="block text-xs mb-2">
-                Select which user roles this role is authorized to view and
-                manage in User Management.
+                Select which user roles this role is authorized to view and manage in User Management.
               </Text>
 
               <Row gutter={[12, 8]}>
@@ -661,13 +629,10 @@ function RoleManagementPage() {
                         checked={isChecked}
                         onChange={(e) => {
                           if (e.target.checked) {
-                            setSelectedManageableRoles((prev) => [
-                              ...prev,
-                              r._id,
-                            ]);
+                            setSelectedManageableRoles((prev) => [...prev, r._id]);
                           } else {
                             setSelectedManageableRoles((prev) =>
-                              prev.filter((id) => id !== r._id),
+                              prev.filter((id) => id !== r._id)
                             );
                           }
                         }}
@@ -694,9 +659,7 @@ function RoleManagementPage() {
       {/* ---------------------------------------------------------------- */}
 
       <Modal
-        title={
-          selectedRole ? `Role Details — ${selectedRole.name}` : "Role Details"
-        }
+        title={selectedRole ? `Role Details — ${selectedRole.name}` : "Role Details"}
         open={detailsOpen}
         onCancel={() => {
           setDetailsOpen(false);
@@ -724,40 +687,31 @@ function RoleManagementPage() {
                   {selectedRole.name}
                 </Tag>
                 {selectedRole.isSystem && <Tag color="gold">System Role</Tag>}
-                {selectedRole.isDefault && (
-                  <Tag color="green">Default Role</Tag>
-                )}
+                {selectedRole.isDefault && <Tag color="green">Default Role</Tag>}
               </Space>
 
               <div className="mt-2">
-                <Text type="secondary">
-                  {selectedRole.description || "No description provided."}
-                </Text>
+                <Text type="secondary">{selectedRole.description || "No description provided."}</Text>
               </div>
 
-              {selectedRole.manageableRoles &&
-                selectedRole.manageableRoles.length > 0 && (
-                  <div className="mt-3">
-                    <Text strong className="text-xs block mb-1">
-                      Manageable User Roles:
-                    </Text>
-                    <Space wrap size={4}>
-                      {selectedRole.manageableRoles.map((mr) => {
-                        const name = typeof mr === "object" ? mr.name : mr;
-                        const color =
-                          typeof mr === "object" ? mr.color : "#722ed1";
-                        return (
-                          <Tag
-                            key={typeof mr === "object" ? mr._id : mr}
-                            color={color}
-                          >
-                            {name}
-                          </Tag>
-                        );
-                      })}
-                    </Space>
-                  </div>
-                )}
+              {selectedRole.manageableRoles && selectedRole.manageableRoles.length > 0 && (
+                <div className="mt-3">
+                  <Text strong className="text-xs block mb-1">
+                    Manageable User Roles:
+                  </Text>
+                  <Space wrap size={4}>
+                    {selectedRole.manageableRoles.map((mr) => {
+                      const name = typeof mr === "object" ? mr.name : mr;
+                      const color = typeof mr === "object" ? mr.color : "#722ed1";
+                      return (
+                        <Tag key={typeof mr === "object" ? mr._id : mr} color={color}>
+                          {name}
+                        </Tag>
+                      );
+                    })}
+                  </Space>
+                </div>
+              )}
             </div>
 
             <Table
@@ -771,14 +725,8 @@ function RoleManagementPage() {
                   dataIndex: "resource",
                   width: 180,
                   render: (resource) => {
-                    const module = MODULES.find(
-                      (item) => item.key === resource,
-                    );
-                    return (
-                      <Text strong className="text-xs">
-                        {module?.label || resource}
-                      </Text>
-                    );
+                    const module = MODULES.find((item) => item.key === resource);
+                    return <Text strong className="text-xs">{module?.label || resource}</Text>;
                   },
                 },
                 ...ACTIONS.map((action) => ({
