@@ -2,9 +2,9 @@ import { ArrowRightOutlined, CheckOutlined } from "@ant-design/icons";
 import { Link } from "react-router-dom";
 
 const rooms = [
-  { type: "Single", title: "Comfort Single", price: 50, image: "/landing/member-hero.jpg", text: "A calm and practical room for solo stays." },
-  { type: "Double", title: "Classic Double", price: 80, image: "/landing/manager-hero.jpg", text: "A spacious room designed for two guests." },
-  { type: "Suite", title: "Signature Suite", price: 120, image: "/landing/admin-hero.jpg", text: "Extra space and comfort for a special stay." },
+  { type: "Single", title: "Comfort Single", price: 50, image: "/landing/Comfort_Single.jpg", text: "A calm and practical room for solo stays." },
+  { type: "Double", title: "Classic Double", price: 80, image: "/landing/Classic_Double.jpg", text: "A spacious room designed for two guests." },
+  { type: "Suite", title: "Signature Suite", price: 120, image: "/landing/Signature_Suite.jpg", text: "Extra space and comfort for a special stay." },
 ];
 
 function FeaturedRooms() {

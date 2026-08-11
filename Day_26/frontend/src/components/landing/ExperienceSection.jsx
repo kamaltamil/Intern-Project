@@ -1,7 +1,7 @@
 function ExperienceSection() {
   return (
     <section className="relative overflow-hidden bg-[#211C19] py-20 text-white sm:py-24">
-      <img src="/landing/member-hero.jpg" alt="Hotel experience" className="absolute inset-0 h-full w-full object-cover opacity-45" />
+      <img src="/landing/experience_section.jpg" alt="Hotel experience" className="absolute inset-0 h-full w-full object-cover opacity-45" />
       <div className="absolute inset-0 bg-[#211C19]/65" />
       <div className="relative mx-auto max-w-7xl px-5 lg:px-8">
         <div className="max-w-2xl">

@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 function HeroSection() {
   return (
     <section id="home" className="relative min-h-[620px] overflow-hidden bg-[#27221F] sm:min-h-[680px]">
-      <img src="/landing/admin-hero.jpg" alt="Hotel reception" className="absolute inset-0 h-full w-full object-cover" />
+      <img src="/landing/hero.jpg" alt="Hotel reception" className="absolute inset-0 h-full w-full object-cover" />
       <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(25,20,17,0.78)_0%,rgba(25,20,17,0.46)_50%,rgba(25,20,17,0.18)_100%)]" />
 
       <div className="relative mx-auto flex min-h-[620px] max-w-7xl items-center px-5 pb-24 pt-32 sm:min-h-[680px] lg:px-8">

@@ -9,9 +9,11 @@ import {
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+
 import { logout, setTheme } from "../store/slices/authSlice";
 import { logoutUser } from "../api/queries";
 import { resolveProfileImage } from "../utils/image";
+import { persistor } from "../store/store";
 
 const { Header } = Layout;
 
@@ -25,27 +27,39 @@ function TopHeader() {
   const isDark = theme === "dark";
 
   // --------------------------------------------------
-  // Complete logout process
+  // Complete Logout
   // --------------------------------------------------
-  const finishLogout = () => {
-    // Clear all React Query cached data
-    queryClient.clear();
+  const finishLogout = async () => {
+    try {
+      // 1. Clear React Query cache
+      queryClient.clear();
 
-    // Clear authentication data from Redux
-    dispatch(logout());
+      // 2. Clear Redux authentication state
+      dispatch(logout());
 
-    // Redirect to public landing page
-    navigate("/", { replace: true });
+      // 3. Make sure redux-persist writes the cleared
+      //    authentication state to localStorage
+      await persistor.flush();
+
+      // 4. Force navigation to public landing page
+      window.location.replace("/");
+    } catch (error) {
+      console.error("Logout cleanup error:", error);
+
+      // Even if persistence flush fails,
+      // still go to landing page.
+      window.location.replace("/");
+    }
   };
 
   // --------------------------------------------------
-  // Logout API mutation
+  // Logout Mutation
   // --------------------------------------------------
   const logoutMutation = useMutation({
     mutationFn: logoutUser,
 
-    // Whether API succeeds or fails, logout locally
-    // and redirect to landing page.
+    // Whether API succeeds or fails,
+    // always clear local authentication.
     onSettled: () => {
       finishLogout();
     },
@@ -55,11 +69,11 @@ function TopHeader() {
   // Handle Logout
   // --------------------------------------------------
   const handleLogout = () => {
-    if (user?._id) {
-      logoutMutation.mutate(user._id);
-    } else {
-      finishLogout();
+    if (logoutMutation.isPending) {
+      return;
     }
+
+    logoutMutation.mutate();
   };
 
   // --------------------------------------------------
@@ -70,7 +84,7 @@ function TopHeader() {
   };
 
   // --------------------------------------------------
-  // Dropdown Menu
+  // Dropdown Items
   // --------------------------------------------------
   const dropdownItems = [
     {
@@ -86,7 +100,9 @@ function TopHeader() {
 
     {
       key: "logout",
-      label: logoutMutation.isPending ? "Logging out..." : "Logout",
+      label: logoutMutation.isPending
+        ? "Logging out..."
+        : "Logout",
       icon: <LogoutOutlined />,
       danger: true,
       disabled: logoutMutation.isPending,
@@ -123,7 +139,8 @@ function TopHeader() {
             margin: 0,
           }}
         >
-          Welcome {user?.name?.split(" ")[0] || "User"}
+          Welcome{" "}
+          {user?.name?.split(" ")[0] || "User"}
         </h2>
       </div>
 
@@ -131,6 +148,7 @@ function TopHeader() {
           Right Side
       --------------------------------------------- */}
       <div className="flex items-center gap-3">
+
         {/* -------------------------------------------
             Theme Toggle
         ------------------------------------------- */}
@@ -163,7 +181,9 @@ function TopHeader() {
             }
             onClick={toggleTheme}
             style={{
-              background: isDark ? "#2d2d44" : "#F8F4EE",
+              background: isDark
+                ? "#2d2d44"
+                : "#F8F4EE",
               border: "none",
               width: 36,
               height: 36,
@@ -193,12 +213,16 @@ function TopHeader() {
           >
             {/* Profile Image */}
             <Avatar
-              src={resolveProfileImage(user?.profileImage)}
+              src={resolveProfileImage(
+                user?.profileImage
+              )}
               style={{
                 backgroundColor: "#C76A34",
               }}
             >
-              {user?.name?.charAt(0)?.toUpperCase() || "U"}
+              {user?.name
+                ?.charAt(0)
+                ?.toUpperCase() || "U"}
             </Avatar>
 
             {/* User Details */}
@@ -219,8 +243,10 @@ function TopHeader() {
                 style={{
                   color:
                     typeof user?.role === "object"
-                      ? user.role?.color || "#C76A34"
-                      : user?.roleColor || "#C76A34",
+                      ? user.role?.color ||
+                        "#C76A34"
+                      : user?.roleColor ||
+                        "#C76A34",
                 }}
               >
                 {typeof user?.role === "object"

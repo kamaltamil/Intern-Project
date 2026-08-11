@@ -41,7 +41,7 @@ function LoginPage() {
       );
 
       message.success("Login successful");
-      navigate("/");
+      navigate("/dashboard", { replace: true });
     },
 
     onError: (error) => {
@@ -60,7 +60,7 @@ function LoginPage() {
 
   // Already logged in — redirect to dashboard
   if (token) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/dashboard" replace />;
   }
 
   const loginForm = [

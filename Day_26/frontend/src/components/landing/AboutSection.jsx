@@ -3,7 +3,7 @@ function AboutSection() {
     <section id="about" className="mx-auto max-w-7xl px-5 py-20 sm:py-24 lg:px-8">
       <div className="grid items-center gap-10 lg:grid-cols-2 lg:gap-16">
         <div className="relative">
-          <img src="/landing/manager-hero.jpg" alt="Hotel interior" className="h-[360px] w-full rounded-[2rem] object-cover shadow-xl sm:h-[470px]" />
+          <img src="/landing/about.jpg" alt="Hotel interior" className="h-[360px] w-full rounded-[2rem] object-cover shadow-xl sm:h-[470px]" />
           <div className="absolute -bottom-6 left-5 rounded-2xl bg-white p-5 shadow-xl sm:left-8">
             <p className="text-2xl font-semibold text-[#C76A34]">140+</p>
             <p className="text-xs text-[#8B8179]">Happy guests served</p>
