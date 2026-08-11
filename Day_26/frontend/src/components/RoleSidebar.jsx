@@ -15,37 +15,106 @@ import { hasPermission } from "../utils/hasPermission";
 
 const { Sider } = Layout;
 
+/* -------------------------------------------------------------------------- */
+/*                           Module → Route Map                               */
+/* -------------------------------------------------------------------------- */
+
 const ALL_MODULES = [
-  { resource: "dashboard", key: "/dashboard", icon: <DashboardOutlined />, label: "Dashboard", alwaysShow: true },
-  { resource: "users", key: "/users", icon: <TeamOutlined />, label: "User Management" },
-  { resource: "roles", key: "/roles", icon: <TagsOutlined />, label: "Role Management" },
-  { resource: "bookings", key: "/bookings", icon: <CalendarOutlined />, label: "Bookings" },
-  { resource: "approval", key: "/approval", icon: <CheckCircleOutlined />, label: "Booking Approval" },
-  { resource: "reports", key: "/reports", icon: <BarChartOutlined />, label: "Reports" },
-  { resource: "profile", key: "/profile", icon: <UserOutlined />, label: "Profile", alwaysShow: true },
+  {
+    resource: "dashboard",
+    key: "/dashboard",
+    icon: <DashboardOutlined />,
+    label: "Dashboard",
+    alwaysShow: true,
+  },
+  {
+    resource: "users",
+    key: "/users",
+    icon: <TeamOutlined />,
+    label: "User Management",
+  },
+  {
+    resource: "roles",
+    key: "/roles",
+    icon: <TagsOutlined />,
+    label: "Role Management",
+  },
+  {
+    resource: "bookings",
+    key: "/bookings",
+    icon: <CalendarOutlined />,
+    label: "Bookings",
+  },
+  {
+    resource: "approval",
+    key: "/approval",
+    icon: <CheckCircleOutlined />,
+    label: "Booking Approval",
+  },
+  {
+    resource: "reports",
+    key: "/reports",
+    icon: <BarChartOutlined />,
+    label: "Reports",
+  },
+  {
+    resource: "profile",
+    key: "/profile",
+    icon: <UserOutlined />,
+    label: "Profile",
+    alwaysShow: true,
+  },
 ];
+
+/* -------------------------------------------------------------------------- */
+/*                           Sidebar Component                                */
+/* -------------------------------------------------------------------------- */
 
 function RoleSidebar() {
   const { permissions, theme } = useSelector((state) => state.auth);
   const navigate = useNavigate();
   const location = useLocation();
+
   const isDark = theme === "dark";
 
+  /* ---------- Build menu items based 100% on DB permissions ---------- */
+
   const menuItems = ALL_MODULES
-    .filter((module) => module.alwaysShow || hasPermission(permissions, module.resource, "view"))
-    .map((module) => ({ key: module.key, icon: module.icon, label: module.label }));
+    .filter((module) => {
+      // Always-visible modules (dashboard, profile)
+      if (module.alwaysShow) return true;
+
+      // Show if user has view permission for this resource in DB permissions
+      return hasPermission(permissions, module.resource, "view");
+    })
+    .map((module) => ({
+      key: module.key,
+      icon: module.icon,
+      label: module.label,
+    }));
+
+  /* ---------- Brand header item ---------- */
 
   const brandItem = {
     key: "brand",
     icon: <CrownOutlined />,
     label: "HotelPro",
-    style: { color: "#C76A34", fontSize: "18px", fontWeight: 700, cursor: "default", marginBottom: 8 },
+    style: {
+      color: "#C76A34",
+      fontSize: "18px",
+      fontWeight: 700,
+      cursor: "default",
+      marginBottom: 8
+    }
   };
+
+  const selectedKey =
+    location.pathname === "/" ? "/dashboard" : location.pathname;
 
   return (
     <Sider
       breakpoint="lg"
-      collapsible
+      collapsible={true}
       style={{
         background: isDark ? "#1a1a2e" : "#ffffff",
         borderRight: `1px solid ${isDark ? "#2d2d44" : "#ECE6DF"}`,
@@ -60,13 +129,16 @@ function RoleSidebar() {
     >
       <Menu
         mode="inline"
-        selectedKeys={[location.pathname === "/" ? "/dashboard" : location.pathname]}
+        selectedKeys={[selectedKey]}
         items={[brandItem, ...menuItems]}
         theme={isDark ? "dark" : "light"}
         onClick={({ key }) => {
           if (key !== "brand") navigate(key);
         }}
-        style={{ borderRight: 0, paddingTop: 8 }}
+        style={{
+          borderRight: 0,
+          paddingTop: 8,
+        }}
       />
     </Sider>
   );
