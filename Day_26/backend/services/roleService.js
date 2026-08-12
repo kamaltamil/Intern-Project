@@ -8,20 +8,13 @@ const createRole = async (data) => {
   try {
     const { name, permissions = [] } = data;
 
-    const existingRole = await Role.findOne({
-      name: name.trim(),
-    });
+    const existingRole = await Role.findOne({ name: name.trim() });
+    if (existingRole) throw new Error("Role already exists");
 
-    if (existingRole) {
-      throw new Error("Role already exists");
-    }
-
-    const role = await Role.create({
+    return await Role.create({
       name: name.trim(),
       permissions,
     });
-
-    return role;
   } catch (error) {
     throw new Error(error.message);
   }
@@ -33,13 +26,11 @@ const createRole = async (data) => {
 
 const getAllRoles = async () => {
   try {
-    return await Role.find().sort({
-      createdAt: 1,
-    });
+    return await Role.find()
+      .populate("manageableRoles", "name color")
+      .sort({ createdAt: 1 });
   } catch (error) {
-    throw new Error(
-      `Error fetching roles: ${error.message}`
-    );
+    throw new Error(`Error fetching roles: ${error.message}`);
   }
 };
 
@@ -49,11 +40,9 @@ const getAllRoles = async () => {
 
 const getRoleById = async (id) => {
   try {
-    return await Role.findById(id);
+    return await Role.findById(id).populate("manageableRoles", "name color");
   } catch (error) {
-    throw new Error(
-      `Error fetching role: ${error.message}`
-    );
+    throw new Error(`Error fetching role: ${error.message}`);
   }
 };
 
@@ -63,20 +52,14 @@ const getRoleById = async (id) => {
 
 const updateRole = async (id, data) => {
   try {
-    const role = await Role.findByIdAndUpdate(
-      id,
-      data,
-      {
-        new: true,
-        runValidators: true,
-      }
-    );
+    const role = await Role.findByIdAndUpdate(id, data, {
+      new: true,
+      runValidators: true,
+    }).populate("manageableRoles", "name color");
 
     return role;
   } catch (error) {
-    throw new Error(
-      `Error updating role: ${error.message}`
-    );
+    throw new Error(`Error updating role: ${error.message}`);
   }
 };
 
@@ -87,22 +70,15 @@ const updateRole = async (id, data) => {
 const deleteRole = async (id) => {
   try {
     const role = await Role.findByIdAndDelete(id);
-
     if (!role) {
       const error = new Error("Role not found");
       error.statusCode = 404;
       throw error;
     }
-
     return role;
   } catch (error) {
-    if (error.statusCode) {
-      throw error;
-    }
-
-    throw new Error(
-      `Error deleting role: ${error.message}`
-    );
+    if (error.statusCode) throw error;
+    throw new Error(`Error deleting role: ${error.message}`);
   }
 };
 
