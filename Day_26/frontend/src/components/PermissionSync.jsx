@@ -1,13 +1,10 @@
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useLocation } from "react-router-dom";
-
-import { fetchMe } from "../api/queries";
+import { fetchMyPermissions } from "../api/queries";
 import { setRolePermissions } from "../store/slices/authSlice";
 
 function PermissionSync() {
   const dispatch = useDispatch();
-  const location = useLocation();
   const token = useSelector((state) => state.auth.token);
 
   useEffect(() => {
@@ -17,12 +14,12 @@ function PermissionSync() {
 
     const syncPermissions = async () => {
       try {
-        const data = await fetchMe();
-        if (cancelled || !data?.role) return;
+        const data = await fetchMyPermissions();
+        if (cancelled || !data) return;
 
         dispatch(
           setRolePermissions({
-            role: data.role,
+            role: data.role?.name || data.role,
             permissions: data.permissions || [],
           }),
         );
@@ -32,13 +29,14 @@ function PermissionSync() {
     };
 
     syncPermissions();
+
     const intervalId = window.setInterval(syncPermissions, 15000);
 
     return () => {
       cancelled = true;
       window.clearInterval(intervalId);
     };
-  }, [dispatch, token, location.pathname]);
+  }, [dispatch, token]);
 
   return null;
 }
