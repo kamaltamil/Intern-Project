@@ -1,7 +1,6 @@
 import { Row, Col, Skeleton } from "antd";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import DashboardLayout from "../components/DashboardLayout";
 import CustomCard from "../components/CustomCard";
 import LandingBanner from "../components/LandingBanner";
 import { TeamOutlined, UserOutlined } from "@ant-design/icons";
@@ -12,9 +11,9 @@ function MemberDashboardPage() {
 
   if (!user) {
     return (
-      <DashboardLayout>
+    
         <Skeleton active paragraph={{ rows: 4 }} />
-      </DashboardLayout>
+      
     );
   }
 
@@ -27,7 +26,7 @@ function MemberDashboardPage() {
   ];
 
   return (
-    <DashboardLayout>
+  
       <div className="space-y-4">
         <Row gutter={[16, 16]}>
           {memberStats.map((stat) => (
@@ -50,7 +49,7 @@ function MemberDashboardPage() {
           onAction={() => navigate('/bookings')}
         />
       </div>
-    </DashboardLayout>
+    
   );
 }
 

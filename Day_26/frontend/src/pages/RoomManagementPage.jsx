@@ -22,7 +22,6 @@ import {
 
 import { useDispatch, useSelector } from "react-redux";
 
-import DashboardLayout from "../components/DashboardLayout";
 import PermissionGate from "../components/PermissionGate";
 import CustomForm from "../components/CustomForm";
 import CustomTable from "../components/CustomTable";
@@ -346,7 +345,6 @@ function RoomManagementPage() {
   /* ---------------------------------------------------------------------- */
 
   return (
-    <DashboardLayout>
       <div className="p-4">
         {/* ---------------------------------------------------------------- */}
         {/* Header                                                           */}
@@ -531,7 +529,7 @@ function RoomManagementPage() {
           </div>
         )}
       </div>
-    </DashboardLayout>
+
   );
 }
 

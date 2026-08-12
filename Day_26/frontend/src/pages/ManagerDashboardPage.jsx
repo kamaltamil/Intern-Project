@@ -2,7 +2,6 @@ import { Row, Col, Skeleton, Alert } from "antd";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { fetchUsers } from "../api/queries";
-import DashboardLayout from "../components/DashboardLayout";
 import CustomCard from "../components/CustomCard";
 import LandingBanner from "../components/LandingBanner";
 
@@ -22,20 +21,20 @@ function ManagerDashboardPage() {
 
   if (isLoading) {
     return (
-      <DashboardLayout>
+    
         <Skeleton active paragraph={{ rows: 4 }} />
-      </DashboardLayout>
+      
     );
   }
 
   if (isError) {
     return (
-      <DashboardLayout>
+    
         <Alert
           type="error"
           message={error?.message || "Unable to load manager dashboard data"}
         />
-      </DashboardLayout>
+      
     );
   }
 
@@ -46,7 +45,7 @@ function ManagerDashboardPage() {
   ];
 
   return (
-    <DashboardLayout>
+  
       <div className="space-y-4">
         <Row gutter={[16, 16]}>
           {managerStats.map((stat) => (
@@ -69,7 +68,7 @@ function ManagerDashboardPage() {
           onAction={() => navigate("/bookings")}
         />
       </div>
-    </DashboardLayout>
+    
   );
 }
 

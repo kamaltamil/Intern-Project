@@ -29,7 +29,6 @@ import {
 } from "@ant-design/icons";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import DashboardLayout from "../components/DashboardLayout";
 import PermissionGate from "../components/PermissionGate";
 import { usePermission } from "../hooks/usePermission";
 import { fetchRoles, createRole, updateRole, deleteRole } from "../api/queries";
@@ -477,15 +476,13 @@ function RoleManagementPage() {
 
   if (isLoading) {
     return (
-      <DashboardLayout>
         <Skeleton active paragraph={{ rows: 6 }} />
-      </DashboardLayout>
+
     );
   }
 
   if (isError) {
     return (
-      <DashboardLayout>
         <Alert
           type="error"
           showIcon
@@ -495,7 +492,7 @@ function RoleManagementPage() {
             "Unable to load roles"
           }
         />
-      </DashboardLayout>
+
     );
   }
 
@@ -504,7 +501,7 @@ function RoleManagementPage() {
   /* ---------------------------------------------------------------------- */
 
   return (
-    <DashboardLayout>
+    <section>
       <div className="p-4">
         {/* Header */}
         <div className="flex justify-between items-center mb-6">
@@ -799,7 +796,7 @@ function RoleManagementPage() {
           </>
         )}
       </Modal>
-    </DashboardLayout>
+    </section>
   );
 }
 

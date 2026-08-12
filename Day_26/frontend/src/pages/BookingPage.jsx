@@ -7,8 +7,6 @@ import { useSelector } from "react-redux";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import DashboardLayout from "../components/DashboardLayout";
-
 import CustomCard from "../components/CustomCard";
 import CustomTable from "../components/CustomTable";
 
@@ -122,7 +120,6 @@ function BookingPage() {
   /* ---------------------------------------------------------------- */
 
   return (
-    <DashboardLayout>
       <div className="space-y-4">
         {/* ---------- Header ---------- */}
 
@@ -223,7 +220,7 @@ function BookingPage() {
           onClose={closeViewModal}
         />
       </div>
-    </DashboardLayout>
+
   );
 }
 

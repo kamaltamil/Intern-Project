@@ -27,8 +27,6 @@ import {
   ReloadOutlined,
 } from "@ant-design/icons";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-
-import DashboardLayout from "../components/DashboardLayout";
 import CustomCard from "../components/CustomCard";
 import CustomTable from "../components/CustomTable";
 import PermissionGate from "../components/PermissionGate";
@@ -322,18 +320,18 @@ function UsersManagementPage() {
   /* ---------- Loading State ---------- */
   if (usersLoading) {
     return (
-      <DashboardLayout>
+    
         <div className="space-y-4">
           <Skeleton active paragraph={{ rows: 6 }} />
         </div>
-      </DashboardLayout>
+      
     );
   }
 
   /* ---------- Error State ---------- */
   if (usersError) {
     return (
-      <DashboardLayout>
+    
         <Alert
           type="error"
           showIcon
@@ -341,12 +339,12 @@ function UsersManagementPage() {
             usersQueryError?.message || "Unable to fetch users list."
           }
         />
-      </DashboardLayout>
+      
     );
   }
 
   return (
-    <DashboardLayout>
+  
       <div className="space-y-4">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -557,7 +555,7 @@ function UsersManagementPage() {
           </Form>
         </Modal>
       </div>
-    </DashboardLayout>
+    
   );
 }
 

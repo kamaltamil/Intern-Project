@@ -1,20 +1,15 @@
 import { Layout } from "antd";
 import { useSelector } from "react-redux";
+import { Outlet } from "react-router-dom";
+
 import RoleSidebar from "./RoleSidebar";
 import TopHeader from "./TopHeader";
 
 const { Content } = Layout;
 
-/**
- * DashboardLayout
- *
- * Wraps all authenticated pages with the sidebar and top header.
- *
- * Permissions are loaded from Redux (set during login via setAuth).
- * No extra permission-fetch needed here — login already returns permissions.
- */
-function DashboardLayout({ children }) {
+function DashboardLayout() {
   const { theme } = useSelector((state) => state.auth);
+
   const isDark = theme === "dark";
 
   return (
@@ -55,7 +50,7 @@ function DashboardLayout({ children }) {
             minHeight: 0,
           }}
         >
-          {children}
+          <Outlet />
         </Content>
       </Layout>
     </Layout>

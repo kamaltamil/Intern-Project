@@ -1,95 +1,52 @@
-import React, {
-  lazy,
-  Suspense,
-} from "react";
+import React, { lazy, Suspense } from "react";
 
-import {
-  Routes,
-  Route,
-  Navigate,
-} from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 
-import {
-  Spin,
-} from "antd";
+import { Spin } from "antd";
 
-const LoginPage = lazy(
-  () => import("../pages/LoginPage")
-);
+/* -------------------------------------------------------------------------- */
+/*                                Components                                  */
+/* -------------------------------------------------------------------------- */
 
-const SignupPage = lazy(
-  () => import("../pages/SignupPage")
-);
+import DashboardLayout from "../components/DashboardLayout";
+import ProtectedRoute from "./ProtectedRoute";
 
-const UsersManagementPage =
-  lazy(
-    () =>
-      import(
-        "../pages/UsersManagementPage"
-      )
-  );
+/* -------------------------------------------------------------------------- */
+/*                                Public Pages                                */
+/* -------------------------------------------------------------------------- */
 
-const RoleManagementPage =
-  lazy(
-    () =>
-      import(
-        "../pages/RoleManagementPage"
-      )
-  );
+const LoginPage = lazy(() => import("../pages/LoginPage"));
 
-const BookingPage = lazy(
-  () =>
-    import("../pages/BookingPage")
-);
+const SignupPage = lazy(() => import("../pages/SignupPage"));
 
-const RoomManagementPage =
-  lazy(
-    () =>
-      import(
-        "../pages/RoomManagementPage"
-      )
-  );
+const UnauthorizedPage = lazy(() => import("../pages/UnauthorizedPage"));
 
-const ProfilePage = lazy(
-  () =>
-    import("../pages/ProfilePage")
-);
+const PublicHome = lazy(() => import("./PublicHome"));
 
-const ReportsPage = lazy(
-  () =>
-    import("../pages/ReportsPage")
-);
+/* -------------------------------------------------------------------------- */
+/*                              Dashboard Pages                               */
+/* -------------------------------------------------------------------------- */
 
-const ApprovalPage = lazy(
-  () =>
-    import("../pages/ApprovalPage")
-);
+const DashboardHome = lazy(() => import("./DashboardHome"));
 
-const UnauthorizedPage =
-  lazy(
-    () =>
-      import(
-        "../pages/UnauthorizedPage"
-      )
-  );
+const ProfilePage = lazy(() => import("../pages/ProfilePage"));
 
-const ProtectedRoute =
-  lazy(
-    () =>
-      import("./ProtectedRoute")
-  );
+const UsersManagementPage = lazy(() => import("../pages/UsersManagementPage"));
 
-const DashboardHome =
-  lazy(
-    () =>
-      import("./DashboardHome")
-  );
+const RoleManagementPage = lazy(() => import("../pages/RoleManagementPage"));
 
-const PublicHome =
-  lazy(
-    () =>
-      import("./PublicHome")
-  );
+const BookingPage = lazy(() => import("../pages/BookingPage"));
+
+const RoomManagementPage = lazy(() => import("../pages/RoomManagementPage"));
+
+const ReportsPage = lazy(() => import("../pages/ReportsPage"));
+
+const ApprovalPage = lazy(() => import("../pages/ApprovalPage"));
+
+
+/* -------------------------------------------------------------------------- */
+/*                                  Loader                                    */
+/* -------------------------------------------------------------------------- */
 
 const Loader = (
   <div className="flex min-h-screen items-center justify-center">
@@ -97,159 +54,109 @@ const Loader = (
   </div>
 );
 
+/* -------------------------------------------------------------------------- */
+/*                                App Routes                                  */
+/* -------------------------------------------------------------------------- */
+
 function AppRoutes() {
   return (
-    <Suspense
-      fallback={Loader}
-    >
+    <Suspense fallback={Loader}>
       <Routes>
-        {/* Public */}
+        {/* ================================================================== */}
+        {/* Public Routes                                                      */}
+        {/* ================================================================== */}
 
-        <Route
-          path="/login"
-          element={
-            <LoginPage />
-          }
-        />
+        <Route path="/" element={<PublicHome />} />
 
-        <Route
-          path="/signup"
-          element={
-            <SignupPage />
-          }
-        />
+        <Route path="/login" element={<LoginPage />} />
 
-        <Route
-          path="/unauthorized"
-          element={
-            <UnauthorizedPage />
-          }
-        />
+        <Route path="/signup" element={<SignupPage />} />
 
-        <Route
-          path="/"
-          element={
-            <PublicHome />
-          }
-        />
+        <Route path="/unauthorized" element={<UnauthorizedPage />} />
 
-        {/* Dashboard */}
+        {/* ================================================================== */}
+        {/* Authentication Protection                                          */}
+        {/* ================================================================== */}
 
-        <Route
-          path="/dashboard"
-          element={
-            <ProtectedRoute>
-              <DashboardHome />
-            </ProtectedRoute>
-          }
-        />
+        <Route element={<ProtectedRoute />}>
+          {/* ================================================================ */}
+          {/* Dashboard Layout - Mounted Once                                  */}
+          {/* ================================================================ */}
 
-        {/* Profile */}
+          <Route element={<DashboardLayout />}>
+            {/* -------------------------------------------------------------- */}
+            {/* Dashboard                                                       */}
+            {/* -------------------------------------------------------------- */}
 
-        <Route
-          path="/profile"
-          element={
-            <ProtectedRoute>
-              <ProfilePage />
-            </ProtectedRoute>
-          }
-        />
+            <Route path="/dashboard" element={<DashboardHome />} />
 
-        {/* Users */}
+            {/* -------------------------------------------------------------- */}
+            {/* Profile                                                         */}
+            {/* -------------------------------------------------------------- */}
 
-        <Route
-          path="/users"
-          element={
-            <ProtectedRoute
-              resource="users"
-              action="view"
+            <Route path="/profile" element={<ProfilePage />} />
+
+            {/* -------------------------------------------------------------- */}
+            {/* Users                                                           */}
+            {/* -------------------------------------------------------------- */}
+
+            <Route element={<ProtectedRoute resource="users" action="view" />}>
+              <Route path="/users" element={<UsersManagementPage />} />
+            </Route>
+
+            {/* -------------------------------------------------------------- */}
+            {/* Roles                                                           */}
+            {/* -------------------------------------------------------------- */}
+
+            <Route element={<ProtectedRoute resource="roles" action="view" />}>
+              <Route path="/roles" element={<RoleManagementPage />} />
+            </Route>
+
+            {/* -------------------------------------------------------------- */}
+            {/* Bookings                                                        */}
+            {/* -------------------------------------------------------------- */}
+
+            <Route
+              element={<ProtectedRoute resource="bookings" action="view" />}
             >
-              <UsersManagementPage />
-            </ProtectedRoute>
-          }
-        />
+              <Route path="/bookings" element={<BookingPage />} />
+            </Route>
 
-        {/* Roles */}
+            {/* -------------------------------------------------------------- */}
+            {/* Rooms                                                           */}
+            {/* -------------------------------------------------------------- */}
 
-        <Route
-          path="/roles"
-          element={
-            <ProtectedRoute
-              resource="roles"
-              action="view"
+            <Route element={<ProtectedRoute resource="rooms" action="view" />}>
+              <Route path="/rooms" element={<RoomManagementPage />} />
+            </Route>
+
+            {/* -------------------------------------------------------------- */}
+            {/* Reports                                                         */}
+            {/* -------------------------------------------------------------- */}
+
+            <Route
+              element={<ProtectedRoute resource="reports" action="view" />}
             >
-              <RoleManagementPage />
-            </ProtectedRoute>
-          }
-        />
+              <Route path="/reports" element={<ReportsPage />} />
+            </Route>
 
-        {/* Bookings */}
+            {/* -------------------------------------------------------------- */}
+            {/* Approval                                                        */}
+            {/* -------------------------------------------------------------- */}
 
-        <Route
-          path="/bookings"
-          element={
-            <ProtectedRoute
-              resource="bookings"
-              action="view"
+            <Route
+              element={<ProtectedRoute resource="approval" action="view" />}
             >
-              <BookingPage />
-            </ProtectedRoute>
-          }
-        />
+              <Route path="/approval" element={<ApprovalPage />} />
+            </Route>
+          </Route>
+        </Route>
 
-        {/* Rooms */}
+        {/* ================================================================== */}
+        {/* Unknown Route                                                      */}
+        {/* ================================================================== */}
 
-        <Route
-          path="/rooms"
-          element={
-            <ProtectedRoute
-              resource="rooms"
-              action="view"
-            >
-              <RoomManagementPage />
-            </ProtectedRoute>
-          }
-        />
-
-        {/* Reports */}
-
-        <Route
-          path="/reports"
-          element={
-            <ProtectedRoute
-              resource="reports"
-              action="view"
-            >
-              <ReportsPage />
-            </ProtectedRoute>
-          }
-        />
-
-        {/* Approval */}
-
-        <Route
-          path="/approval"
-          element={
-            <ProtectedRoute
-              resource="approval"
-              action="view"
-            >
-              <ApprovalPage />
-            </ProtectedRoute>
-          }
-        />
-
-        {/* Unknown */}
-
-        <Route
-          path="*"
-          element={
-            <Navigate
-              to="/"
-              replace
-            />
-          }
-        />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Suspense>
   );

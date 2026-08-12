@@ -2,7 +2,6 @@ import { Row, Col, Skeleton, Alert } from 'antd';
 import { TeamOutlined, UserOutlined, CrownOutlined, DollarOutlined } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
 import { fetchUsers } from '../api/queries';
-import DashboardLayout from '../components/DashboardLayout';
 import { useNavigate } from 'react-router-dom';
 import CustomCard from '../components/CustomCard';
 import LandingBanner from '../components/LandingBanner';
@@ -25,17 +24,13 @@ function AdminDashboardPage() {
 
   if (isLoading) {
     return (
-      <DashboardLayout>
         <Skeleton active paragraph={{ rows: 4 }} />
-      </DashboardLayout>
     );
   }
 
   if (isError) {
     return (
-      <DashboardLayout>
         <Alert type="error" message={error?.message || 'Unable to load dashboard data'} />
-      </DashboardLayout>
     );
   }
 
@@ -47,7 +42,6 @@ function AdminDashboardPage() {
   ];
 
   return (
-    <DashboardLayout>
       <div className="space-y-4">
         <Row gutter={[16, 16]}>
           {dashboardStats.map((stat) => (
@@ -66,7 +60,6 @@ function AdminDashboardPage() {
           onAction={() => navigate('/users')}
         />
       </div>
-    </DashboardLayout>
   );
 }
 

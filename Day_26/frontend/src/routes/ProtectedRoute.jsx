@@ -1,13 +1,14 @@
-import { Navigate } from "react-router-dom";
+import { Navigate, Outlet } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { hasPermission } from "../utils/hasPermission";
 
 function ProtectedRoute({
-  children,
   resource,
   action = "view",
 }) {
-  const { token, permissions } = useSelector((state) => state.auth);
+  const { token, permissions } = useSelector(
+    (state) => state.auth
+  );
 
   /* ---------------- No Login ---------------- */
 
@@ -15,25 +16,21 @@ function ProtectedRoute({
     return <Navigate to="/" replace />;
   }
 
-  /* ---------- Routes without permission requirement ---------- */
+  /* ---------------- Permission Check ---------------- */
 
-  if (!resource) {
-    return children;
+  if (resource) {
+    const allowed = hasPermission(
+      permissions,
+      resource,
+      action
+    );
+
+    if (!allowed) {
+      return <Navigate to="/unauthorized" replace />;
+    }
   }
 
-  /* --------------- Permission Check --------------- */
-
-  const allowed = hasPermission(
-    permissions,
-    resource,
-    action
-  );
-
-  if (!allowed) {
-    return <Navigate to="/unauthorized" replace />;
-  }
-
-  return children;
+  return <Outlet />;
 }
 
 export default ProtectedRoute;

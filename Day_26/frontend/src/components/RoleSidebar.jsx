@@ -1,7 +1,4 @@
-import {
-  Layout,
-  Menu,
-} from "antd";
+import { Layout, Menu } from "antd";
 
 import {
   DashboardOutlined,
@@ -15,22 +12,15 @@ import {
   HomeOutlined,
 } from "@ant-design/icons";
 
-import {
-  useSelector,
-} from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 
-import {
-  useNavigate,
-  useLocation,
-} from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
-import {
-  hasPermission,
-} from "../utils/hasPermission";
+import { hasPermission } from "../utils/hasPermission";
 
-const {
-  Sider,
-} = Layout;
+import { setSidebarCollapsed } from "../store/slices/dashboardSlice"
+
+const { Sider } = Layout;
 
 const ALL_MODULES = [
   {
@@ -93,42 +83,32 @@ const ALL_MODULES = [
 ];
 
 function RoleSidebar() {
-  const {
-    permissions,
-    theme,
-  } = useSelector(
-    (state) => state.auth
-  );
+  const { permissions, theme } = useSelector((state) => state.auth);
+  const { sidebarCollapsed  } = useSelector((state) => state.dashboard);
 
-  const navigate =
-    useNavigate();
+  const navigate = useNavigate();
 
-  const location =
-    useLocation();
+  const dispatch = useDispatch();
 
-  const isDark =
-    theme === "dark";
+  const location = useLocation();
 
-  const menuItems =
-    ALL_MODULES
-      .filter((module) => {
-        if (
-          module.alwaysShow
-        ) {
-          return true;
-        }
+  const isDark = theme === "dark";
 
-        return hasPermission(
-          permissions,
-          module.resource,
-          "view"
-        );
-      })
-      .map((module) => ({
-        key: module.key,
-        icon: module.icon,
-        label: module.label,
-      }));
+  const handleSidebarCollapse = (collapsed) => {
+    dispatch(setSidebarCollapsed(collapsed));
+  };
+
+  const menuItems = ALL_MODULES.filter((module) => {
+    if (module.alwaysShow) {
+      return true;
+    }
+
+    return hasPermission(permissions, module.resource, "view");
+  }).map((module) => ({
+    key: module.key,
+    icon: module.icon,
+    label: module.label,
+  }));
 
   const brandItem = {
     key: "brand",
@@ -144,25 +124,18 @@ function RoleSidebar() {
     },
   };
 
-  const selectedKey =
-    location.pathname === "/"
-      ? "/"
-      : location.pathname;
+  const selectedKey = location.pathname === "/" ? "/" : location.pathname;
 
   return (
     <Sider
       breakpoint="lg"
       collapsible
+      collapsed={sidebarCollapsed}
+      onCollapse={handleSidebarCollapse}
       style={{
-        background: isDark
-          ? "#1a1a2e"
-          : "#ffffff",
+        background: isDark ? "#1a1a2e" : "#ffffff",
 
-        borderRight: `1px solid ${
-          isDark
-            ? "#2d2d44"
-            : "#ECE6DF"
-        }`,
+        borderRight: `1px solid ${isDark ? "#2d2d44" : "#ECE6DF"}`,
 
         minHeight: "100vh",
         position: "sticky",
@@ -177,24 +150,11 @@ function RoleSidebar() {
     >
       <Menu
         mode="inline"
-        selectedKeys={[
-          selectedKey,
-        ]}
-        items={[
-          brandItem,
-          ...menuItems,
-        ]}
-        theme={
-          isDark
-            ? "dark"
-            : "light"
-        }
-        onClick={({
-          key,
-        }) => {
-          if (
-            key !== "brand"
-          ) {
+        selectedKeys={[selectedKey]}
+        items={[brandItem, ...menuItems]}
+        theme={isDark ? "dark" : "light"}
+        onClick={({ key }) => {
+          if (key !== "brand") {
             navigate(key);
           }
         }}

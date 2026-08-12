@@ -5,7 +5,6 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { updateUser, fetchMe } from '../api/queries';
 import { updateUserProfile } from '../store/slices/authSlice';
-import DashboardLayout from '../components/DashboardLayout';
 import { resolveProfileImage } from '../utils/image';
 import { ROLE_COLORS } from '../constants/roleColors';
 
@@ -108,7 +107,7 @@ function ProfilePage() {
   };
 
   return (
-    <DashboardLayout>
+  
       <div className="max-w-2xl mx-auto space-y-4">
         <Title level={4} style={{ color: isDark ? "#f0f0f0" : "#2E2A27" }}>My Profile</Title>
 
@@ -253,7 +252,7 @@ function ProfilePage() {
           )}
         </Card>
       </div>
-    </DashboardLayout>
+    
   );
 }
 
