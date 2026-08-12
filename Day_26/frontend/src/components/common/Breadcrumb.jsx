@@ -16,12 +16,13 @@ const ROUTES = {
 };
 
 const BreadcrumbItem = ({ item, isLast, isDark }) => {
-  const color = isDark ? "#f0f0f0" : "#2E2A27";
-  const linkColor = isDark ? "#aeb7c6" : "#756C65";
-
   if (isLast) {
     return (
-      <span className="whitespace-nowrap" style={{ color }}>
+      <span
+        className={`whitespace-nowrap ${
+          isDark ? "!text-gray-200" : "!text-gray-700"
+        }`}
+      >
         {item.label}
       </span>
     );
@@ -30,14 +31,11 @@ const BreadcrumbItem = ({ item, isLast, isDark }) => {
   return (
     <Link
       to={item.path}
-      className="whitespace-nowrap text-sm"
-      style={{ color }}
-      onMouseEnter={(event) => {
-        event.currentTarget.style.color = isDark ? "#ffffff" : "#2E2A27";
-      }}
-      onMouseLeave={(event) => {
-        event.currentTarget.style.color = linkColor;
-      }}
+      className={`whitespace-nowrap text-sm ${
+        isDark
+          ? "!text-gray-400 hover:!text-white"
+          : "!text-gray-500 hover:!text-gray-900"
+      }`}
     >
       {item.label}
     </Link>
@@ -80,16 +78,14 @@ function Breadcrumb() {
     hasPermission(permissions, item.resource, "view"),
   );
 
-  const textColor = isDark ? "#f0f0f0" : "#2E2A27";
-  const separatorColor = isDark ? "#8f98a8" : "#8B8179";
-
   return (
-    <div
-      className="mb-4 min-w-0 overflow-x-auto"
-      style={{ color: textColor }}
-    >
+    <div className="mb-4 min-w-0 overflow-x-auto">
       <AntBreadcrumb
-        separator={<span style={{ color: separatorColor }}>/</span>}
+        separator={
+          <span className={isDark ? "!text-gray-500" : "!text-gray-400"}>
+            /
+          </span>
+        }
         items={visibleItems}
         itemRender={(item, params, routes) =>
           renderBreadcrumbItem(item, params, routes, isDark)
