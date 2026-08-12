@@ -28,7 +28,7 @@ function ReportsPage() {
     <div className="space-y-4">
       <div>
         <Title level={4} className="!mb-1" style={{ color: isDark ? "#f0f0f0" : "#2E2A27" }}>Reports</Title>
-        <Text type="secondary">Booking analytics, status distribution, revenue and room utilization.</Text>
+        <Text className="text-gray-400 text-sm">Booking analytics, status distribution, revenue and room utilization.</Text>
       </div>
       {isError && <Alert type="error" showIcon message={error?.response?.data?.message || "Unable to load reports."} />}
       <Row gutter={[16, 16]}>

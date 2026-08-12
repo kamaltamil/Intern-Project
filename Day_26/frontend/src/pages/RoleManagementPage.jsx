@@ -64,7 +64,9 @@ const createEmptyPermissions = () =>
 
 const normalizePermissions = (permissions = []) =>
   MODULES.map(({ key }) => {
-    const current = permissions.find((permission) => permission.resource === key);
+    const current = permissions.find(
+      (permission) => permission.resource === key,
+    );
     return {
       resource: key,
       action: {
@@ -201,7 +203,12 @@ function RoleManagementPage() {
   const [permissions, setPermissions] = useState(createEmptyPermissions());
   const [selectedManageableRoles, setSelectedManageableRoles] = useState([]);
 
-  const { data: roles = [], isLoading, isError, error } = useQuery({
+  const {
+    data: roles = [],
+    isLoading,
+    isError,
+    error,
+  } = useQuery({
     queryKey: ["roles"],
     queryFn: fetchRoles,
   });
@@ -414,7 +421,9 @@ function RoleManagementPage() {
           >
             Role Management
           </Title>
-          <Text type="secondary">Create roles and control module permissions.</Text>
+          <Text className="text-gray-400 text-sm">
+            Create roles and control module permissions.
+          </Text>
         </div>
 
         <PermissionGate resource="roles" action="create">
@@ -439,7 +448,9 @@ function RoleManagementPage() {
       </Card>
 
       <Modal
-        title={editingRole ? `Edit Role — ${editingRole.name}` : "Create New Role"}
+        title={
+          editingRole ? `Edit Role — ${editingRole.name}` : "Create New Role"
+        }
         open={modalOpen}
         onCancel={closeModal}
         onOk={handleSubmit}
@@ -464,7 +475,11 @@ function RoleManagementPage() {
               </Form.Item>
             </Col>
             <Col xs={24} md={8}>
-              <Form.Item name="color" label="Badge Color" rules={[{ required: true }]}>
+              <Form.Item
+                name="color"
+                label="Badge Color"
+                rules={[{ required: true }]}
+              >
                 <Select>
                   {ROLE_COLORS.map((color) => (
                     <Option key={color.value} value={color.value}>
@@ -481,28 +496,41 @@ function RoleManagementPage() {
               </Form.Item>
             </Col>
             <Col xs={24} md={6}>
-              <Form.Item name="isDefault" label="Default Role" valuePropName="checked">
+              <Form.Item
+                name="isDefault"
+                label="Default Role"
+                valuePropName="checked"
+              >
                 <Switch />
               </Form.Item>
             </Col>
           </Row>
 
           <Form.Item name="description" label="Description">
-            <Input placeholder="Describe role purpose (optional)" maxLength={150} />
+            <Input
+              placeholder="Describe role purpose (optional)"
+              maxLength={150}
+            />
           </Form.Item>
 
           <div className="mb-2">
             <Text strong>Module Permissions</Text>
             <Text type="secondary" className="block text-xs">
-              Create, Update, and Delete require View. The All checkbox enables all four actions.
+              Create, Update, and Delete require View. The All checkbox enables
+              all four actions.
             </Text>
           </div>
 
-          <PermissionMatrix permissions={permissions} setPermissions={setPermissions} />
+          <PermissionMatrix
+            permissions={permissions}
+            setPermissions={setPermissions}
+          />
 
           {hasUserViewPermission && (
             <div className="mt-4 p-3 bg-gray-50 border rounded-lg">
-              <Text strong className="block mb-1">User Management Role Access</Text>
+              <Text strong className="block mb-1">
+                User Management Role Access
+              </Text>
               <Text type="secondary" className="block text-xs mb-3">
                 Select which roles this role can manage.
               </Text>
@@ -539,7 +567,9 @@ function RoleManagementPage() {
       </Modal>
 
       <Modal
-        title={selectedRole ? `Role Details — ${selectedRole.name}` : "Role Details"}
+        title={
+          selectedRole ? `Role Details — ${selectedRole.name}` : "Role Details"
+        }
         open={detailsOpen}
         onCancel={() => {
           setDetailsOpen(false);
@@ -562,9 +592,13 @@ function RoleManagementPage() {
           <div className="space-y-4">
             <div>
               <Space wrap>
-                <Tag color={selectedRole.color || "#722ed1"}>{selectedRole.name}</Tag>
+                <Tag color={selectedRole.color || "#722ed1"}>
+                  {selectedRole.name}
+                </Tag>
                 {selectedRole.isSystem && <Tag color="gold">System Role</Tag>}
-                {selectedRole.isDefault && <Tag color="green">Default Role</Tag>}
+                {selectedRole.isDefault && (
+                  <Tag color="green">Default Role</Tag>
+                )}
               </Space>
               <Text type="secondary" className="block mt-2">
                 {selectedRole.description || "No description provided."}
@@ -573,7 +607,9 @@ function RoleManagementPage() {
 
             {selectedRole.manageableRoles?.length > 0 && (
               <div>
-                <Text strong className="block mb-2">Manageable User Roles</Text>
+                <Text strong className="block mb-2">
+                  Manageable User Roles
+                </Text>
                 <Space wrap>
                   {selectedRole.manageableRoles.map((role) => (
                     <Tag
@@ -597,13 +633,17 @@ function RoleManagementPage() {
                   title: "Module",
                   dataIndex: "resource",
                   render: (resource) =>
-                    MODULES.find((module) => module.key === resource)?.label || resource,
+                    MODULES.find((module) => module.key === resource)?.label ||
+                    resource,
                 },
                 ...ACTIONS.map((action) => ({
                   title: action.label,
                   align: "center",
                   render: (_, record) => (
-                    <Checkbox checked={Boolean(record.action?.[action.key])} disabled />
+                    <Checkbox
+                      checked={Boolean(record.action?.[action.key])}
+                      disabled
+                    />
                   ),
                 })),
                 {
