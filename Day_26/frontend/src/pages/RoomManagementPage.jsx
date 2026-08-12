@@ -231,7 +231,7 @@ function RoomManagementPage() {
   ];
 
   return (
-    <div className="p-4">
+    <div className="space-y-4">
       <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <div>
           <Title
@@ -316,7 +316,6 @@ function RoomManagementPage() {
         dataSource={rooms}
         columns={columns}
         pagination={{ pageSize: 8, showSizeChanger: true }}
-        scroll={{ x: 700 }}
       />
 
       {!loading && rooms.length === 0 && !error && (

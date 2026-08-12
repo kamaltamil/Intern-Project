@@ -137,8 +137,7 @@ function BookingPage() {
         isLoading={bookingsLoading}
         dataSource={bookings}
         columns={columns}
-        pagination={{ pageSize: 8, showSizeChanger: false }}
-        scroll={{ x: 900 }}
+        pagination={{ pageSize: 5, showSizeChanger: false }}
       />
 
       <BookingModal

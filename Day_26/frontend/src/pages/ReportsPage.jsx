@@ -25,6 +25,7 @@ import { useSelector } from "react-redux";
 import { fetchReports, updateBooking } from "../api/queries";
 import { bookingStatusConfig } from "../components/booking/BookingHelpers";
 import PermissionGate from "../components/PermissionGate";
+import CustomTable from "../components/CustomTable";
 
 const { Title, Text } = Typography;
 
@@ -328,17 +329,16 @@ function ReportsPage() {
 
       <Row gutter={[16, 16]}>
         <Col xs={24} lg={12}>
-          <Card title="Room Utilization">
-            <Table
-              loading={isLoading}
-              rowKey="roomId"
-              dataSource={roomUsage}
-              columns={roomColumns}
-              pagination={{ pageSize: 5 }}
-              locale={{ emptyText: "No room usage data." }}
-              scroll={{ x: 480 }}
-            />
-          </Card>
+          <CustomTable
+            title="Room Utilization"
+            loading={isLoading}
+            rowKey="roomId"
+            dataSource={roomUsage}
+            columns={roomColumns}
+            pagination={{ pageSize: 5 }}
+            locale={{ emptyText: "No room usage data." }}
+            scroll={{ x: 480 }}
+          />
         </Col>
         <Col xs={24} lg={12}>
           <Card title="Booking Status Summary">

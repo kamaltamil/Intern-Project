@@ -34,6 +34,7 @@ import PermissionGate from "../components/PermissionGate";
 import { usePermission } from "../hooks/usePermission";
 import { fetchRoles, createRole, updateRole, deleteRole } from "../api/queries";
 import { ROLE_COLORS } from "../constants/roleColors";
+import CustomTable from "../components/CustomTable";
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -438,14 +439,12 @@ function RoleManagementPage() {
         </PermissionGate>
       </div>
 
-      <Card>
-        <Table
-          rowKey="_id"
-          columns={columns}
-          dataSource={roles}
-          pagination={{ pageSize: 8 }}
-        />
-      </Card>
+      <CustomTable
+        rowKey="_id"
+        columns={columns}
+        dataSource={roles}
+        pagination={{ pageSize: 8 }}
+      />
 
       <Modal
         title={
