@@ -6,7 +6,7 @@ const bookingSchema = new mongoose.Schema({
         ref: 'Room',
         required: true
     },
-    user: { 
+    user: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
         required: true
@@ -28,9 +28,17 @@ const bookingSchema = new mongoose.Schema({
     bookingStatus: {
         type: String,
         required: [true, "Booking status is required"],
-        enum: ["Payment Pending", "Booked", "CheckedIn", "CheckedOut", "Cancelled"],
-        default: "Payment Pending"
+        enum: [
+            "Pending Approval",
+            "Rejected",
+            "Payment Pending",
+            "Booked",
+            "CheckedIn",
+            "CheckedOut",
+            "Cancelled"
+        ],
+        default: "Pending Approval"
     }
-})
+});
 
 module.exports = mongoose.model("Booking", bookingSchema);
