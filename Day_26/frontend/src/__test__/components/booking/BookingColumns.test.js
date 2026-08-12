@@ -16,7 +16,7 @@ test("builds member columns and renders values", () => {
   render(<>{columns[0].render(booking.room)}</>);
   expect(screen.getByText("#101")).toBeInTheDocument();
   render(<>{columns[3].render(null, booking)}</>);
-  expect(screen.getByText("2 nights")).toBeInTheDocument();
+  expect(screen.getByText("2 days")).toBeInTheDocument();
   render(<>{columns[4].render(null, booking)}</>);
   expect(screen.getByText("₹200")).toBeInTheDocument();
   render(<>{columns[5].render("Booked")}</>);
