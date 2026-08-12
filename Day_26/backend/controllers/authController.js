@@ -3,56 +3,27 @@ const {
   loginUser,
   refreshAccessToken,
   getProfile,
+  updateOwnProfile,
 } = require("../services/authService");
 
 const User = require("../models/user");
 
-/**
- * Register (public signup)
- *
- * Assigns the default role from DB.
- */
 const register = async (req, res) => {
   try {
     const user = await registerUser(req.body);
-
-    return res.status(201).json({
-      message: "User registered successfully",
-      user,
-    });
+    return res.status(201).json({ message: "User registered successfully", user });
   } catch (error) {
-    const statusCode = error.statusCode || 500;
-
-    return res.status(statusCode).json({
-      message: error.message || "Error registering user",
-    });
+    return res.status(error.statusCode || 500).json({ message: error.message || "Error registering user" });
   }
 };
 
-/**
- * Login
- *
- * Response:
- * {
- *   user,
- *   token,
- *   refreshToken,
- *   role,
- *   permissions
- * }
- */
 const login = async (req, res) => {
   try {
     const { identifier, password } = req.body;
-
     if (!identifier || !password) {
-      return res.status(400).json({
-        message: "Identifier and password are required",
-      });
+      return res.status(400).json({ message: "Identifier and password are required" });
     }
-
     const result = await loginUser(identifier, password);
-
     return res.status(200).json({
       message: "Login successful",
       user: result.user,
@@ -62,37 +33,15 @@ const login = async (req, res) => {
       permissions: result.permissions || [],
     });
   } catch (error) {
-    const statusCode = error.statusCode || 500;
-
-    return res.status(statusCode).json({
-      message: error.message || "Login failed",
-    });
+    return res.status(error.statusCode || 500).json({ message: error.message || "Login failed" });
   }
 };
 
-/**
- * Refresh access token
- *
- * Response:
- * {
- *   token,
- *   refreshToken,
- *   role,
- *   permissions
- * }
- */
 const refresh = async (req, res) => {
   try {
     const { refreshToken } = req.body;
-
-    if (!refreshToken) {
-      return res.status(400).json({
-        message: "Refresh token is required",
-      });
-    }
-
+    if (!refreshToken) return res.status(400).json({ message: "Refresh token is required" });
     const result = await refreshAccessToken(refreshToken);
-
     return res.status(200).json({
       message: "Access token refreshed successfully",
       token: result.token,
@@ -101,84 +50,51 @@ const refresh = async (req, res) => {
       permissions: result.permissions || [],
     });
   } catch (error) {
-    const statusCode = error.statusCode || 401;
-
-    return res.status(statusCode).json({
-      message: error.message || "Invalid refresh token",
-    });
+    return res.status(error.statusCode || 401).json({ message: error.message || "Invalid refresh token" });
   }
 };
 
-/**
- * Get logged-in user's profile
- *
- * Response:
- * {
- *   user,
- *   role,
- *   permissions
- * }
- */
 const profile = async (req, res) => {
   try {
     const userId = req.user?._id;
-
-    if (!userId) {
-      return res.status(401).json({
-        message: "Unauthorized",
-      });
-    }
-
+    if (!userId) return res.status(401).json({ message: "Unauthorized" });
     const result = await getProfile(userId);
+    if (!result) return res.status(404).json({ message: "User not found" });
+    return res.status(200).json({ user: result.user, role: result.role, permissions: result.permissions || [] });
+  } catch (error) {
+    return res.status(500).json({ message: error.message || "Error fetching profile" });
+  }
+};
 
-    if (!result) {
-      return res.status(404).json({
-        message: "User not found",
-      });
-    }
+const updateProfile = async (req, res) => {
+  try {
+    const userId = req.user?._id;
+    if (!userId) return res.status(401).json({ message: "Unauthorized" });
+
+    const updateData = { ...req.body };
+    if (req.file) updateData.profileImage = `/uploads/profile/${req.file.filename}`;
+
+    const result = await updateOwnProfile(userId, updateData);
 
     return res.status(200).json({
+      message: "Profile updated successfully",
       user: result.user,
       role: result.role,
       permissions: result.permissions || [],
     });
   } catch (error) {
-    return res.status(500).json({
-      message: error.message || "Error fetching profile",
-    });
+    return res.status(error.statusCode || 500).json({ message: error.message || "Error updating profile" });
   }
 };
 
-/**
- * Logout
- *
- * Clears the stored refresh token for the authenticated user.
- * Client must discard their tokens after this call.
- */
 const logout = async (req, res) => {
   try {
     const userId = req.user?._id;
-
-    if (userId) {
-      await User.findByIdAndUpdate(userId, {
-        refreshToken: null,
-      });
-    }
-
-    return res.status(200).json({
-      message: "Logged out successfully",
-    });
+    if (userId) await User.findByIdAndUpdate(userId, { refreshToken: null });
+    return res.status(200).json({ message: "Logged out successfully" });
   } catch (error) {
-    return res.status(500).json({
-      message: error.message || "Error logging out",
-    });
+    return res.status(500).json({ message: error.message || "Error logging out" });
   }
 };
 
-module.exports = {
-  register,
-  login,
-  refresh,
-  profile,
-  logout,
-};
+module.exports = { register, login, refresh, profile, updateProfile, logout };
