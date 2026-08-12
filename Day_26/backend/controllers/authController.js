@@ -6,11 +6,30 @@ const {
   updateOwnProfile,
 } = require("../services/authService");
 
+const { verifyRecaptcha } = require("../services/recaptchaService");
 const User = require("../models/user");
+
+const validateRecaptcha = async (req, token) => {
+  if (!token) {
+    const error = new Error("Please complete the reCAPTCHA verification");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const valid = await verifyRecaptcha(token, req.ip);
+  if (!valid) {
+    const error = new Error("reCAPTCHA verification failed. Please try again");
+    error.statusCode = 400;
+    throw error;
+  }
+};
 
 const register = async (req, res) => {
   try {
-    const user = await registerUser(req.body);
+    const { recaptchaToken, ...userData } = req.body;
+    await validateRecaptcha(req, recaptchaToken);
+
+    const user = await registerUser(userData);
     return res.status(201).json({ message: "User registered successfully", user });
   } catch (error) {
     return res.status(error.statusCode || 500).json({ message: error.message || "Error registering user" });
@@ -19,10 +38,13 @@ const register = async (req, res) => {
 
 const login = async (req, res) => {
   try {
-    const { identifier, password } = req.body;
+    const { identifier, password, recaptchaToken } = req.body;
     if (!identifier || !password) {
       return res.status(400).json({ message: "Identifier and password are required" });
     }
+
+    await validateRecaptcha(req, recaptchaToken);
+
     const result = await loginUser(identifier, password);
     return res.status(200).json({
       message: "Login successful",
