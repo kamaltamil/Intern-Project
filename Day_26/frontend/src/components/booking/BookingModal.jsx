@@ -1,5 +1,5 @@
 import React from "react";
-import { Modal, Form, Tag, Space } from "antd";
+import { Modal, Form, Tag, Space, message } from "antd";
 import { HomeOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 
@@ -22,14 +22,49 @@ const BookingModal = ({
   const selectedDateRange = form.getFieldValue("dateRange");
 
   const handleSubmit = async () => {
-    const values = await form.validateFields();
-    const [startDate, endDate] = values.dateRange;
+    try {
+      const values = await form.validateFields();
+      const [startDate, endDate] = values.dateRange || [];
 
-    onSubmit({
-      roomId: values.roomId,
-      startDate: startDate.toISOString(),
-      endDate: endDate.toISOString(),
-    });
+      if (!startDate || !endDate) {
+        form.setFields([
+          {
+            name: "dateRange",
+            errors: ["Please select check-in and check-out dates before confirming the booking."],
+          },
+        ]);
+        return;
+      }
+
+      if (endDate.isBefore(startDate, "day")) {
+        form.setFields([
+          {
+            name: "dateRange",
+            errors: ["Check-out date cannot be before check-in date."],
+          },
+        ]);
+        return;
+      }
+
+      onSubmit({
+        roomId: values.roomId,
+        startDate: startDate.toISOString(),
+        endDate: endDate.toISOString(),
+      });
+    } catch (error) {
+      if (error?.errorFields) {
+        return;
+      }
+
+      const errorMessage =
+        error?.response?.data?.message ||
+        error?.message ||
+        "Unable to submit the booking. Please try again.";
+
+      message.error(
+        typeof errorMessage === "string" ? errorMessage : "Unable to submit the booking. Please try again.",
+      );
+    }
   };
 
   const bookingFields = [
@@ -60,14 +95,27 @@ const BookingModal = ({
       name: "dateRange",
       label: "Stay Duration",
       rules: [
-        { required: true, message: "Select dates" },
+        {
+          required: true,
+          message: "Please select check-in and check-out dates",
+        },
         {
           validator(_, value) {
-            if (!value) return Promise.resolve();
+            if (!value || value.length !== 2 || !value[0] || !value[1]) {
+              return Promise.resolve();
+            }
+
             const [start, end] = value;
+            if (end.isBefore(start, "day")) {
+              return Promise.reject(
+                new Error("Check-out date cannot be before check-in date."),
+              );
+            }
+
             if (end.diff(start, "day") < 1) {
               return Promise.reject(new Error("Minimum stay is 1 day"));
             }
+
             return Promise.resolve();
           },
         },
