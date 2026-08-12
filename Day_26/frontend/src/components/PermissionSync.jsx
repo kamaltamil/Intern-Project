@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { useLocation } from "react-router-dom";
 
 import { fetchMe } from "../api/queries";
-import { updateUserProfile } from "../store/slices/authSlice";
+import { setRolePermissions } from "../store/slices/authSlice";
 
 function PermissionSync() {
   const dispatch = useDispatch();
@@ -18,11 +18,10 @@ function PermissionSync() {
     const syncPermissions = async () => {
       try {
         const data = await fetchMe();
-        if (cancelled || !data?.user) return;
+        if (cancelled || !data?.role) return;
 
         dispatch(
-          updateUserProfile({
-            user: data.user,
+          setRolePermissions({
             role: data.role,
             permissions: data.permissions || [],
           }),
@@ -33,7 +32,6 @@ function PermissionSync() {
     };
 
     syncPermissions();
-
     const intervalId = window.setInterval(syncPermissions, 15000);
 
     return () => {
