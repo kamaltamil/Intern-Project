@@ -3,37 +3,58 @@ const Booking = require("../models/booking");
 const User = require("../models/user");
 const Role = require("../models/role");
 
+const createServiceError = (message, statusCode) => {
+  const error = new Error(message);
+  error.statusCode = statusCode;
+  return error;
+};
+
+const getToday = () => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return today;
+};
+
 const varifyAndBookRoom = async ({ roomId, userId, startDate, endDate }) => {
   const start = new Date(startDate);
   const end = new Date(endDate);
+  const today = getToday();
 
-  if (start >= end) {
-    throw new Error("Invalid date range");
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
+    throw createServiceError("Invalid booking dates.", 400);
+  }
+
+  if (start < today || end < today) {
+    throw createServiceError("Booking dates cannot be in the past.", 400);
+  }
+
+  if (end <= start) {
+    throw createServiceError("End date must be after start date.", 400);
   }
 
   const room = await Room.findById(roomId);
   if (!room) {
-    throw new Error("Room not found");
+    throw createServiceError("Room not found", 404);
   }
 
-  const roomIsBooked = await Booking.findOne({
+  const conflictingBooking = await Booking.findOne({
     room: roomId,
-    bookingStatus: { $in: ["Booked", "CheckedIn"] },
+    bookingStatus: { $in: ["Pending Approval", "Booked", "CheckedIn"] },
     startDate: { $lt: end },
     endDate: { $gt: start },
   });
 
-  if (roomIsBooked) {
-    throw new Error("Room is already booked");
+  if (conflictingBooking) {
+    throw createServiceError("The room is unavailable.", 409);
   }
 
   const booking = await Booking.create({
     room: roomId,
     user: userId,
-    startDate: startDate,
-    endDate: endDate,
+    startDate: start,
+    endDate: end,
     roomStatus: "Occupied",
-    bookingStatus: "Payment Pending",
+    bookingStatus: "Pending Approval",
   });
 
   return await Booking.findById(booking._id)
@@ -47,7 +68,7 @@ const varifyAndBookRoom = async ({ roomId, userId, startDate, endDate }) => {
 
 const getAllBookings = async () => {
   try {
-    const bookings = await Booking.find()
+    return await Booking.find()
       .populate("room")
       .populate({
         path: "user",
@@ -55,8 +76,6 @@ const getAllBookings = async () => {
         populate: { path: "role" },
       })
       .sort({ createdAt: -1 });
-
-    return bookings;
   } catch (error) {
     throw new Error("Error fetching bookings: " + error.message);
   }
@@ -69,7 +88,7 @@ const getMemberBookings = async () => {
       ? await User.find({ role: memberRole._id }).distinct("_id")
       : [];
 
-    const bookings = await Booking.find({ user: { $in: memberIds } })
+    return await Booking.find({ user: { $in: memberIds } })
       .populate("room")
       .populate({
         path: "user",
@@ -77,8 +96,6 @@ const getMemberBookings = async () => {
         populate: { path: "role" },
       })
       .sort({ createdAt: -1 });
-
-    return bookings;
   } catch (error) {
     throw new Error("Error fetching bookings: " + error.message);
   }
@@ -86,7 +103,7 @@ const getMemberBookings = async () => {
 
 const getBookingsByUserId = async (userId) => {
   try {
-    const bookings = await Booking.find({ user: userId })
+    return await Booking.find({ user: userId })
       .populate("room")
       .populate({
         path: "user",
@@ -94,8 +111,6 @@ const getBookingsByUserId = async (userId) => {
         populate: { path: "role" },
       })
       .sort({ createdAt: -1 });
-
-    return bookings;
   } catch (error) {
     throw new Error("Error fetching bookings: " + error.message);
   }
@@ -121,8 +136,7 @@ const updateBooking = async (id, updateData) => {
 
 const deleteBooking = async (id) => {
   try {
-    const booking = await Booking.findByIdAndDelete(id);
-    return booking;
+    return await Booking.findByIdAndDelete(id);
   } catch (error) {
     throw new Error("Error deleting booking: " + error.message);
   }
