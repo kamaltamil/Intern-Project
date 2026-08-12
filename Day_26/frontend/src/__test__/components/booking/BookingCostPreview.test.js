@@ -5,7 +5,7 @@ import BookingCostPreview from "../../../components/booking/BookingCostPreview";
 
 test("renders room cost preview", () => {
   render(<BookingCostPreview room={{price:200}} dateRange={[dayjs("2026-08-10"), dayjs("2026-08-13")]} />);
-  expect(screen.getByText("₹200/night")).toBeInTheDocument();
+  expect(screen.getByText("₹200/day")).toBeInTheDocument();
   expect(screen.getByText("3")).toBeInTheDocument();
   expect(screen.getByText("₹600")).toBeInTheDocument();
 });
