@@ -71,6 +71,10 @@ export const createBooking = async (payload) => {
   const response = await api.post("/booking/new", payload);
   return response.data || {};
 };
+export const updateBooking = async ({ id, payload }) => {
+  const response = await api.patch(`/booking/${id}`, payload);
+  return response.data?.booking || response.data || {};
+};
 
 export const fetchRooms = async () => {
   const response = await api.get("/rooms");
