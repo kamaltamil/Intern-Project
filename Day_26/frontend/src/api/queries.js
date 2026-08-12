@@ -122,3 +122,8 @@ export const fetchReports = async () => {
   const response = await api.get("/reports");
   return response.data?.report || {};
 };
+
+export const subscribeToNewsletter = async (email) => {
+  const response = await api.post("/subscriptions", { email });
+  return response.data || {};
+};
