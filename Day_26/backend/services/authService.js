@@ -344,11 +344,95 @@ const getProfile = async (userId) => {
   };
 };
 
+/**
+ * Update only the authenticated user's own profile.
+ *
+ * This intentionally does not use users.update/managed-user rules.
+ * Authorization is provided by the profile.update route middleware and
+ * the target user is always req.user._id.
+ */
+const updateOwnProfile = async (userId, payload) => {
+  const user = await User.findById(userId);
+
+  if (!user) {
+    const error = new Error("User not found");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  if (payload.name !== undefined) {
+    const name = String(payload.name).trim();
+    if (!name) {
+      const error = new Error("Name is required");
+      error.statusCode = 400;
+      throw error;
+    }
+    user.name = name;
+  }
+
+  if (payload.email !== undefined) {
+    const email = String(payload.email).trim().toLowerCase();
+    if (!email) {
+      const error = new Error("Email is required");
+      error.statusCode = 400;
+      throw error;
+    }
+
+    const existing = await User.findOne({
+      email,
+      _id: { $ne: userId },
+    });
+
+    if (existing) {
+      const error = new Error("Email already exists");
+      error.statusCode = 409;
+      throw error;
+    }
+
+    user.email = email;
+  }
+
+  if (payload.username !== undefined) {
+    const username = String(payload.username).trim().toLowerCase();
+    if (!username) {
+      const error = new Error("Username is required");
+      error.statusCode = 400;
+      throw error;
+    }
+
+    const existing = await User.findOne({
+      username,
+      _id: { $ne: userId },
+    });
+
+    if (existing) {
+      const error = new Error("Username already exists");
+      error.statusCode = 409;
+      throw error;
+    }
+
+    user.username = username;
+  }
+
+  if (payload.password && String(payload.password).trim()) {
+    user.password = await bcrypt.hash(String(payload.password), 10);
+  }
+
+  if (payload.profileImage !== undefined) {
+    user.profileImage = payload.profileImage;
+  }
+
+  await user.save();
+
+  return await getProfile(user._id);
+};
+
 module.exports = {
   registerUser,
   loginUser,
   refreshAccessToken,
   getProfile,
+  updateOwnProfile,
   createAccessToken,
   createRefreshToken,
   generateAndStoreTokens,
