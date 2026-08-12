@@ -16,6 +16,10 @@ export const fetchMe = async () => {
   const response = await api.get("/users/profile");
   return response.data || {};
 };
+export const updateProfile = async (payload) => {
+  const response = await api.patch("/users/profile", payload);
+  return response.data || {};
+};
 export const refreshToken = async (payload) => {
   const response = await api.post("/users/refresh", payload);
   return response.data || {};
