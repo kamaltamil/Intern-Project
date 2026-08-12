@@ -50,7 +50,7 @@ const BookingModal = ({
           <Space>
             <Tag color="blue">{room.type}</Tag>
             <span>Room #{room.roomNumber}</span>
-            <span style={{ color: "#999" }}>₹{room.price}/night</span>
+            <span style={{ color: "#999" }}>₹{room.price}/day</span>
           </Space>
         ),
       })),
@@ -66,7 +66,7 @@ const BookingModal = ({
             if (!value) return Promise.resolve();
             const [start, end] = value;
             if (end.diff(start, "day") < 1) {
-              return Promise.reject(new Error("Minimum stay is 1 night"));
+              return Promise.reject(new Error("Minimum stay is 1 day"));
             }
             return Promise.resolve();
           },
