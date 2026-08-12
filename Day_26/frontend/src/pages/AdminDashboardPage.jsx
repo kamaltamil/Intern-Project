@@ -58,7 +58,7 @@ function AdminDashboardPage() {
         </Row>
 
         <LandingBanner
-          image="/landing/admin-hero.jpg"
+          image="/dashboard/admin-hero.jpg"
           alt="Hotel lobby"
           title="HotelPro Admin Console"
           subtitle="Oversee rooms, bookings, staff roles, and revenue — all in one place."

@@ -61,7 +61,7 @@ function ManagerDashboardPage() {
         </Row>
 
         <LandingBanner
-          image="/landing/manager-hero.jpg"
+          image="/dashboard/manager-hero.jpg"
           alt="Hotel reception"
           title="HotelPro Manager Console"
           subtitle="Review bookings, track room availability, and manage your team's day-to-day."

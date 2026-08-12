@@ -42,7 +42,7 @@ function MemberDashboardPage() {
         </Row>
 
         <LandingBanner
-          image="/landing/member-hero.jpg"
+          image="/dashboard/member-hero.jpg"
           alt="Hotel room"
           title="Welcome to HotelPro"
           subtitle="Book your next stay and keep track of your reservations, all in one place."
