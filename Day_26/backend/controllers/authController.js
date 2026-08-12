@@ -66,6 +66,23 @@ const profile = async (req, res) => {
   }
 };
 
+const permissions = async (req, res) => {
+  try {
+    const userId = req.user?._id;
+    if (!userId) return res.status(401).json({ message: "Unauthorized" });
+
+    const result = await getProfile(userId);
+    if (!result) return res.status(404).json({ message: "User not found" });
+
+    return res.status(200).json({
+      role: result.role,
+      permissions: result.permissions || [],
+    });
+  } catch (error) {
+    return res.status(500).json({ message: error.message || "Error fetching permissions" });
+  }
+};
+
 const updateProfile = async (req, res) => {
   try {
     const userId = req.user?._id;
@@ -97,4 +114,4 @@ const logout = async (req, res) => {
   }
 };
 
-module.exports = { register, login, refresh, profile, updateProfile, logout };
+module.exports = { register, login, refresh, profile, permissions, updateProfile, logout };
