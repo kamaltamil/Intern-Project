@@ -63,7 +63,7 @@ const roomFormFields = [
   },
   {
     type: "number",
-    label: "Price Per Night",
+    label: "Price Per Day",
     name: "price",
     placeholder: "Enter price",
     props: { min: 0, precision: 2 },
@@ -186,7 +186,7 @@ function RoomManagementPage() {
       },
     },
     {
-      title: "Price / Night",
+      title: "Price / Day",
       dataIndex: "price",
       key: "price",
       render: (value) => <Text strong>₹{Number(value).toLocaleString("en-IN")}</Text>,
