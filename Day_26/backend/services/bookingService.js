@@ -2,6 +2,7 @@ const Room = require("../models/rooms");
 const Booking = require("../models/booking");
 const User = require("../models/user");
 const Role = require("../models/role");
+const { sendBookingNotification } = require("./emailService");
 
 const createServiceError = (message, statusCode) => {
   const error = new Error(message);
@@ -13,6 +14,12 @@ const getToday = () => {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   return today;
+};
+
+const sendBookingEmail = (type, booking) => {
+  sendBookingNotification(type, booking).catch((error) => {
+    console.error(`Booking email failed (${type}):`, error.message);
+  });
 };
 
 const varifyAndBookRoom = async ({ roomId, userId, startDate, endDate }) => {
@@ -57,13 +64,17 @@ const varifyAndBookRoom = async ({ roomId, userId, startDate, endDate }) => {
     bookingStatus: "Pending Approval",
   });
 
-  return await Booking.findById(booking._id)
+  const populatedBooking = await Booking.findById(booking._id)
     .populate("room")
     .populate({
       path: "user",
       select: "-password -refreshToken",
       populate: { path: "role" },
     });
+
+  sendBookingEmail("created", populatedBooking);
+
+  return populatedBooking;
 };
 
 const getAllBookings = async () => {
@@ -134,6 +145,8 @@ const updateBooking = async (id, updateData) => {
       throw createServiceError("Booking not found", 404);
     }
 
+    let statusChanged = false;
+
     if (updateData.bookingStatus) {
       const currentStatus = booking.bookingStatus;
       const nextStatus = updateData.bookingStatus;
@@ -147,6 +160,7 @@ const updateBooking = async (id, updateData) => {
       }
 
       booking.bookingStatus = nextStatus;
+      statusChanged = currentStatus !== nextStatus;
 
       if (["Rejected", "Cancelled", "CheckedOut"].includes(nextStatus)) {
         booking.roomStatus = "Available";
@@ -168,13 +182,19 @@ const updateBooking = async (id, updateData) => {
 
     await booking.save();
 
-    return await Booking.findById(booking._id)
+    const updatedBooking = await Booking.findById(booking._id)
       .populate("room")
       .populate({
         path: "user",
         select: "-password -refreshToken",
         populate: { path: "role" },
       });
+
+    if (statusChanged) {
+      sendBookingEmail("status", updatedBooking);
+    }
+
+    return updatedBooking;
   } catch (error) {
     if (error.statusCode) throw error;
     throw new Error("Error updating booking: " + error.message);
