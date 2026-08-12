@@ -4,6 +4,7 @@ import { Outlet } from "react-router-dom";
 
 import RoleSidebar from "./RoleSidebar";
 import TopHeader from "./TopHeader";
+import Breadcrumb from "./common/Breadcrumb";
 
 const { Content } = Layout;
 
@@ -50,6 +51,7 @@ function DashboardLayout() {
             minHeight: 0,
           }}
         >
+          <Breadcrumb />
           <Outlet />
         </Content>
       </Layout>
