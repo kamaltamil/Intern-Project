@@ -119,7 +119,11 @@ function ReportsPage() {
     {
       title: "Status",
       dataIndex: "bookingStatus",
-      render: (status) => <Tag color={getStatusColor(status)}>{STATUS_LABELS[status] || status}</Tag>,
+      render: (status) => (
+        <Tag color={getStatusColor(status)}>
+          {STATUS_LABELS[status] || status}
+        </Tag>
+      ),
     },
     {
       title: "Change Status",
@@ -204,8 +208,8 @@ function ReportsPage() {
           <Card className="h-full">
             <Statistic
               loading={isLoading}
-              title="Total Users"
-              value={summary.totalUsers || 0}
+              title="Active Users"
+              value={summary.activeUsers || 0}
               prefix={<TeamOutlined />}
             />
           </Card>
@@ -218,7 +222,9 @@ function ReportsPage() {
               value={summary.revenue || 0}
               prefix={<DollarOutlined />}
               precision={0}
-              formatter={(value) => `₹${Number(value).toLocaleString("en-IN")}`}
+              formatter={(value) =>
+                `₹${Number(value).toLocaleString("en-IN")}`
+              }
             />
           </Card>
         </Col>
@@ -237,7 +243,10 @@ function ReportsPage() {
                   <div
                     className="w-8 rounded-t-lg bg-[#C76A34] transition-all"
                     style={{
-                      height: `${Math.max((item.bookings / maxMonthlyBookings) * 75, item.bookings ? 8 : 2)}%`,
+                      height: `${Math.max(
+                        (item.bookings / maxMonthlyBookings) * 75,
+                        item.bookings ? 8 : 2,
+                      )}%`,
                     }}
                   />
                   <Text type="secondary" className="text-xs">
@@ -269,7 +278,9 @@ function ReportsPage() {
                       percent={percentage}
                       showInfo={false}
                       size="small"
-                      status={item.status === "Cancelled" ? "exception" : "normal"}
+                      status={
+                        item.status === "Cancelled" ? "exception" : "normal"
+                      }
                     />
                   </div>
                 );
@@ -282,22 +293,35 @@ function ReportsPage() {
       <Row gutter={[16, 16]}>
         <Col xs={24} sm={12} lg={6}>
           <Card>
-            <Statistic title="Completed" value={summary.completedBookings || 0} prefix={<HomeOutlined />} />
+            <Statistic
+              title="Completed"
+              value={summary.completedBookings || 0}
+              prefix={<HomeOutlined />}
+            />
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={6}>
           <Card>
-            <Statistic title="Cancelled" value={summary.cancelledBookings || 0} prefix={<CloseCircleOutlined />} />
+            <Statistic
+              title="Cancelled"
+              value={summary.cancelledBookings || 0}
+              prefix={<CloseCircleOutlined />}
+            />
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={6}>
           <Card>
-            <Statistic title="Available Rooms" value={summary.totalRooms || 0} />
+            <Statistic title="Total Rooms" value={summary.totalRooms || 0} />
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={6}>
           <Card>
-            <Statistic title="Avg. Booking Value" value={summary.averageBookingValue || 0} prefix="₹" precision={0} />
+            <Statistic
+              title="Avg. Booking Value"
+              value={summary.averageBookingValue || 0}
+              prefix="₹"
+              precision={0}
+            />
           </Card>
         </Col>
       </Row>
