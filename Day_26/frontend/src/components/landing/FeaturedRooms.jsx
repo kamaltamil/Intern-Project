@@ -161,7 +161,7 @@ function FeaturedRooms() {
                       color: "#8B8179",
                     }}
                   >
-                    / night
+                    / day
                   </Text>
                 </div>
               </div>
