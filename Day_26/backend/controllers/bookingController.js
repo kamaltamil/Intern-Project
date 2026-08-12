@@ -1,4 +1,5 @@
 const {
+  getAvailableRoomsForBooking,
   varifyAndBookRoom,
   getAllBookings,
   getMemberBookings,
@@ -13,6 +14,22 @@ const getPermission = (permissions, resource) =>
   permissions.find(
     (permission) => permission.resource?.toLowerCase() === resource,
   )?.action || {};
+
+const getAvailableRooms = async (req, res) => {
+  try {
+    const { startDate, endDate } = req.query;
+    const rooms = await getAvailableRoomsForBooking({ startDate, endDate });
+
+    return res.status(200).json({
+      message: "Available rooms fetched successfully",
+      rooms,
+    });
+  } catch (error) {
+    return res.status(error.statusCode || 500).json({
+      message: error.message || "Error fetching available rooms",
+    });
+  }
+};
 
 const bookRoom = async (req, res) => {
   try {
@@ -141,6 +158,7 @@ const deleteBookingHandler = async (req, res) => {
 };
 
 module.exports = {
+  getAvailableRooms,
   bookRoom,
   getBookings,
   updateBookingHandler,
