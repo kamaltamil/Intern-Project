@@ -1,12 +1,51 @@
 const Booking = require("../models/booking");
+const User = require("../models/user");
+const Room = require("../models/rooms");
 
-const ACTIVE_STATUSES = ["Pending Approval", "Payment Pending", "Booked", "CheckedIn"];
+const ACTIVE_STATUSES = [
+  "Pending Approval",
+  "Payment Pending",
+  "Booked",
+  "CheckedIn",
+];
+
+const REVENUE_STATUSES = ["Booked", "CheckedIn", "CheckedOut"];
+
+const getMonthKey = (date) => {
+  const value = new Date(date);
+  return `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, "0")}`;
+};
+
+const getMonthLabel = (date) =>
+  new Intl.DateTimeFormat("en", { month: "short" }).format(date);
+
+const getLastSixMonths = () => {
+  const months = [];
+  const now = new Date();
+
+  for (let index = 5; index >= 0; index -= 1) {
+    const date = new Date(now.getFullYear(), now.getMonth() - index, 1);
+    months.push({
+      key: getMonthKey(date),
+      label: getMonthLabel(date),
+      bookings: 0,
+      revenue: 0,
+    });
+  }
+
+  return months;
+};
 
 const getReports = async () => {
-  const bookings = await Booking.find()
-    .populate("room", "roomNumber type price")
-    .populate("user", "name username email")
-    .sort({ createdAt: -1 });
+  const [bookings, totalUsers, activeUsers, totalRooms] = await Promise.all([
+    Booking.find()
+      .populate("room", "roomNumber type price")
+      .populate("user", "name username email")
+      .sort({ createdAt: -1 }),
+    User.countDocuments(),
+    User.countDocuments({ isActive: true }),
+    Room.countDocuments(),
+  ]);
 
   const statusCounts = {
     "Pending Approval": 0,
@@ -20,6 +59,10 @@ const getReports = async () => {
 
   let revenue = 0;
   const roomUsage = new Map();
+  const monthlyStats = getLastSixMonths();
+  const monthlyStatsMap = new Map(
+    monthlyStats.map((item) => [item.key, item]),
+  );
 
   for (const booking of bookings) {
     statusCounts[booking.bookingStatus] =
@@ -33,8 +76,16 @@ const getReports = async () => {
       ),
     );
 
-    if (["Booked", "CheckedIn", "CheckedOut"].includes(booking.bookingStatus)) {
-      revenue += nights * Number(booking.room?.price || 0);
+    const bookingRevenue = REVENUE_STATUSES.includes(booking.bookingStatus)
+      ? nights * Number(booking.room?.price || 0)
+      : 0;
+
+    revenue += bookingRevenue;
+
+    const month = monthlyStatsMap.get(getMonthKey(booking.createdAt));
+    if (month) {
+      month.bookings += 1;
+      month.revenue += bookingRevenue;
     }
 
     if (booking.room?._id) {
@@ -46,6 +97,7 @@ const getReports = async () => {
         bookings: 0,
         nights: 0,
       };
+
       current.bookings += 1;
       if (ACTIVE_STATUSES.includes(booking.bookingStatus)) {
         current.nights += nights;
@@ -64,18 +116,25 @@ const getReports = async () => {
     bookingStatus: booking.bookingStatus,
   }));
 
+  const bookingValue = bookings.length ? revenue / bookings.length : 0;
+
   return {
     summary: {
       totalBookings: bookings.length,
-      activeBookings: bookings.filter((b) =>
-        ACTIVE_STATUSES.includes(b.bookingStatus),
+      activeBookings: bookings.filter((booking) =>
+        ACTIVE_STATUSES.includes(booking.bookingStatus),
       ).length,
       completedBookings: statusCounts.CheckedOut,
       cancelledBookings: statusCounts.Cancelled,
       rejectedBookings: statusCounts.Rejected,
       revenue,
+      averageBookingValue: bookingValue,
+      totalUsers,
+      activeUsers,
+      totalRooms,
     },
     statusCounts,
+    monthlyStats,
     roomUsage: Array.from(roomUsage.values()).sort(
       (a, b) => b.nights - a.nights,
     ),
