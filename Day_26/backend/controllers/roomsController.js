@@ -1,54 +1,32 @@
 const {
   createNewRoom,
   listRooms,
+  updateExistingRoom,
   deleteExistingRoom,
 } = require("../services/roomService");
 
-/* -------------------------------------------------------------------------- */
-/*                              Create Room                                   */
-/* -------------------------------------------------------------------------- */
-
 const createRoom = async (req, res) => {
   try {
-    const {
-      roomNumber,
-      type,
-      price,
-    } = req.body;
-
-    const result =
-      await createNewRoom({
-        roomNumber,
-        type,
-        price,
-      });
+    const { roomNumber, type, price } = req.body;
+    const result = await createNewRoom({ roomNumber, type, price });
 
     return res.status(201).json({
-      message:
-        "Room created successfully",
+      message: "Room created successfully",
       result,
     });
   } catch (error) {
-    return res.status(
-      error.statusCode || 500
-    ).json({
+    return res.status(error.statusCode || 500).json({
       error: error.message,
     });
   }
 };
 
-/* -------------------------------------------------------------------------- */
-/*                              Get Rooms                                     */
-/* -------------------------------------------------------------------------- */
-
 const getAllRooms = async (req, res) => {
   try {
-    const rooms =
-      await listRooms();
+    const rooms = await listRooms();
 
     return res.status(200).json({
-      message:
-        "Rooms fetched successfully",
+      message: "Rooms fetched successfully",
       rooms,
     });
   } catch (error) {
@@ -58,35 +36,40 @@ const getAllRooms = async (req, res) => {
   }
 };
 
-/* -------------------------------------------------------------------------- */
-/*                              Delete Room                                   */
-/* -------------------------------------------------------------------------- */
-
-const deleteRoom = async (req, res) => {
+const updateRoom = async (req, res) => {
   try {
     const { id } = req.params;
-
-    await deleteExistingRoom(id);
+    const room = await updateExistingRoom(id, req.body);
 
     return res.status(200).json({
-      message:
-        "Room deleted successfully",
+      message: "Room updated successfully",
+      room,
     });
   } catch (error) {
-    return res.status(
-      error.statusCode || 500
-    ).json({
+    return res.status(error.statusCode || 500).json({
       error: error.message,
     });
   }
 };
 
-/* -------------------------------------------------------------------------- */
-/*                              Exports                                       */
-/* -------------------------------------------------------------------------- */
+const deleteRoom = async (req, res) => {
+  try {
+    const { id } = req.params;
+    await deleteExistingRoom(id);
+
+    return res.status(200).json({
+      message: "Room deleted successfully",
+    });
+  } catch (error) {
+    return res.status(error.statusCode || 500).json({
+      error: error.message,
+    });
+  }
+};
 
 module.exports = {
   createRoom,
   getAllRooms,
+  updateRoom,
   deleteRoom,
 };
