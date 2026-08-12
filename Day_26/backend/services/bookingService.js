@@ -22,6 +22,37 @@ const sendBookingEmail = (type, booking) => {
   });
 };
 
+const getAvailableRoomsForBooking = async ({ startDate, endDate } = {}) => {
+  const query = {};
+
+  if (startDate && endDate) {
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+
+    if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
+      throw createServiceError("Invalid booking dates.", 400);
+    }
+
+    if (start < getToday() || end < getToday()) {
+      throw createServiceError("Booking dates cannot be in the past.", 400);
+    }
+
+    if (end <= start) {
+      throw createServiceError("End date must be after start date.", 400);
+    }
+
+    const bookedRoomIds = await Booking.find({
+      bookingStatus: { $in: ["Pending Approval", "Booked", "CheckedIn"] },
+      startDate: { $lt: end },
+      endDate: { $gt: start },
+    }).distinct("room");
+
+    query._id = { $nin: bookedRoomIds };
+  }
+
+  return Room.find(query).select("roomNumber type price").sort({ roomNumber: 1 });
+};
+
 const varifyAndBookRoom = async ({ roomId, userId, startDate, endDate }) => {
   const start = new Date(startDate);
   const end = new Date(endDate);
@@ -210,6 +241,7 @@ const deleteBooking = async (id) => {
 };
 
 module.exports = {
+  getAvailableRoomsForBooking,
   varifyAndBookRoom,
   getAllBookings,
   getMemberBookings,
