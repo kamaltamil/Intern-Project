@@ -1,6 +1,8 @@
 import dayjs from "dayjs";
 
 export const bookingStatusConfig = {
+  "Pending Approval": { color: "orange" },
+  Rejected: { color: "red" },
   "Payment Pending": { color: "gold" },
   Booked: { color: "blue" },
   CheckedIn: { color: "green" },
