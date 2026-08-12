@@ -84,7 +84,7 @@ function ApprovalPage() {
     {
       title: "Duration",
       render: (_, record) =>
-        `${getNights(record.startDate, record.endDate)} night(s)`,
+        `${getNights(record.startDate, record.endDate)} day(s)`,
     },
     { title: "Amount", render: (_, record) => `₹${getTotalCost(record)}` },
     {
