@@ -23,7 +23,7 @@ export const getBookingColumns = (showGuest, onView) => {
             <Space direction="vertical" size={0}>
               <span className="font-semibold">{room.roomNumber}</span>
               <Tag color={roomTypeColor[room.type]}>{room.type}</Tag>
-              <span className="text-xs text-gray-400">₹{room.price}/night</span>
+              <span className="text-xs text-gray-400">₹{room.price}/day</span>
             </Space>
           </Space>
         ) : (
