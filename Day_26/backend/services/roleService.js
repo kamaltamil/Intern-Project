@@ -1,122 +1,115 @@
-const Room = require("../models/rooms");
-const Booking = require("../models/booking");
+const Role = require("../models/role");
 
 /* -------------------------------------------------------------------------- */
-/*                              Create Room                                   */
+/*                              Create Role                                   */
 /* -------------------------------------------------------------------------- */
 
-const createNewRoom = async ({
-  roomNumber,
-  type,
-  price,
-}) => {
+const createRole = async (data) => {
   try {
-    const isRoomExist =
-      await Room.findOne({
-        roomNumber,
-      });
+    const { name, permissions = [] } = data;
 
-    if (isRoomExist) {
-      throw new Error(
-        "Room with this number already exists"
-      );
+    const existingRole = await Role.findOne({
+      name: name.trim(),
+    });
+
+    if (existingRole) {
+      throw new Error("Role already exists");
     }
 
-    const newRoom =
-      await Room.create({
-        roomNumber,
-        type,
-        price,
-      });
+    const role = await Role.create({
+      name: name.trim(),
+      permissions,
+    });
 
-    return newRoom;
+    return role;
+  } catch (error) {
+    throw new Error(error.message);
+  }
+};
+
+/* -------------------------------------------------------------------------- */
+/*                              Get All Roles                                 */
+/* -------------------------------------------------------------------------- */
+
+const getAllRoles = async () => {
+  try {
+    return await Role.find().sort({
+      createdAt: 1,
+    });
   } catch (error) {
     throw new Error(
-      `Validation error: ${error.message}`
+      `Error fetching roles: ${error.message}`
     );
   }
 };
 
 /* -------------------------------------------------------------------------- */
-/*                              List Rooms                                    */
+/*                              Get Role By ID                                */
 /* -------------------------------------------------------------------------- */
 
-const listRooms = async () => {
+const getRoleById = async (id) => {
   try {
-    const rooms =
-      await Room.find().sort({
-        roomNumber: 1,
-      });
-
-    return rooms;
+    return await Role.findById(id);
   } catch (error) {
     throw new Error(
-      `Error fetching rooms: ${error.message}`
+      `Error fetching role: ${error.message}`
     );
   }
 };
 
 /* -------------------------------------------------------------------------- */
-/*                              Delete Room                                   */
+/*                              Update Role                                   */
 /* -------------------------------------------------------------------------- */
 
-const deleteExistingRoom = async (id) => {
+const updateRole = async (id, data) => {
   try {
-    const room =
-      await Room.findById(id);
+    const role = await Role.findByIdAndUpdate(
+      id,
+      data,
+      {
+        new: true,
+        runValidators: true,
+      }
+    );
 
-    if (!room) {
-      const error = new Error(
-        "Room not found"
-      );
+    return role;
+  } catch (error) {
+    throw new Error(
+      `Error updating role: ${error.message}`
+    );
+  }
+};
 
+/* -------------------------------------------------------------------------- */
+/*                              Delete Role                                   */
+/* -------------------------------------------------------------------------- */
+
+const deleteRole = async (id) => {
+  try {
+    const role = await Role.findByIdAndDelete(id);
+
+    if (!role) {
+      const error = new Error("Role not found");
       error.statusCode = 404;
-
       throw error;
     }
 
-    /*
-     * Do not delete a room that already has
-     * booking records.
-     *
-     * This prevents existing booking documents
-     * from pointing to a deleted room.
-     */
-    const bookingCount =
-      await Booking.countDocuments({
-        room: id,
-      });
-
-    if (bookingCount > 0) {
-      const error = new Error(
-        "Cannot delete this room because booking records exist for this room."
-      );
-
-      error.statusCode = 409;
-
-      throw error;
-    }
-
-    await Room.findByIdAndDelete(id);
-
-    return room;
+    return role;
   } catch (error) {
     if (error.statusCode) {
       throw error;
     }
 
     throw new Error(
-      `Error deleting room: ${error.message}`
+      `Error deleting role: ${error.message}`
     );
   }
 };
 
-/* -------------------------------------------------------------------------- */
-/*                              Exports                                       */
-/* -------------------------------------------------------------------------- */
-
 module.exports = {
-  createNewRoom,
-  listRooms,
-  deleteExistingRoom,
+  createRole,
+  getAllRoles,
+  getRoleById,
+  updateRole,
+  deleteRole,
 };

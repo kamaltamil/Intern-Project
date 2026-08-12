@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const Room = require("../models/rooms");
+const Booking = require("../models/booking");
 
 /* -------------------------------------------------------------------------- */
 /*                              Create Room                                   */
@@ -48,7 +49,9 @@ const createNewRoom = async ({
 
 const listRooms = async () => {
   try {
-    const rooms = await Room.find();
+    const rooms = await Room.find().sort({
+      roomNumber: 1,
+    });
 
     return rooms;
   } catch (error) {
@@ -64,6 +67,8 @@ const listRooms = async () => {
 
 const deleteExistingRoom = async (roomId) => {
   try {
+    /* Validate MongoDB ObjectId */
+
     if (!mongoose.Types.ObjectId.isValid(roomId)) {
       const error = new Error(
         "Invalid room ID"
@@ -72,6 +77,8 @@ const deleteExistingRoom = async (roomId) => {
       error.statusCode = 400;
       throw error;
     }
+
+    /* Find room */
 
     const room = await Room.findById(roomId);
 
@@ -83,6 +90,26 @@ const deleteExistingRoom = async (roomId) => {
       error.statusCode = 404;
       throw error;
     }
+
+    /* -------------------------------------------------------------- */
+    /* Prevent deleting rooms that have booking records               */
+    /* -------------------------------------------------------------- */
+
+    const bookingCount =
+      await Booking.countDocuments({
+        room: roomId,
+      });
+
+    if (bookingCount > 0) {
+      const error = new Error(
+        "Cannot delete this room because booking records exist for this room."
+      );
+
+      error.statusCode = 409;
+      throw error;
+    }
+
+    /* Delete room */
 
     await Room.findByIdAndDelete(roomId);
 
