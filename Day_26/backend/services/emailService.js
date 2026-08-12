@@ -19,7 +19,15 @@ const getTransporter = () => {
     throw new Error("Email service is not configured");
   }
 
+  if (host === "smtp.example.com") {
+    throw new Error("EMAIL_HOST is still configured with the placeholder smtp.example.com");
+  }
+
   const port = Number(process.env.EMAIL_PORT || 587);
+
+  if (!Number.isInteger(port) || port <= 0) {
+    throw new Error("EMAIL_PORT must be a valid port number");
+  }
 
   return nodemailer.createTransport({
     host,
@@ -29,18 +37,29 @@ const getTransporter = () => {
   });
 };
 
+const verifyEmailConfiguration = async () => {
+  const transporter = getTransporter();
+  await transporter.verify();
+  return true;
+};
+
 const sendEmail = async ({ to, subject, text, html }) => {
   if (!to) throw new Error("Recipient email is required");
 
   const transporter = getTransporter();
-
-  return transporter.sendMail({
+  const result = await transporter.sendMail({
     from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
     to,
     subject,
     text,
     html,
   });
+
+  if (!result.accepted?.includes(to) || result.rejected?.includes(to)) {
+    throw new Error("SMTP server did not accept the recipient");
+  }
+
+  return result;
 };
 
 const formatDate = (date) =>
@@ -125,4 +144,5 @@ module.exports = {
   sendEmail,
   sendBookingNotification,
   sendSubscriptionConfirmation,
+  verifyEmailConfiguration,
 };
