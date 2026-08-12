@@ -19,7 +19,12 @@ router.post("/signup", register);
 router.post("/login", login);
 router.post("/refresh", refresh);
 
-router.get("/profile", authenticateToken, profile);
+router.get(
+  "/profile",
+  authenticateToken,
+  requirePermission("profile", "view"),
+  profile
+);
 
 router.patch(
   "/profile",
