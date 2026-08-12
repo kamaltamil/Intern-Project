@@ -2,14 +2,14 @@ const Booking = require("../models/booking");
 const User = require("../models/user");
 const Room = require("../models/rooms");
 
-const ACTIVE_STATUSES = [
+const ACTIVE_STATUSES = new Set([
   "Pending Approval",
   "Payment Pending",
   "Booked",
   "CheckedIn",
-];
+]);
 
-const REVENUE_STATUSES = ["Booked", "CheckedIn", "CheckedOut"];
+const REVENUE_STATUSES = new Set(["Booked", "CheckedIn", "CheckedOut"]);
 
 const getMonthKey = (date) => {
   const value = new Date(date);
@@ -76,7 +76,7 @@ const getReports = async () => {
       ),
     );
 
-    const bookingRevenue = REVENUE_STATUSES.includes(booking.bookingStatus)
+    const bookingRevenue = REVENUE_STATUSES.has(booking.bookingStatus)
       ? nights * Number(booking.room?.price || 0)
       : 0;
 
@@ -99,7 +99,7 @@ const getReports = async () => {
       };
 
       current.bookings += 1;
-      if (ACTIVE_STATUSES.includes(booking.bookingStatus)) {
+      if (ACTIVE_STATUSES.has(booking.bookingStatus)) {
         current.nights += nights;
       }
       roomUsage.set(key, current);
@@ -122,7 +122,7 @@ const getReports = async () => {
     summary: {
       totalBookings: bookings.length,
       activeBookings: bookings.filter((booking) =>
-        ACTIVE_STATUSES.includes(booking.bookingStatus),
+        ACTIVE_STATUSES.has(booking.bookingStatus),
       ).length,
       completedBookings: statusCounts.CheckedOut,
       cancelledBookings: statusCounts.Cancelled,
