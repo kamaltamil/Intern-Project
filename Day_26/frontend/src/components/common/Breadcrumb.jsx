@@ -39,48 +39,129 @@ const ROUTES = {
   },
 };
 
+const BreadcrumbItem = ({
+  item,
+  isLast,
+  isDark,
+}) => {
+  const textClass = isDark
+    ? "text-gray-200"
+    : "text-gray-700";
+
+  if (isLast) {
+    return (
+      <span
+        className={`whitespace-nowrap ${textClass}`}
+      >
+        {item.label}
+      </span>
+    );
+  }
+
+  return (
+    <Link
+      to={item.path}
+      className={`whitespace-nowrap text-sm ${
+        isDark
+          ? "text-gray-400 hover:text-white"
+          : "text-gray-500 hover:text-gray-900"
+      }`}
+    >
+      {item.label}
+    </Link>
+  );
+};
+
+function renderBreadcrumbItem(
+  item,
+  params,
+  routes,
+  isDark
+) {
+  const isLast =
+    routes.indexOf(item) === routes.length - 1;
+
+  return (
+    <BreadcrumbItem
+      item={item}
+      isLast={isLast}
+      isDark={isDark}
+    />
+  );
+}
+
 function Breadcrumb() {
   const location = useLocation();
-  const permissions = useSelector((state) => state.auth.permissions);
-  const currentRoute = ROUTES[location.pathname];
+
+  const { permissions, theme } = useSelector(
+    (state) => state.auth
+  );
+
+  const isDark = theme === "dark";
+
+  const currentRoute =
+    ROUTES[location.pathname];
 
   if (!currentRoute) {
     return null;
   }
 
-  if (!hasPermission(permissions, currentRoute.resource, "view")) {
+  if (
+    !hasPermission(
+      permissions,
+      currentRoute.resource,
+      "view"
+    )
+  ) {
     return null;
   }
 
   const items =
     location.pathname === "/dashboard"
-      ? [currentRoute]
-      : [ROUTES["/dashboard"], currentRoute];
+      ? [
+          {
+            ...currentRoute,
+            path: "/dashboard",
+          },
+        ]
+      : [
+          {
+            ...ROUTES["/dashboard"],
+            path: "/dashboard",
+          },
+          {
+            ...currentRoute,
+            path: location.pathname,
+          },
+        ];
 
   const visibleItems = items.filter((item) =>
-    hasPermission(permissions, item.resource, "view")
+    hasPermission(
+      permissions,
+      item.resource,
+      "view"
+    )
   );
 
   return (
-    <div className="mb-4 min-w-0 overflow-x-auto">
+    <div
+      className={`mb-4 min-w-0 overflow-x-auto ${
+        isDark
+          ? "text-gray-200"
+          : "text-gray-700"
+      }`}
+    >
       <AntBreadcrumb
+        separator="/"
         items={visibleItems}
-        itemRender={(item, params, routes) => {
-          const isLast = routes.indexOf(item) === routes.length - 1;
-          const path = Object.keys(ROUTES).find(
-            (routePath) => ROUTES[routePath] === item
-          );
-
-          if (isLast || !path) {
-            return <span className="whitespace-nowrap">{item.label}</span>;
-          }
-
-          return (
-            <Link to={path} className="whitespace-nowrap">
-              {item.label}
-            </Link>
-          );
-        }}
+        itemRender={(item, params, routes) =>
+          renderBreadcrumbItem(
+            item,
+            params,
+            routes,
+            isDark
+          )
+        }
       />
     </div>
   );

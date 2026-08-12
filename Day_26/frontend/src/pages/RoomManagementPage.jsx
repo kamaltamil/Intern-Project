@@ -241,7 +241,7 @@ function RoomManagementPage() {
           >
             Room Management
           </Title>
-          <Text type="secondary">Create, update and view hotel room inventory.</Text>
+          <Text className="text-gray-400 text-sm">Create, update and view hotel room inventory.</Text>
         </div>
 
         <PermissionGate resource="rooms" action="create">

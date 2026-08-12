@@ -169,7 +169,7 @@ function ReportsPage() {
         >
           Reports
         </Title>
-        <Text type="secondary">
+        <Text className="text-gray-400 text-sm">
           Hotel booking analytics, occupancy activity, revenue and status trends.
         </Text>
       </div>
