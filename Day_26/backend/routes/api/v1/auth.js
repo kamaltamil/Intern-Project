@@ -7,40 +7,28 @@ const {
   login,
   refresh,
   profile,
+  updateProfile,
   logout,
 } = require("../../../controllers/authController");
 
 const { authenticateToken } = require("../../../middleware/auth");
+const { requirePermission } = require("../../../middleware/permissionMiddleware");
+const profileUpload = require("../../../middleware/profileUpload");
 
-/* -------------------------------------------------------------------------- */
-/*                               Public Routes                                */
-/* -------------------------------------------------------------------------- */
-
-// Public signup (assigned default role from DB)
 router.post("/signup", register);
-
-// Login — returns token, refreshToken, role, permissions
 router.post("/login", login);
-
-// Refresh access token
 router.post("/refresh", refresh);
 
-/* -------------------------------------------------------------------------- */
-/*                            Protected Routes                                */
-/* -------------------------------------------------------------------------- */
+router.get("/profile", authenticateToken, profile);
 
-// Current logged-in user's profile
-router.get(
+router.patch(
   "/profile",
   authenticateToken,
-  profile
+  requirePermission("profile", "update"),
+  profileUpload.single("profileImage"),
+  updateProfile
 );
 
-// Logout — clears stored refresh token
-router.post(
-  "/logout",
-  authenticateToken,
-  logout
-);
+router.post("/logout", authenticateToken, logout);
 
 module.exports = router;
