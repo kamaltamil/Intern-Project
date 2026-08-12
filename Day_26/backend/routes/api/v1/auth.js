@@ -7,6 +7,7 @@ const {
   login,
   refresh,
   profile,
+  permissions,
   updateProfile,
   logout,
 } = require("../../../controllers/authController");
@@ -18,6 +19,7 @@ const profileUpload = require("../../../middleware/profileUpload");
 router.post("/signup", register);
 router.post("/login", login);
 router.post("/refresh", refresh);
+router.get("/permissions", authenticateToken, permissions);
 
 router.get(
   "/profile",
