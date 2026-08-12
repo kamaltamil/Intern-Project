@@ -1,12 +1,38 @@
 const Role = require("../models/role");
 
+const validatePermissions = (permissions = []) => {
+  if (!Array.isArray(permissions)) {
+    const error = new Error("Permissions must be an array");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  permissions.forEach((permission) => {
+    const action = permission?.action || {};
+    const hasCrudWithoutView =
+      action.create === true ||
+      action.update === true ||
+      action.delete === true;
+
+    if (hasCrudWithoutView && action.view !== true) {
+      const error = new Error(
+        `View permission is required for resource '${permission.resource}' when Create, Update, or Delete is enabled.`
+      );
+      error.statusCode = 400;
+      throw error;
+    }
+  });
+};
+
 /* -------------------------------------------------------------------------- */
 /*                              Create Role                                   */
 /* -------------------------------------------------------------------------- */
 
 const createRole = async (data) => {
   try {
-    const { name, permissions = [] } = data;
+    const { name, permissions = [], manageableRoles = [], description = "", color, isDefault = false } = data;
+
+    validatePermissions(permissions);
 
     const existingRole = await Role.findOne({ name: name.trim() });
     if (existingRole) throw new Error("Role already exists");
@@ -14,8 +40,13 @@ const createRole = async (data) => {
     return await Role.create({
       name: name.trim(),
       permissions,
+      manageableRoles,
+      description,
+      color,
+      isDefault,
     });
   } catch (error) {
+    if (error.statusCode) throw error;
     throw new Error(error.message);
   }
 };
@@ -52,6 +83,8 @@ const getRoleById = async (id) => {
 
 const updateRole = async (id, data) => {
   try {
+    if (data.permissions) validatePermissions(data.permissions);
+
     const role = await Role.findByIdAndUpdate(id, data, {
       new: true,
       runValidators: true,
@@ -59,6 +92,7 @@ const updateRole = async (id, data) => {
 
     return role;
   } catch (error) {
+    if (error.statusCode) throw error;
     throw new Error(`Error updating role: ${error.message}`);
   }
 };

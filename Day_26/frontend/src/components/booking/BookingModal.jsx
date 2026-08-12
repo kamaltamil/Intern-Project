@@ -1,5 +1,5 @@
 import React from "react";
-import { Modal, Form, Tag, Space, message } from "antd";
+import { Modal, Form, Tag, Space } from "antd";
 import { HomeOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 
@@ -19,25 +19,17 @@ const BookingModal = ({
   const selectedRoom = rooms.find(
     (room) => room._id === form.getFieldValue("roomId"),
   );
-
   const selectedDateRange = form.getFieldValue("dateRange");
 
   const handleSubmit = async () => {
-    try {
-      const values = await form.validateFields();
+    const values = await form.validateFields();
+    const [startDate, endDate] = values.dateRange;
 
-      const [startDate, endDate] = values.dateRange;
-
-      onSubmit({
-        roomId: values.roomId,
-        startDate: startDate.toISOString(),
-        endDate: endDate.toISOString(),
-      });
-
-      form.resetFields();
-    } catch (err) {
-        message.error("Please fill in all required fields.",{err});
-    }
+    onSubmit({
+      roomId: values.roomId,
+      startDate: startDate.toISOString(),
+      endDate: endDate.toISOString(),
+    });
   };
 
   const bookingFields = [
@@ -45,21 +37,13 @@ const BookingModal = ({
       type: "select",
       name: "roomId",
       label: "Select Room",
-
-      rules: [
-        {
-          required: true,
-          message: "Please select a room",
-        },
-      ],
-
+      rules: [{ required: true, message: "Please select a room" }],
       props: {
         placeholder: "Choose Room",
         loading: roomsLoading,
         showSearch: true,
         optionFilterProp: "label",
       },
-
       options: rooms.map((room) => ({
         value: room._id,
         label: (
@@ -71,38 +55,27 @@ const BookingModal = ({
         ),
       })),
     },
-
     {
       type: "rangepicker",
-
       name: "dateRange",
-
       label: "Stay Duration",
-
       rules: [
-        {
-          required: true,
-          message: "Select dates",
-        },
+        { required: true, message: "Select dates" },
         {
           validator(_, value) {
             if (!value) return Promise.resolve();
-
             const [start, end] = value;
-
             if (end.diff(start, "day") < 1) {
               return Promise.reject(new Error("Minimum stay is 1 night"));
             }
-
             return Promise.resolve();
           },
         },
       ],
-
       props: {
         format: "DD MMM YYYY",
-
-        disabledDate: (current) => current && current < dayjs().startOf("day"),
+        disabledDate: (current) =>
+          current && current < dayjs().startOf("day"),
       },
     },
   ];
@@ -120,28 +93,20 @@ const BookingModal = ({
       okText="Confirm Booking"
       okButtonProps={{
         loading,
-        style: {
-          background: "#C76A34",
-          borderColor: "#C76A34",
-        },
+        style: { background: "#C76A34", borderColor: "#C76A34" },
       }}
       title={
         <Space>
-          <HomeOutlined
-            style={{
-              color: "#C76A34",
-            }}
-          />
+          <HomeOutlined style={{ color: "#C76A34" }} />
           Make Booking
         </Space>
       }
     >
       <CustomForm
-      form={bookingFields}
-      formInstance={form}
-      onFinish={handleSubmit}
-    />
-
+        form={bookingFields}
+        formInstance={form}
+        onFinish={handleSubmit}
+      />
       <BookingCostPreview room={selectedRoom} dateRange={selectedDateRange} />
     </Modal>
   );

@@ -1,5 +1,4 @@
 const express = require("express");
-
 const router = express.Router();
 
 const {
@@ -8,51 +7,12 @@ const {
   deleteRoom,
 } = require("../../../controllers/roomsController");
 
-const {
-  requirePermission,
-} = require(
-  "../../../middleware/permissionMiddleware"
-);
+const { requirePermission } = require("../../../middleware/permissionMiddleware");
 
-/* -------------------------------------------------------------------------- */
-/*                              Get Rooms                                     */
-/* -------------------------------------------------------------------------- */
+router.get("/", requirePermission("rooms", "view"), getAllRooms);
 
-/*
- * Any authenticated user can view rooms.
- *
- * This is required because members need to
- * see available rooms before booking.
- */
-router.get(
-  "/",
-  getAllRooms
-);
+router.post("/new", requirePermission("rooms", "create"), createRoom);
 
-/* -------------------------------------------------------------------------- */
-/*                              Create Room                                   */
-/* -------------------------------------------------------------------------- */
-
-router.post(
-  "/new",
-  requirePermission(
-    "rooms",
-    "create"
-  ),
-  createRoom
-);
-
-/* -------------------------------------------------------------------------- */
-/*                              Delete Room                                   */
-/* -------------------------------------------------------------------------- */
-
-router.delete(
-  "/:id",
-  requirePermission(
-    "rooms",
-    "delete"
-  ),
-  deleteRoom
-);
+router.delete("/:id", requirePermission("rooms", "delete"), deleteRoom);
 
 module.exports = router;
