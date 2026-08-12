@@ -12,7 +12,7 @@ import BookingDetailsModal from "../components/booking/BookingDetailsModal";
 import BookingStats from "../components/booking/BookingStats";
 import { getBookingColumns } from "../components/booking/BookingColumns";
 import { getPageTitle } from "../components/booking/BookingHelpers";
-import { fetchRooms, fetchBookings, createBooking } from "../api/queries";
+import { fetchBookingRooms, fetchBookings, createBooking } from "../api/queries";
 import { usePermission } from "../hooks/usePermission";
 
 const { Title } = Typography;
@@ -21,6 +21,7 @@ function BookingPage() {
   const queryClient = useQueryClient();
   const { role, theme } = useSelector((state) => state.auth);
   const canViewUsers = usePermission("users", "view");
+  const canCreateBooking = usePermission("bookings", "create");
   const isDark = theme === "dark";
 
   const [bookModalOpen, setBookModalOpen] = useState(false);
@@ -30,8 +31,14 @@ function BookingPage() {
   const {
     data: rooms = [],
     isLoading: roomsLoading,
+    isError: roomsError,
+    error: roomsQueryError,
     refetch: refetchRooms,
-  } = useQuery({ queryKey: ["rooms"], queryFn: fetchRooms });
+  } = useQuery({
+    queryKey: ["booking-rooms"],
+    queryFn: () => fetchBookingRooms(),
+    enabled: canCreateBooking,
+  });
 
   const {
     data: bookings = [],
@@ -46,6 +53,7 @@ function BookingPage() {
     onSuccess: () => {
       message.success("Booking request created successfully. Waiting for approval.");
       queryClient.invalidateQueries({ queryKey: ["bookings"] });
+      queryClient.invalidateQueries({ queryKey: ["booking-rooms"] });
       setBookModalOpen(false);
     },
     onError: (error) =>
@@ -57,7 +65,7 @@ function BookingPage() {
   });
 
   const openBookingModal = () => {
-    if (rooms.length === 0) refetchRooms();
+    refetchRooms();
     setBookModalOpen(true);
   };
 
@@ -109,6 +117,18 @@ function BookingPage() {
             bookingsQueryError?.response?.data?.message ||
             bookingsQueryError?.message ||
             "Unable to load bookings."
+          }
+        />
+      )}
+
+      {roomsError && (
+        <Alert
+          type="error"
+          showIcon
+          message={
+            roomsQueryError?.response?.data?.message ||
+            roomsQueryError?.message ||
+            "Unable to load available rooms."
           }
         />
       )}
