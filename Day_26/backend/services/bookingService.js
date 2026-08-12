@@ -116,20 +116,67 @@ const getBookingsByUserId = async (userId) => {
   }
 };
 
+const STATUS_TRANSITIONS = {
+  "Pending Approval": ["Payment Pending", "Rejected", "Cancelled"],
+  "Payment Pending": ["Booked", "Cancelled"],
+  Booked: ["CheckedIn", "Cancelled"],
+  CheckedIn: ["CheckedOut"],
+  CheckedOut: [],
+  Cancelled: [],
+  Rejected: [],
+};
+
 const updateBooking = async (id, updateData) => {
   try {
-    const booking = await Booking.findByIdAndUpdate(id, updateData, {
-      new: true,
-    })
+    const booking = await Booking.findById(id);
+
+    if (!booking) {
+      throw createServiceError("Booking not found", 404);
+    }
+
+    if (updateData.bookingStatus) {
+      const currentStatus = booking.bookingStatus;
+      const nextStatus = updateData.bookingStatus;
+      const allowedStatuses = STATUS_TRANSITIONS[currentStatus] || [];
+
+      if (!allowedStatuses.includes(nextStatus)) {
+        throw createServiceError(
+          `Booking cannot be changed from '${currentStatus}' to '${nextStatus}'.`,
+          409,
+        );
+      }
+
+      booking.bookingStatus = nextStatus;
+
+      if (["Rejected", "Cancelled", "CheckedOut"].includes(nextStatus)) {
+        booking.roomStatus = "Available";
+      } else if (
+        ["Pending Approval", "Payment Pending", "Booked", "CheckedIn"].includes(
+          nextStatus,
+        )
+      ) {
+        booking.roomStatus = "Occupied";
+      }
+    }
+
+    const allowedFields = ["room", "startDate", "endDate", "roomStatus"];
+    for (const field of allowedFields) {
+      if (Object.prototype.hasOwnProperty.call(updateData, field)) {
+        booking[field] = updateData[field];
+      }
+    }
+
+    await booking.save();
+
+    return await Booking.findById(booking._id)
       .populate("room")
       .populate({
         path: "user",
         select: "-password -refreshToken",
         populate: { path: "role" },
       });
-
-    return booking;
   } catch (error) {
+    if (error.statusCode) throw error;
     throw new Error("Error updating booking: " + error.message);
   }
 };
