@@ -1,4 +1,5 @@
 const Booking = require("../models/booking");
+const { sendBookingNotification } = require("./emailService");
 
 const populateBooking = (query) =>
   query
@@ -8,6 +9,12 @@ const populateBooking = (query) =>
       select: "-password -refreshToken",
       populate: { path: "role", select: "name color" },
     });
+
+const sendApprovalEmail = (type, booking) => {
+  sendBookingNotification(type, booking).catch((error) => {
+    console.error(`Booking email failed (${type}):`, error.message);
+  });
+};
 
 const getPendingApprovals = async () => {
   return populateBooking(
@@ -37,16 +44,14 @@ const changeApprovalStatus = async (id, decision) => {
   const nextStatus = decision === "approve" ? "Payment Pending" : "Rejected";
 
   booking.bookingStatus = nextStatus;
-
-  if (nextStatus === "Rejected") {
-    booking.roomStatus = "Available";
-  } else {
-    booking.roomStatus = "Occupied";
-  }
+  booking.roomStatus = nextStatus === "Rejected" ? "Available" : "Occupied";
 
   await booking.save();
 
-  return populateBooking(Booking.findById(booking._id));
+  const updatedBooking = await populateBooking(Booking.findById(booking._id));
+  sendApprovalEmail(decision === "approve" ? "approved" : "rejected", updatedBooking);
+
+  return updatedBooking;
 };
 
 module.exports = {
