@@ -9,6 +9,11 @@ const {
 
 const Booking = require("../models/booking");
 
+const getPermission = (permissions, resource) =>
+  permissions.find(
+    (permission) => permission.resource?.toLowerCase() === resource,
+  )?.action || {};
+
 const bookRoom = async (req, res) => {
   try {
     const userId = req.user?._id || req.user?.id || req.user?.userId;
@@ -44,27 +49,33 @@ const getBookings = async (req, res) => {
       return res.status(401).json({ message: "Unauthorized" });
     }
 
-    const userPermissions = req.user?.role?.permissions || [];
-    const bookingPerm = userPermissions.find(
-      (p) => p.resource?.toLowerCase() === "bookings"
-    );
-    const bookingAct = bookingPerm?.action || {};
-    const approvalPerm = userPermissions.find(
-      (p) => p.resource?.toLowerCase() === "approval"
-    );
-    const approvalAct = approvalPerm?.action || {};
+    const permissions = req.user?.role?.permissions || [];
+    const bookingActions = getPermission(permissions, "bookings");
+    const approvalActions = getPermission(permissions, "approval");
+    const userActions = getPermission(permissions, "users");
 
-    const canViewAll = bookingAct.delete === true || bookingAct.update === true;
-    const canReview = approvalAct.view === true;
+    const canViewAll =
+      bookingActions.delete === true || userActions.view === true;
+    const canReviewMemberBookings = approvalActions.view === true;
 
     let bookings;
-    if (canViewAll) bookings = await getAllBookings();
-    else if (canReview) bookings = await getMemberBookings();
-    else bookings = await getBookingsByUserId(userId);
+    if (canViewAll) {
+      bookings = await getAllBookings();
+    } else if (canReviewMemberBookings) {
+      bookings = await getMemberBookings();
+    } else {
+      bookings = await getBookingsByUserId(userId);
+    }
 
-    return res.status(200).json({ message: "Bookings fetched successfully", bookings });
+    return res.status(200).json({
+      message: "Bookings fetched successfully",
+      bookings,
+    });
   } catch (error) {
-    return res.status(500).json({ message: "Error fetching bookings", error: error.message });
+    return res.status(500).json({
+      message: "Error fetching bookings",
+      error: error.message,
+    });
   }
 };
 
@@ -72,25 +83,31 @@ const updateBookingHandler = async (req, res) => {
   try {
     const { id } = req.params;
     const userId = req.user?._id || req.user?.id;
-    const userPermissions = req.user?.role?.permissions || [];
     const booking = await Booking.findById(id);
 
-    if (!booking) return res.status(404).json({ message: "Booking not found" });
+    if (!booking) {
+      return res.status(404).json({ message: "Booking not found" });
+    }
 
+    const userPermissions = req.user?.role?.permissions || [];
+    const bookingActions = getPermission(userPermissions, "bookings");
     const isOwner = booking.user.toString() === userId.toString();
-    const bookingPerm = userPermissions.find(
-      (p) => p.resource?.toLowerCase() === "bookings"
-    );
-    const canUpdateAny = bookingPerm?.action?.update === true;
 
-    if (!isOwner && !canUpdateAny) {
-      return res.status(403).json({ message: "Forbidden: You cannot update another user's booking" });
+    if (!isOwner && bookingActions.update !== true) {
+      return res.status(403).json({
+        message: "Forbidden: You cannot update another user's booking",
+      });
     }
 
     const updatedBooking = await updateBooking(id, req.body);
-    return res.status(200).json({ message: "Booking updated successfully", booking: updatedBooking });
+    return res.status(200).json({
+      message: "Booking updated successfully",
+      booking: updatedBooking,
+    });
   } catch (error) {
-    return res.status(error.statusCode || 500).json({ message: error.message || "Error updating booking" });
+    return res.status(error.statusCode || 500).json({
+      message: error.message || "Error updating booking",
+    });
   }
 };
 
@@ -98,25 +115,28 @@ const deleteBookingHandler = async (req, res) => {
   try {
     const { id } = req.params;
     const userId = req.user?._id || req.user?.id;
-    const userPermissions = req.user?.role?.permissions || [];
     const booking = await Booking.findById(id);
 
-    if (!booking) return res.status(404).json({ message: "Booking not found" });
+    if (!booking) {
+      return res.status(404).json({ message: "Booking not found" });
+    }
 
+    const userPermissions = req.user?.role?.permissions || [];
+    const bookingActions = getPermission(userPermissions, "bookings");
     const isOwner = booking.user.toString() === userId.toString();
-    const bookingPerm = userPermissions.find(
-      (p) => p.resource?.toLowerCase() === "bookings"
-    );
-    const canDeleteAny = bookingPerm?.action?.delete === true;
 
-    if (!isOwner && !canDeleteAny) {
-      return res.status(403).json({ message: "Forbidden: You cannot delete another user's booking" });
+    if (!isOwner && bookingActions.delete !== true) {
+      return res.status(403).json({
+        message: "Forbidden: You cannot delete another user's booking",
+      });
     }
 
     await deleteBooking(id);
     return res.status(200).json({ message: "Booking deleted successfully" });
   } catch (error) {
-    return res.status(error.statusCode || 500).json({ message: error.message || "Error deleting booking" });
+    return res.status(error.statusCode || 500).json({
+      message: error.message || "Error deleting booking",
+    });
   }
 };
 
