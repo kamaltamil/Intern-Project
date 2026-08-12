@@ -11,6 +11,7 @@ const CustomTable = ({
   columns = [],   
   pagination = { pageSize: 5 },
   tableTitleRender, 
+  size,
   scroll,
 }) => {
   const tableWrapperRef = useRef(null);
@@ -65,6 +66,7 @@ const CustomTable = ({
             pagination={pagination}
             title={tableTitleRender}
             scroll={scroll || { y: internalScrollY, x: 'max-content' }}
+            size='large'
           />
         </div>
       )}

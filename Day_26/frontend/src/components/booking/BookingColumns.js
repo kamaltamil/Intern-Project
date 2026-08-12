@@ -21,7 +21,7 @@ export const getBookingColumns = (showGuest, onView) => {
           <Space>
             <HomeOutlined style={{ color: "#C76A34" }} />
             <Space direction="vertical" size={0}>
-              <span className="font-semibold">#{room.roomNumber}</span>
+              <span className="font-semibold">{room.roomNumber}</span>
               <Tag color={roomTypeColor[room.type]}>{room.type}</Tag>
               <span className="text-xs text-gray-400">₹{room.price}/night</span>
             </Space>

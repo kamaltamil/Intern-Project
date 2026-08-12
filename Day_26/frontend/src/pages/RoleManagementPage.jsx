@@ -2,7 +2,6 @@ import { useState } from "react";
 import {
   Alert,
   Button,
-  Card,
   Checkbox,
   Col,
   Dropdown,
@@ -179,7 +178,7 @@ function PermissionMatrix({ permissions, setPermissions }) {
   ];
 
   return (
-    <Table
+    <CustomTable
       rowKey="resource"
       columns={columns}
       dataSource={permissions}
