@@ -92,6 +92,17 @@ export const fetchRooms = async () => {
   const response = await api.get("/rooms");
   return response.data?.rooms || response.data || [];
 };
+export const fetchBookingRooms = async ({ startDate, endDate } = {}) => {
+  const params = {};
+
+  if (startDate && endDate) {
+    params.startDate = startDate;
+    params.endDate = endDate;
+  }
+
+  const response = await api.get("/booking/available-rooms", { params });
+  return response.data?.rooms || [];
+};
 export const createRoom = async (payload) => {
   const response = await api.post("/rooms/new", payload);
   return response.data || {};
