@@ -19,9 +19,14 @@ const subscribe = async (req, res) => {
       await sendSubscriptionConfirmation(email);
     } catch (error) {
       console.error("Subscription email failed:", error.message);
+      return res.status(502).json({
+        message: "Subscription saved, but the confirmation email could not be sent",
+      });
     }
 
-    return res.status(201).json({ message: "Subscription successful" });
+    return res.status(201).json({
+      message: "Subscription successful. Confirmation email sent.",
+    });
   } catch (error) {
     if (error.code === 11000) {
       return res.status(409).json({ message: "This email is already subscribed" });
