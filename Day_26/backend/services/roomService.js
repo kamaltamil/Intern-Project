@@ -62,13 +62,65 @@ const listRooms = async () => {
 };
 
 /* -------------------------------------------------------------------------- */
+/*                              Update Room                                   */
+/* -------------------------------------------------------------------------- */
+
+const updateExistingRoom = async (roomId, data) => {
+  try {
+    if (!mongoose.Types.ObjectId.isValid(roomId)) {
+      const error = new Error("Invalid room ID");
+      error.statusCode = 400;
+      throw error;
+    }
+
+    const room = await Room.findById(roomId);
+
+    if (!room) {
+      const error = new Error("Room not found");
+      error.statusCode = 404;
+      throw error;
+    }
+
+    const { roomNumber, type, price } = data;
+
+    if (roomNumber && roomNumber !== room.roomNumber) {
+      const duplicateRoom = await Room.findOne({
+        roomNumber,
+        _id: { $ne: roomId },
+      });
+
+      if (duplicateRoom) {
+        const error = new Error(
+          "Room with this number already exists"
+        );
+        error.statusCode = 409;
+        throw error;
+      }
+    }
+
+    if (roomNumber !== undefined) room.roomNumber = roomNumber.trim();
+    if (type !== undefined) room.type = type;
+    if (price !== undefined) room.price = Number(price);
+
+    await room.save();
+    return room;
+  } catch (error) {
+    if (error.statusCode) {
+      throw error;
+    }
+
+    throw new Error(
+      `Error updating room: ${error.message}`
+    );
+  }
+};
+
+/* -------------------------------------------------------------------------- */
 /*                              Delete Room                                   */
 /* -------------------------------------------------------------------------- */
 
 const deleteExistingRoom = async (roomId) => {
   try {
-    /* Validate MongoDB ObjectId */
-
     if (!mongoose.Types.ObjectId.isValid(roomId)) {
       const error = new Error(
         "Invalid room ID"
@@ -77,8 +129,6 @@ const deleteExistingRoom = async (roomId) => {
       error.statusCode = 400;
       throw error;
     }
-
-    /* Find room */
 
     const room = await Room.findById(roomId);
 
@@ -90,10 +140,6 @@ const deleteExistingRoom = async (roomId) => {
       error.statusCode = 404;
       throw error;
     }
-
-    /* -------------------------------------------------------------- */
-    /* Prevent deleting rooms that have booking records               */
-    /* -------------------------------------------------------------- */
 
     const bookingCount =
       await Booking.countDocuments({
@@ -108,8 +154,6 @@ const deleteExistingRoom = async (roomId) => {
       error.statusCode = 409;
       throw error;
     }
-
-    /* Delete room */
 
     await Room.findByIdAndDelete(roomId);
 
@@ -132,5 +176,6 @@ const deleteExistingRoom = async (roomId) => {
 module.exports = {
   createNewRoom,
   listRooms,
+  updateExistingRoom,
   deleteExistingRoom,
 };
