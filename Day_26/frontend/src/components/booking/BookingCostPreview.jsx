@@ -14,11 +14,11 @@ const BookingCostPreview = ({ room, dateRange }) => {
       <div className="flex justify-between">
         <span className="text-gray-600">Room Price</span>
 
-        <span className="font-medium">₹{room.price}/night</span>
+        <span className="font-medium">₹{room.price}/day</span>
       </div>
 
       <div className="flex justify-between mt-2">
-        <span className="text-gray-600">Nights</span>
+        <span className="text-gray-600">Days</span>
 
         <span>{nights}</span>
       </div>
