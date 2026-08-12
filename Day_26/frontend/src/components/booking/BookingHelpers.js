@@ -27,7 +27,7 @@ export const formatDate = (date) =>
 
 export const getNights = (start, end) => {
   const nights = dayjs(end).diff(dayjs(start), "day");
-  return `${nights} night${nights !== 1 ? "s" : ""}`;
+  return `${nights} day${nights !== 1 ? "s" : ""}`;
 };
 
 export const getTotalCost = (booking) => {
