@@ -54,6 +54,10 @@ export const fetchRoleById = async (id) => {
   const response = await api.get(`/roles/${id}`);
   return response.data || null;
 };
+export const fetchRoleByName = async (name) => {
+  const roles = await fetchRoles();
+  return roles.find((role) => role?.name === name) || null;
+};
 export const createRole = async (payload) => {
   const response = await api.post("/roles", payload);
   return response.data?.role || response.data;
@@ -87,6 +91,10 @@ export const fetchRooms = async () => {
 export const createRoom = async (payload) => {
   const response = await api.post("/rooms/new", payload);
   return response.data || {};
+};
+export const updateRoom = async ({ id, payload }) => {
+  const response = await api.patch(`/rooms/${id}`, payload);
+  return response.data?.room || response.data || {};
 };
 export const deleteRoom = async (id) => {
   const response = await api.delete(`/rooms/${id}`);
