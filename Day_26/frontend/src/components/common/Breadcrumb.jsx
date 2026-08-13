@@ -79,7 +79,7 @@ function Breadcrumb() {
   );
 
   return (
-    <div className="mb-4 min-w-0 overflow-x-auto">
+    <div className="mb-2 min-w-0 overflow-x-auto">
       <AntBreadcrumb
         separator={
           <span className={isDark ? "!text-gray-500" : "!text-gray-400"}>
