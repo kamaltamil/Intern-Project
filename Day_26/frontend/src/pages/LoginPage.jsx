@@ -37,7 +37,7 @@ function LoginPage() {
           refreshToken,
           role,
           permissions: permissions || [],
-        })
+        }),
       );
 
       recaptchaRef.current?.reset();
@@ -75,14 +75,40 @@ function LoginPage() {
       label: "Email or Username",
       name: "email",
       placeholder: "Enter your email or username",
-      rules: [{ required: true, message: "Email or username is required" }],
+      rules: [
+        { required: true, message: "Email or username is required" },
+        { 
+          pattern: String.raw`^([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}|[a-zA-Z0-9_]{3,16})$`, 
+          message: "Please enter a valid email or username"
+        }
+      ],
     },
     {
       type: "password",
       label: "Password",
       name: "password",
       placeholder: "Enter your password",
-      rules: [{ required: true, message: "Password is required" }],
+      rules: [
+        { required: true, message: "Password is required" },
+        { 
+          pattern: String.raw`^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@&%*+!$])[a-zA-Z\d@&%*+!$]{8,}$`,
+          message: "Please enter a valid password"
+        }
+      ],
+    },
+    {
+      key: "reCaptcha",
+      render: () => (
+        <div className="flex justify-center mt-4">
+          <ReCAPTCHA
+            ref={recaptchaRef}
+            sitekey={RECAPTCHA_SITE_KEY}
+            onChange={setRecaptchaToken}
+            onExpired={() => setRecaptchaToken(null)}
+            onErrored={() => setRecaptchaToken(null)}
+          />
+        </div>
+      ),
     },
     {
       type: "submit",
@@ -101,24 +127,20 @@ function LoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#F8F4EE] p-4">
       <Card className="w-full max-w-md rounded-2xl shadow-md border border-[#ECE6DF]">
-        <Title level={3} className="!text-[#2E2A27]">Sign In</Title>
-        <Text className="text-[#A74E2B]">Welcome back to HotelPro Dashboard</Text>
+        <Title level={3} className="!text-[#2E2A27]">
+          Sign In
+        </Title>
+        <Text className="text-[#A74E2B]">
+          Welcome back to HotelPro Dashboard
+        </Text>
 
         <CustomForm form={loginForm} onFinish={onFinish} />
 
-        <div className="flex justify-center mt-4">
-          <ReCAPTCHA
-            ref={recaptchaRef}
-            sitekey={RECAPTCHA_SITE_KEY}
-            onChange={setRecaptchaToken}
-            onExpired={() => setRecaptchaToken(null)}
-            onErrored={() => setRecaptchaToken(null)}
-          />
-        </div>
-
         <div className="text-center mt-4 text-sm text-gray-500">
           Don't have an account?{" "}
-          <Link to="/signup" className="text-[#C76A34] font-medium">Create one</Link>
+          <Link to="/signup" className="text-[#C76A34] font-medium">
+            Create one
+          </Link>
         </div>
       </Card>
     </div>

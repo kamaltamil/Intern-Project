@@ -86,7 +86,7 @@ const CustomForm = ({
   formInstance,
   onFinish,
   layout = "vertical",
-  className = "mt-6",
+  className = "mt-3",
 }) => {
   return (
     <Form
@@ -98,26 +98,30 @@ const CustomForm = ({
       {form.map((field) => {
         if (field.render) {
           return (
-            <Form.Item key={field.key || field.name || field.type}>
+            <Form.Item 
+              key={field.key || field.name || field.type}
+              className="mb-4"
+              >
               {field.render()}
             </Form.Item>
           );
         }
-
+        
         if (field.type === "submit") {
           return (
-            <Form.Item key={field.label}>
+            <Form.Item 
+              key={field.label}
+              className="mb-4"
+            >
               <Button {...field.buttonProps}>{field.label}</Button>
             </Form.Item>
           );
         }
-
+        
         const valuePropName =
-          field.valuePropName ||
-          (["switch", "checkbox"].includes(field.type)
-            ? "checked"
-            : "value");
-
+        field.valuePropName ||
+        (["switch", "checkbox"].includes(field.type) ? "checked" : "value");
+        
         return (
           <Form.Item
             key={field.name}
@@ -125,6 +129,7 @@ const CustomForm = ({
             name={field.name}
             rules={field.rules}
             valuePropName={valuePropName}
+            className="mb-4"
           >
             {renderField(field)}
           </Form.Item>

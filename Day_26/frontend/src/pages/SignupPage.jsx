@@ -18,6 +18,7 @@ function SignupPage() {
 
   const signupMutation = useMutation({
     mutationFn: signupUser,
+    retry: 0,
     onSuccess: () => {
       recaptchaRef.current?.reset();
       setRecaptchaToken(null);
@@ -34,15 +35,14 @@ function SignupPage() {
   });
 
   const onFinish = (values) => {
-
-     console.log("SIGNUP onFinish called");
+    console.log("SIGNUP onFinish called");
 
     if (!recaptchaToken) {
       message.error("Please complete the reCAPTCHA verification");
       return;
     }
 
-    console.log(recaptchaToken)
+    console.log(recaptchaToken);
 
     signupMutation.mutate({
       name: values.name,
@@ -62,9 +62,13 @@ function SignupPage() {
       type: "input",
       label: "Full Name",
       name: "name",
-      placeholder: "Enter your full name",
+      placeholder: "Enter your name",
       rules: [
-        { required: true }, { min: 5 }
+        { required: true, message: "Please enter your full name" },
+        {
+          pattern: String.raw`^([a-zA-Z]{2,}(?:\s[a-zA-Z]{2,})+)$`,
+          message: "Please enter full name (only alphabets)",
+        },
       ],
     },
     {
@@ -72,37 +76,61 @@ function SignupPage() {
       label: "Email",
       name: "email",
       placeholder: "Enter your email",
-      rules: [{ required: true }, { type: "email" }],
+      rules: [
+        { required: true, message: "Please enter your required" },
+        {
+          type: 'email',
+          message: "Please enter a valid email",
+        },
+        // {
+        //   pattern: String.raw`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`,
+        //   message: "Please enter a valid email",
+        // }
+      ],
     },
     {
       type: "input",
       label: "Username",
       name: "username",
       placeholder: "Choose username",
-      rules: [{ required: true }, { min: 5 }],
+      rules: [
+        { required: true, message: "Please enter your username" },
+        {
+          pattern: "^[a-zA-Z0-9_]{3,16}$",
+          message:
+            "Please enter valid a username (3-16 characters, alphanumeric/underscores)",
+        },
+      ],
     },
     {
       type: "password",
       label: "Password",
       name: "password",
       placeholder: "Create password",
-      rules: [{ required: true }, { min: 6 }],
+      rules: [
+        { required: true, message: "Password is required" },
+        {
+          pattern: String.raw`^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@&%*+!$])[a-zA-Z\d@&%*+!$]{8,}$`,
+          message:
+            "Password must be at least 8 characters and include uppercase, lowercase, a number, and a special character",
+        },
+      ],
     },
     {
       key: "reCaptcha",
-      render:()=>(
-        <div className="flex justify-center mt-4">
+      render: () => (
+        <div className="flex justify-center">
           <ReCAPTCHA
             size="normal"
-            theme="light" 
+            theme="light"
             ref={recaptchaRef}
             sitekey={RECAPTCHA_SITE_KEY}
             onChange={setRecaptchaToken}
             onExpired={() => setRecaptchaToken(null)}
             onErrored={() => setRecaptchaToken(null)}
-            />
-        </div>)
-          
+          />
+        </div>
+      ),
     },
     {
       type: "submit",
@@ -127,16 +155,6 @@ function SignupPage() {
         <Text className="text-[#A74E2B]">Join the HotelPro Admin Portal</Text>
 
         <CustomForm form={signupForm} onFinish={onFinish} />
-
-        {/* <div className="flex justify-center mt-4">
-          <ReCAPTCHA
-            ref={recaptchaRef}
-            sitekey={RECAPTCHA_SITE_KEY}
-            onChange={setRecaptchaToken}
-            onExpired={() => setRecaptchaToken(null)}
-            onErrored={() => setRecaptchaToken(null)}
-          />
-        </div> */}
 
         <div className="text-center mt-4 text-sm text-gray-500">
           Already have an account?{" "}

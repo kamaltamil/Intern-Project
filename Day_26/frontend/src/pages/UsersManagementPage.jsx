@@ -11,8 +11,6 @@ import {
   Space,
   Modal,
   Form,
-  Input,
-  Select,
   Avatar,
   Row,
   Col,
@@ -42,13 +40,13 @@ import {
 import { resolveProfileImage } from "../utils/image";
 import { usePermission } from "../hooks/usePermission";
 import { ROLE_COLORS } from "../constants/roleColors";
+import CustomForm from "../components/CustomForm";
 
 const { Title, Text } = Typography;
-const { Option } = Select;
 
 const getFallbackRoleColor = (roleName) => {
   const match = ROLE_COLORS.find(
-    (c) => c.label.toLowerCase() === roleName?.toLowerCase()
+    (c) => c.label.toLowerCase() === roleName?.toLowerCase(),
   );
   return match ? match.value : "#722ed1";
 };
@@ -106,9 +104,7 @@ function UsersManagementPage() {
     },
 
     onError: (error) => {
-      message.error(
-        error?.response?.data?.message || "Failed to update user"
-      );
+      message.error(error?.response?.data?.message || "Failed to update user");
     },
   });
 
@@ -124,9 +120,7 @@ function UsersManagementPage() {
     },
 
     onError: (error) => {
-      message.error(
-        error?.response?.data?.message || "Unable to create user"
-      );
+      message.error(error?.response?.data?.message || "Unable to create user");
     },
   });
 
@@ -142,9 +136,7 @@ function UsersManagementPage() {
 
     onError: (error) => {
       setUpdatingId(null);
-      message.error(
-        error?.response?.data?.message || "Failed to delete user"
-      );
+      message.error(error?.response?.data?.message || "Failed to delete user");
     },
   });
 
@@ -161,6 +153,7 @@ function UsersManagementPage() {
       username: record.username,
       role: roleVal,
       isActive: record.isActive,
+      password: '',
     });
 
     setEditModalOpen(true);
@@ -226,21 +219,18 @@ function UsersManagementPage() {
     {
       title: "Username",
       dataIndex: "username",
-      render: (username) => (
-        <span className="text-gray-500">@{username}</span>
-      ),
+      render: (username) => <span className="text-gray-500">@{username}</span>,
     },
     {
       title: "Role",
       dataIndex: "role",
       render: (role) => {
         const roleName = typeof role === "object" ? role?.name : role;
-        const color = typeof role === "object" && role?.color ? role.color : getFallbackRoleColor(roleName);
-        return (
-          <Tag color={color}>
-            {roleName || "—"}
-          </Tag>
-        );
+        const color =
+          typeof role === "object" && role?.color
+            ? role.color
+            : getFallbackRoleColor(roleName);
+        return <Tag color={color}>{roleName || "—"}</Tag>;
       },
     },
     {
@@ -299,15 +289,15 @@ function UsersManagementPage() {
   const getRoleName = (r) => (typeof r === "object" ? r?.name : r) || "";
 
   const totalAdmins = safeUsers.filter(
-    (u) => getRoleName(u.role) === "Admin"
+    (u) => getRoleName(u.role) === "Admin",
   ).length;
 
   const totalManagers = safeUsers.filter(
-    (u) => getRoleName(u.role) === "Manager"
+    (u) => getRoleName(u.role) === "Manager",
   ).length;
 
   const totalMembers = safeUsers.filter(
-    (u) => getRoleName(u.role) === "Member"
+    (u) => getRoleName(u.role) === "Member",
   ).length;
 
   const userStats = [
@@ -320,242 +310,318 @@ function UsersManagementPage() {
   /* ---------- Loading State ---------- */
   if (usersLoading) {
     return (
-    
-        <div className="space-y-4">
-          <Skeleton active paragraph={{ rows: 6 }} />
-        </div>
-      
+      <div className="space-y-4">
+        <Skeleton active paragraph={{ rows: 6 }} />
+      </div>
     );
   }
 
   /* ---------- Error State ---------- */
   if (usersError) {
     return (
-    
-        <Alert
-          type="error"
-          showIcon
-          message={
-            usersQueryError?.message || "Unable to fetch users list."
-          }
-        />
-      
+      <Alert
+        type="error"
+        showIcon
+        message={usersQueryError?.message || "Unable to fetch users list."}
+      />
     );
   }
 
-  return (
-  
-      <div className="space-y-4">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <Title level={4} className="!mb-0" style={{ color: isDark ? "#f0f0f0" : "#2E2A27" }}>
-              User Management
-            </Title>
-            <Text className="text-gray-400 text-sm">
-              Manage system users and assign roles.
-            </Text>
-          </div>
-
+  const addFormData = [
+    {
+      type: "input",
+      name: "name",
+      label: "Full Name",
+      rules: [
+        { required: true, message: "Please enter your full name" },
+        {
+          pattern: String.raw`^([a-zA-Z]{2,}(?:\s[a-zA-Z]{2,})+)$`,
+          message: "Please enter full name (only alphabets)",
+        },
+      ],
+      placeholder: "Enter full name",
+    },
+    {
+      type: "input",
+      name: "username",
+      label: "Username",
+      rules: [
+        { required: true, message: "Please enter your username" },
+        {
+          pattern: "^[a-zA-Z0-9_]{3,16}$",
+          message:
+            "Please enter valid a username (3-16 characters, alphanumeric/underscores)",
+        },
+      ],
+      placeholder: "Enter username",
+    },
+    {
+      type: "input",
+      name: "email",
+      label: "Email",
+      placeholder: "Enter email",
+      rules: [
+        { required: true, message: "Please enter your required" },
+        {
+          type: 'email',
+          message: "Please enter a valid email",
+        },
+        // {
+        //   pattern: String.raw`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`,
+        //   message: "Please enter a valid email",
+        // }
+      ],
+    },
+    {
+      type: "password",
+      name: "password",
+      label: "Password",
+      rules: [
+        { required: true, message: "Password is required" },
+        {
+          pattern: String.raw`^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@&%*+!$])[a-zA-Z\d@&%*+!$]{8,}$`,
+          message:
+            "Password must be at least 8 characters and include uppercase, lowercase, a number, and a special character",
+        },
+      ],
+      placeholder: "Enter password",
+    },
+    {
+      type: "select",
+      name: "role",
+      label: "Role",
+      rules: [
+        {
+          required: true,
+          message: "Role is required",
+        },
+      ],
+      placeholder: "Select role",
+      options: roles.map((r) => ({
+        value: r._id,
+        label: (
           <Space>
-            <Button icon={<ReloadOutlined />} onClick={() => refetchUsers()}>
-              Refresh
-            </Button>
-
-            {canCreate && (
-              <Button
-                type="primary"
-                icon={<PlusOutlined />}
-                onClick={() => {
-                  addForm.resetFields();
-                  setAddModalOpen(true);
-                }}
-                style={{ backgroundColor: "#C76A34", borderColor: "#C76A34" }}
-              >
-                Add User
-              </Button>
-            )}
+            <span
+              className="inline-block w-2.5 h-2.5 rounded-full"
+              style={{
+                backgroundColor: r.color || "#722ed1",
+              }}
+            />
+            <span>{r.name}</span>
           </Space>
+        ),
+      })),
+    },
+  ];
+
+  const editFormData = [
+    {
+      type: "input",
+      name: "name",
+      label: "Full Name",
+      rules: [
+        {
+          required: true,
+          message: "Name is required",
+        },
+      ],
+      placeholder: "Enter full name",
+    },
+    {
+      type: "input",
+      name: "username",
+      label: "Username",
+      rules: [
+        {
+          required: true,
+          message: "Username is required",
+        },
+      ],
+      placeholder: "Enter username",
+    },
+    {
+      type: "input",
+      name: "email",
+      label: "Email",
+      rules: [
+        {
+          required: true,
+          message: "Email is required",
+        },
+        {
+          type: "email",
+          message: "Enter a valid email",
+        },
+      ],
+      placeholder: "Enter email",
+    },
+    {
+      type: "select",
+      name: "role",
+      label: "Role",
+      rules: [
+        {
+          required: true,
+          message: "Role is required",
+        },
+      ],
+      placeholder: "Select role",
+      options: roles.map((r) => ({
+        value: r._id,
+        label: (
+          <Space>
+            <span
+              className="inline-block w-2.5 h-2.5 rounded-full"
+              style={{
+                backgroundColor: r.color || "#722ed1",
+              }}
+            />
+            <span>{r.name}</span>
+          </Space>
+        ),
+      })),
+    },
+    {
+      type: "select",
+      name: "isActive",
+      label: "Status",
+      rules: [
+        {
+          required: true,
+          message: "Status is required",
+        },
+      ],
+      placeholder: "Select status",
+      options: [
+        {
+          value: true,
+          label: "Active",
+        },
+        {
+          value: false,
+          label: "Inactive",
+        },
+      ],
+    },
+    // {
+    //   type: "password",
+    //   label: "Password",
+    //   name: "password",
+    //   placeholder: "Create password",
+    //   rules: [
+    //     {
+    //       pattern: String.raw`^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@&%*+!$])[a-zA-Z\d@&%*+!$]{8,}$`,
+    //       message:
+    //         "Password must be at least 8 characters and include uppercase, lowercase, a number, and a special character",
+    //     },
+    //   ],
+    // },
+  ];
+  return (
+    <div className="space-y-4">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <Title
+            level={4}
+            className="!mb-0"
+            style={{ color: isDark ? "#f0f0f0" : "#2E2A27" }}
+          >
+            User Management
+          </Title>
+          <Text className="text-gray-400 text-sm">
+            Manage system users and assign roles.
+          </Text>
         </div>
 
-        {/* Stats Row */}
-        <div className="space-y-4">
-          <Row gutter={[16, 16]}>
-            {userStats.map((stat) => (
-              <Col xs={24} sm={12} lg={6} key={stat.title}>
-                <CustomCard
-                  title={stat.title}
-                  value={stat.value}
-                  icon={stat.icon}
-                />
-              </Col>
-            ))}
-          </Row>
-        </div>
+        <Space>
+          <Button icon={<ReloadOutlined />} onClick={() => refetchUsers()}>
+            Refresh
+          </Button>
 
-        {/* Users Table */}
-        <CustomTable
-          title={`All Users (${safeUsers.length})`}
-          rowKey="_id"
-          dataSource={safeUsers}
-          columns={columns}
-          pagination={{ pageSize: 8, showSizeChanger: false }}
-        />
-
-        {/* ---------- Edit User Modal ---------- */}
-        <Modal
-          title={`Edit User — ${editingUser?.name || ""}`}
-          open={editModalOpen}
-          onOk={handleUpdate}
-          confirmLoading={updateUserMutation.isPending}
-          onCancel={() => {
-            setEditModalOpen(false);
-            setEditingUser(null);
-            editForm.resetFields();
-          }}
-          okText="Save Changes"
-          okButtonProps={{
-            style: { backgroundColor: "#C76A34", borderColor: "#C76A34" },
-          }}
-        >
-          <Form form={editForm} layout="vertical" className="mt-4">
-            <Form.Item
-              name="name"
-              label="Full Name"
-              rules={[{ required: true, message: "Name is required" }]}
+          {canCreate && (
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={() => {
+                addForm.resetFields();
+                setAddModalOpen(true);
+              }}
+              style={{ backgroundColor: "#C76A34", borderColor: "#C76A34" }}
             >
-              <Input placeholder="Enter full name" />
-            </Form.Item>
-
-            <Form.Item
-              name="username"
-              label="Username"
-              rules={[{ required: true, message: "Username is required" }]}
-            >
-              <Input placeholder="Enter username" />
-            </Form.Item>
-
-            <Form.Item
-              name="email"
-              label="Email"
-              rules={[
-                { required: true, message: "Email is required" },
-                { type: "email", message: "Enter a valid email" },
-              ]}
-            >
-              <Input placeholder="Enter email" />
-            </Form.Item>
-
-            <Form.Item
-              name="role"
-              label="Role"
-              rules={[{ required: true, message: "Role is required" }]}
-            >
-              <Select placeholder="Select role">
-                {roles.map((r) => (
-                  <Option key={r._id} value={r._id}>
-                    <Space>
-                      <span
-                        className="inline-block w-2.5 h-2.5 rounded-full"
-                        style={{ backgroundColor: r.color || "#722ed1" }}
-                      />
-                      <span>{r.name}</span>
-                    </Space>
-                  </Option>
-                ))}
-              </Select>
-            </Form.Item>
-
-            <Form.Item
-              name="isActive"
-              label="Status"
-              rules={[{ required: true, message: "Status is required" }]}
-            >
-              <Select>
-                <Option value={true}>Active</Option>
-                <Option value={false}>Inactive</Option>
-              </Select>
-            </Form.Item>
-          </Form>
-        </Modal>
-
-        {/* ---------- Add User Modal (Admin) ---------- */}
-        <Modal
-          title="Create New User"
-          open={addModalOpen}
-          onOk={handleAddUser}
-          confirmLoading={createUserMutation.isPending}
-          onCancel={() => {
-            setAddModalOpen(false);
-            addForm.resetFields();
-          }}
-          okText="Create User"
-          okButtonProps={{
-            style: { backgroundColor: "#C76A34", borderColor: "#C76A34" },
-          }}
-        >
-          <Form form={addForm} layout="vertical" className="mt-4">
-            <Form.Item
-              name="name"
-              label="Full Name"
-              rules={[{ required: true, message: "Name is required" }]}
-            >
-              <Input placeholder="Enter full name" />
-            </Form.Item>
-
-            <Form.Item
-              name="username"
-              label="Username"
-              rules={[{ required: true, message: "Username is required" }]}
-            >
-              <Input placeholder="Enter username" />
-            </Form.Item>
-
-            <Form.Item
-              name="email"
-              label="Email"
-              rules={[
-                { required: true, message: "Email is required" },
-                { type: "email", message: "Enter a valid email" },
-              ]}
-            >
-              <Input placeholder="Enter email" />
-            </Form.Item>
-
-            <Form.Item
-              name="password"
-              label="Password"
-              rules={[
-                { required: true, message: "Password is required" },
-                { min: 4, message: "Password must be at least 4 characters" },
-              ]}
-            >
-              <Input.Password placeholder="Enter password" />
-            </Form.Item>
-
-            <Form.Item
-              name="role"
-              label="Role"
-              rules={[{ required: true, message: "Role is required" }]}
-            >
-              <Select placeholder="Select role">
-                {roles.map((r) => (
-                  <Option key={r._id} value={r._id}>
-                    <Space>
-                      <span
-                        className="inline-block w-2.5 h-2.5 rounded-full"
-                        style={{ backgroundColor: r.color || "#722ed1" }}
-                      />
-                      <span>{r.name}</span>
-                    </Space>
-                  </Option>
-                ))}
-              </Select>
-            </Form.Item>
-          </Form>
-        </Modal>
+              Add User
+            </Button>
+          )}
+        </Space>
       </div>
-    
+
+      {/* Stats Row */}
+      <div className="space-y-4">
+        <Row gutter={[16, 16]}>
+          {userStats.map((stat) => (
+            <Col xs={24} sm={12} lg={6} key={stat.title}>
+              <CustomCard
+                title={stat.title}
+                value={stat.value}
+                icon={stat.icon}
+              />
+            </Col>
+          ))}
+        </Row>
+      </div>
+
+      {/* Users Table */}
+      <CustomTable
+        title={`All Users (${safeUsers.length})`}
+        rowKey="_id"
+        dataSource={safeUsers}
+        columns={columns}
+        pagination={{ pageSize: 8, showSizeChanger: false }}
+      />
+
+      {/* ---------- Edit User Modal ---------- */}
+      <Modal
+        title={`Edit User — ${editingUser?.name || ""}`}
+        open={editModalOpen}
+        onOk={handleUpdate}
+        confirmLoading={updateUserMutation.isPending}
+        onCancel={() => {
+          setEditModalOpen(false);
+          setEditingUser(null);
+          editForm.resetFields();
+        }}
+        okText="Save Changes"
+        okButtonProps={{
+          style: { backgroundColor: "#C76A34", borderColor: "#C76A34" },
+        }}
+      >
+        <CustomForm
+          form={editFormData}
+          formInstance={editForm}
+        />
+      </Modal>
+
+      {/* ---------- Add User Modal (Admin) ---------- */}
+      <Modal
+        title="Create New User"
+        open={addModalOpen}
+        onOk={handleAddUser}
+        confirmLoading={createUserMutation.isPending}
+        onCancel={() => {
+          setAddModalOpen(false);
+          addForm.resetFields();
+        }}
+        okText="Create User"
+        okButtonProps={{
+          style: { backgroundColor: "#C76A34", borderColor: "#C76A34" },
+        }}
+      >
+        <CustomForm
+          form={addFormData}
+          formInstance={addForm}
+        />
+      </Modal>
+    </div>
   );
 }
 
