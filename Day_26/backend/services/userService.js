@@ -182,11 +182,11 @@ const updateUser = async (id, payload, requestingUser = null) => {
     const reqRole = await resolveRole(requestingUser.role);
 
     if (reqRole?.name !== "Admin") {
-      const allowedRoles = (reqRole?.manageableRoles || []).map((r) => r.toString());
+      const allowedRoles = new Set((reqRole?.manageableRoles || []).map((r) => r.toString()));
       const currentRoleStr = user.role?.toString();
 
       // Check existing user's role is manageable
-      if (!allowedRoles.includes(currentRoleStr)) {
+      if (!allowedRoles.has(currentRoleStr)) {
         const error = new Error("Forbidden: You are not authorized to manage this user");
         error.statusCode = 403;
         throw error;
@@ -202,7 +202,7 @@ const updateUser = async (id, payload, requestingUser = null) => {
           newRoleDoc = await Role.findOne({ name: payload.role }).lean();
         }
 
-        if (!newRoleDoc || !allowedRoles.includes(newRoleDoc._id.toString())) {
+        if (!newRoleDoc || !allowedRoles.has(newRoleDoc._id.toString())) {
           const error = new Error("Forbidden: You cannot assign this role to a user");
           error.statusCode = 403;
           throw error;

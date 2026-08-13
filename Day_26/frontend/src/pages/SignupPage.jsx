@@ -27,15 +27,22 @@ function SignupPage() {
     onError: (error) => {
       recaptchaRef.current?.reset();
       setRecaptchaToken(null);
-      message.error(error?.response?.data?.message || "Unable to create account");
+      message.error(
+        error?.response?.data?.message || "Unable to create account",
+      );
     },
   });
 
   const onFinish = (values) => {
+
+     console.log("SIGNUP onFinish called");
+
     if (!recaptchaToken) {
       message.error("Please complete the reCAPTCHA verification");
       return;
     }
+
+    console.log(recaptchaToken)
 
     signupMutation.mutate({
       name: values.name,
@@ -51,10 +58,52 @@ function SignupPage() {
   }
 
   const signupForm = [
-    { type: "input", label: "Full Name", name: "name", placeholder: "Enter your full name", rules: [{ required: true }] },
-    { type: "input", label: "Email", name: "email", placeholder: "Enter your email", rules: [{ required: true }, { type: "email" }] },
-    { type: "input", label: "Username", name: "username", placeholder: "Choose username", rules: [{ required: true }] },
-    { type: "password", label: "Password", name: "password", placeholder: "Create password", rules: [{ required: true }, { min: 6 }] },
+    {
+      type: "input",
+      label: "Full Name",
+      name: "name",
+      placeholder: "Enter your full name",
+      rules: [
+        { required: true }, { min: 5 }
+      ],
+    },
+    {
+      type: "input",
+      label: "Email",
+      name: "email",
+      placeholder: "Enter your email",
+      rules: [{ required: true }, { type: "email" }],
+    },
+    {
+      type: "input",
+      label: "Username",
+      name: "username",
+      placeholder: "Choose username",
+      rules: [{ required: true }, { min: 5 }],
+    },
+    {
+      type: "password",
+      label: "Password",
+      name: "password",
+      placeholder: "Create password",
+      rules: [{ required: true }, { min: 6 }],
+    },
+    {
+      key: "reCaptcha",
+      render:()=>(
+        <div className="flex justify-center mt-4">
+          <ReCAPTCHA
+            size="normal"
+            theme="light" 
+            ref={recaptchaRef}
+            sitekey={RECAPTCHA_SITE_KEY}
+            onChange={setRecaptchaToken}
+            onExpired={() => setRecaptchaToken(null)}
+            onErrored={() => setRecaptchaToken(null)}
+            />
+        </div>)
+          
+    },
     {
       type: "submit",
       label: "Sign Up",
@@ -72,12 +121,14 @@ function SignupPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#F8F4EE] p-4">
       <Card className="w-full max-w-md rounded-2xl shadow-md border border-[#ECE6DF]">
-        <Title level={3} className="!text-[#2E2A27]">Create Account</Title>
+        <Title level={3} className="!text-[#2E2A27]">
+          Create Account
+        </Title>
         <Text className="text-[#A74E2B]">Join the HotelPro Admin Portal</Text>
 
         <CustomForm form={signupForm} onFinish={onFinish} />
 
-        <div className="flex justify-center mt-4">
+        {/* <div className="flex justify-center mt-4">
           <ReCAPTCHA
             ref={recaptchaRef}
             sitekey={RECAPTCHA_SITE_KEY}
@@ -85,11 +136,13 @@ function SignupPage() {
             onExpired={() => setRecaptchaToken(null)}
             onErrored={() => setRecaptchaToken(null)}
           />
-        </div>
+        </div> */}
 
         <div className="text-center mt-4 text-sm text-gray-500">
           Already have an account?{" "}
-          <Link to="/login" className="text-[#C76A34] font-medium">Sign in</Link>
+          <Link to="/login" className="text-[#C76A34] font-medium">
+            Sign in
+          </Link>
         </div>
       </Card>
     </div>

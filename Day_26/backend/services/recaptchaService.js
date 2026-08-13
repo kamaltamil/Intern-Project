@@ -1,4 +1,4 @@
-const https = require("https");
+const https = require("node:https");
 
 const verifyRecaptcha = (token, remoteIp) => {
   return new Promise((resolve, reject) => {
@@ -21,7 +21,7 @@ const verifyRecaptcha = (token, remoteIp) => {
     }
 
     const request = https.request(
-      "https://www.google.com/recaptcha/api/siteverify",
+      process.env.RECAPTCHA_URL,
       {
         method: "POST",
         headers: {
@@ -34,13 +34,16 @@ const verifyRecaptcha = (token, remoteIp) => {
 
         response.on("data", (chunk) => {
           data += chunk;
+          console.log(data)
         });
 
         response.on("end", () => {
           try {
             const result = JSON.parse(data);
+            console.log(result)
             resolve(result.success === true);
           } catch (error) {
+            console.log(error)
             reject(new Error("Invalid reCAPTCHA verification response"));
           }
         });

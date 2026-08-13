@@ -1,6 +1,6 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const crypto = require("crypto");
+const crypto = require("node:crypto");
 const mongoose = require("mongoose");
 
 const User = require("../models/user");
@@ -218,7 +218,7 @@ const loginUser = async (identifier, password) => {
 
   let roleDoc = user.role;
 
-  if (!roleDoc || !roleDoc.name) {
+  if (!roleDoc?.name) {
     roleDoc = await getRoleDocument(user.role);
   }
 
@@ -272,7 +272,7 @@ const refreshAccessToken = async (refreshToken) => {
 
   const user = await User.findById(userId).populate("role");
 
-  if (!user || !user.refreshToken) {
+  if (!user?.refreshToken) {
     const error = new Error("Invalid refresh token");
     error.statusCode = 401;
     throw error;
@@ -287,7 +287,7 @@ const refreshAccessToken = async (refreshToken) => {
   }
 
   let roleDoc = user.role;
-  if (!roleDoc || !roleDoc.name) {
+  if (!roleDoc?.name) {
     roleDoc = await getRoleDocument(user.role);
   }
 
@@ -322,7 +322,7 @@ const getProfile = async (userId) => {
   }
 
   let roleDoc = user.role;
-  if (!roleDoc || !roleDoc.name) {
+  if (!roleDoc?.name) {
     roleDoc = await getRoleDocument(user.role);
   }
 

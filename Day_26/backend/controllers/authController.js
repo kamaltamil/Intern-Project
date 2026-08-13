@@ -17,20 +17,28 @@ const validateRecaptcha = async (req, token) => {
   }
 
   const valid = await verifyRecaptcha(token, req.ip);
+  console.log(valid)
   if (!valid) {
     const error = new Error("reCAPTCHA verification failed. Please try again");
     error.statusCode = 400;
     throw error;
+  }
+  
+  if (valid) {
+    return valid
   }
 };
 
 const register = async (req, res) => {
   try {
     const { recaptchaToken, ...userData } = req.body;
-    await validateRecaptcha(req, recaptchaToken);
-
-    const user = await registerUser(userData);
-    return res.status(201).json({ message: "User registered successfully", user });
+    const validatedRecaptcha = await validateRecaptcha(req, recaptchaToken);
+    console.log(validatedRecaptcha)
+    
+    if (validatedRecaptcha){
+      const user = await registerUser(userData);
+      return res.status(201).json({ message: "User registered successfully", user });
+    }
   } catch (error) {
     return res.status(error.statusCode || 500).json({ message: error.message || "Error registering user" });
   }
