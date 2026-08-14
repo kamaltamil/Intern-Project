@@ -1,5 +1,6 @@
 const https = require("node:https");
 
+// Verifies the reCAPTCHA token with Google's verification endpoint from the backend.
 const verifyRecaptcha = (token, remoteIp) => {
   return new Promise((resolve, reject) => {
     if (!token) {
