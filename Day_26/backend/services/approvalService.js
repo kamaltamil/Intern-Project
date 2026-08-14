@@ -10,12 +10,14 @@ const populateBooking = (query) =>
       populate: { path: "role", select: "name color" },
     });
 
+// Sends approval-related notifications without making email delivery part of the booking response.
 const sendApprovalEmail = (type, booking) => {
   sendBookingNotification(type, booking).catch((error) => {
     console.error(`Booking email failed (${type}):`, error.message);
   });
 };
 
+// Returns bookings that are waiting for an approval decision.
 const getPendingApprovals = async () => {
   return populateBooking(
     Booking.find({ bookingStatus: "Pending Approval" }).sort({
@@ -24,6 +26,7 @@ const getPendingApprovals = async () => {
   );
 };
 
+// Applies the existing approval/rejection transition and returns the populated booking.
 const changeApprovalStatus = async (id, decision) => {
   const booking = await Booking.findById(id);
 

@@ -1,6 +1,7 @@
 const multer = require("multer");
 const path = require("node:path");
 
+// Stores uploaded profile images in the application's profile upload directory.
 const storage = multer.diskStorage({
   destination(req, file, cb) {
     cb(null, "public/uploads/profile"); 
@@ -11,6 +12,7 @@ const storage = multer.diskStorage({
   },
 });
 
+// Restricts profile uploads to the image formats supported by the application.
 const fileFilter = (req, file, cb) => {
   const allowed = ["image/jpeg", "image/png", "image/webp"];
   if (allowed.includes(file.mimetype)) {

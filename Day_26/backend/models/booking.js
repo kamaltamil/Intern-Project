@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 
+// Stores the room, guest, dates, and current state for each booking.
 const bookingSchema = new mongoose.Schema({
     room: {
         type: mongoose.Schema.Types.ObjectId,
@@ -25,6 +26,7 @@ const bookingSchema = new mongoose.Schema({
         enum: ["Available", "Occupied", "Maintenance"],
         default: "Available"
     },
+    // Tracks the booking workflow from approval through completion or cancellation.
     bookingStatus: {
         type: String,
         required: [true, "Booking status is required"],

@@ -16,6 +16,7 @@ const Role = require("../models/role");
  *   - ObjectId / string ID
  *   - String role name
  */
+// Resolves the user's role and permits the request only when the requested RBAC action is enabled.
 const requirePermission = (resource, action) => {
   return async (req, res, next) => {
     try {

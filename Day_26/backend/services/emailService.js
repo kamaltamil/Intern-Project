@@ -1,7 +1,9 @@
 const nodemailer = require("nodemailer");
 
+// Uses the configured application name in notification messages.
 const getApplicationName = () => process.env.APP_NAME || "HotelPro";
 
+// Escapes dynamic values before placing them into HTML email content.
 const escapeHtml = (value) =>
   String(value ?? "")
     .replaceAll("&", "&amp;")
@@ -10,6 +12,7 @@ const escapeHtml = (value) =>
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
 
+// Creates the SMTP transporter from the application's email environment settings.
 const getTransporter = () => {
   const host = process.env.EMAIL_HOST;
   const user = process.env.EMAIL_USER;
@@ -37,12 +40,14 @@ const getTransporter = () => {
   });
 };
 
+// Verifies that the configured SMTP server can be reached and authenticated.
 const verifyEmailConfiguration = async () => {
   const transporter = getTransporter();
   await transporter.verify();
   return true;
 };
 
+// Sends an email through the configured SMTP transporter and checks recipient acceptance.
 const sendEmail = async ({ to, subject, text, html }) => {
   if (!to) throw new Error("Recipient email is required");
 
@@ -62,9 +67,11 @@ const sendEmail = async ({ to, subject, text, html }) => {
   return result;
 };
 
+// Formats booking dates for user-facing email content.
 const formatDate = (date) =>
   date ? new Date(date).toLocaleDateString("en-IN") : "-";
 
+// Extracts the booking and guest fields shared by booking notification templates.
 const getBookingDetails = (booking) => {
   const user = booking?.user || {};
   const room = booking?.room || {};
@@ -83,6 +90,7 @@ const getBookingDetails = (booking) => {
   };
 };
 
+// Builds and sends the email for booking creation, approval, rejection, or status changes.
 const sendBookingNotification = async (type, booking) => {
   const details = getBookingDetails(booking);
   const safe = Object.fromEntries(
@@ -128,6 +136,7 @@ const sendBookingNotification = async (type, booking) => {
   });
 };
 
+// Sends the confirmation email after a newsletter subscription is stored.
 const sendSubscriptionConfirmation = async (email) => {
   const applicationName = getApplicationName();
   const safeApplicationName = escapeHtml(applicationName);

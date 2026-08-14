@@ -9,6 +9,7 @@ const {
 const { verifyRecaptcha } = require("../services/recaptchaService");
 const User = require("../models/user");
 
+// Verify the CAPTCHA token before continuing with the authentication operation.
 const validateRecaptcha = async (req, token) => {
   if (!token) {
     const error = new Error("Please complete the reCAPTCHA verification");
@@ -29,6 +30,7 @@ const validateRecaptcha = async (req, token) => {
   }
 };
 
+// Registers a user only after the submitted reCAPTCHA token has been verified.
 const register = async (req, res) => {
   try {
     const { recaptchaToken, ...userData } = req.body;
@@ -44,6 +46,7 @@ const register = async (req, res) => {
   }
 };
 
+// Validates login input and CAPTCHA before delegating credential verification to the service.
 const login = async (req, res) => {
   try {
     const { identifier, password, recaptchaToken } = req.body;
@@ -67,6 +70,7 @@ const login = async (req, res) => {
   }
 };
 
+// Exchanges a valid refresh token for a new access/refresh token pair.
 const refresh = async (req, res) => {
   try {
     const { refreshToken } = req.body;
@@ -84,6 +88,7 @@ const refresh = async (req, res) => {
   }
 };
 
+// Returns the authenticated user's current profile and permissions.
 const profile = async (req, res) => {
   try {
     const userId = req.user?._id;
@@ -96,6 +101,7 @@ const profile = async (req, res) => {
   }
 };
 
+// Returns only the role and permissions used by the frontend RBAC layer.
 const permissions = async (req, res) => {
   try {
     const userId = req.user?._id;
@@ -113,6 +119,7 @@ const permissions = async (req, res) => {
   }
 };
 
+// Updates only the authenticated user's own profile and optional profile image.
 const updateProfile = async (req, res) => {
   try {
     const userId = req.user?._id;
@@ -134,6 +141,7 @@ const updateProfile = async (req, res) => {
   }
 };
 
+// Invalidates the stored refresh token for the authenticated user.
 const logout = async (req, res) => {
   try {
     const userId = req.user?._id;

@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const MODULES = require('../constants/modules');
 
+// Defines the CRUD actions available for each RBAC resource.
 const actionSchema = new mongoose.Schema(
     {
         view: { type: Boolean, default: false },
@@ -11,6 +12,7 @@ const actionSchema = new mongoose.Schema(
     { _id: false }
 );
 
+// Associates a module with its allowed actions in a role's permission set.
 const permissionSchema = new mongoose.Schema(
     {
         resource: {
@@ -27,6 +29,7 @@ const permissionSchema = new mongoose.Schema(
     { _id: false }
 );
 
+// Stores role metadata, permissions, and the roles this role can manage.
 const roleSchema = new mongoose.Schema(
     {
         name: {

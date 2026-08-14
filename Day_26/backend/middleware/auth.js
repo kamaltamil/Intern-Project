@@ -9,6 +9,7 @@ const accessSecret =
 /*                         Authenticate JWT Token                             */
 /* -------------------------------------------------------------------------- */
 
+// Verifies the access token, loads the current user, and attaches the user to the request.
 /**
  * Validates the Bearer token and attaches req.user with populated role.
  *
@@ -67,6 +68,7 @@ const authenticateToken = async (req, res, next) => {
 /*                     Check Module Permission (inline)                       */
 /* -------------------------------------------------------------------------- */
 
+// Checks the authenticated user's populated role for the requested resource action.
 const hasPermission = (resource, action) => {
   return (req, res, next) => {
     try {
@@ -101,6 +103,7 @@ const hasPermission = (resource, action) => {
 /*                         Require System Role                                */
 /* -------------------------------------------------------------------------- */
 
+// Restricts a route to one of the explicitly supplied system role names.
 const requireSystemRole = (...roles) => {
   return (req, res, next) => {
     const currentRole =
