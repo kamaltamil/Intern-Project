@@ -18,12 +18,14 @@ const RoomManagementPage = lazy(() => import("../pages/RoomManagementPage"));
 const ReportsPage = lazy(() => import("../pages/ReportsPage"));
 const ApprovalPage = lazy(() => import("../pages/ApprovalPage"));
 
+// Displays a common loading state while a lazy-loaded route component is fetched.
 const Loader = (
   <div className="flex min-h-screen items-center justify-center">
     <Spin size="large" />
   </div>
 );
 
+// Defines public routes and the protected dashboard routes used by the application.
 function AppRoutes() {
   return (
     <Suspense fallback={Loader}>
