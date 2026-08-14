@@ -1,6 +1,7 @@
 const Subscription = require("../models/subscription");
 const { sendSubscriptionConfirmation } = require("../services/emailService");
 
+// Validates a newsletter subscription, stores the email, and sends confirmation.
 const subscribe = async (req, res) => {
   try {
     const email = String(req.body?.email || "").trim().toLowerCase();
