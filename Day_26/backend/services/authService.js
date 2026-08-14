@@ -7,26 +7,17 @@ const User = require("../models/user");
 const Role = require("../models/role");
 
 const accessSecret = process.env.JWT_ACCESS_SECRET || "dev-access-secret";
-
 const refreshSecret = process.env.JWT_REFRESH_SECRET || "dev-refresh-secret";
-
 const nameRegex = /^[a-zA-Z]{2,}(?:\s[a-zA-Z]{2,})+$/;
 const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 const userNameRegex = /^[a-zA-Z\d_]{3,16}$/;
 const passwordRegex =
   /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@&%*+!$])[a-zA-Z\d@&%*+!$]{8,}$/;
 
-/**
- * Normalize permissions array so both action and actions fields exist.
- */
 const normalizePermissions = (permissions = []) => {
-  if (!Array.isArray(permissions)) {
-    return [];
-  }
-
+  if (!Array.isArray(permissions)) return [];
   return permissions.map((permission) => {
     const act = permission.action || permission.actions || {};
-
     return {
       resource: permission.resource,
       action: {
@@ -39,99 +30,47 @@ const normalizePermissions = (permissions = []) => {
   });
 };
 
-/**
- * Create access token
- */
-const createAccessToken = (userId, roleName) => {
-  return jwt.sign(
-    {
-      sub: userId.toString(),
-      userId: userId.toString(),
-      role: roleName,
-    },
+const createAccessToken = (userId, roleName) =>
+  jwt.sign(
+    { sub: userId.toString(), userId: userId.toString(), role: roleName },
     accessSecret,
-    {
-      expiresIn: "1h",
-    },
+    { expiresIn: "1h" },
   );
-};
 
-/**
- * Create refresh token
- */
-const createRefreshToken = (userId) => {
-  return jwt.sign(
-    {
-      userId: userId.toString(),
-      jti: crypto.randomUUID(),
-    },
+const createRefreshToken = (userId) =>
+  jwt.sign(
+    { userId: userId.toString(), jti: crypto.randomUUID() },
     refreshSecret,
-    {
-      expiresIn: "7d",
-    },
+    { expiresIn: "7d" },
   );
-};
 
-/**
- * Find role by ID or Name
- */
 const getRoleDocument = async (roleRef) => {
   if (!roleRef) return null;
-
-  if (typeof roleRef === "object" && roleRef.name) {
-    return roleRef;
-  }
-
+  if (typeof roleRef === "object" && roleRef.name) return roleRef;
   if (mongoose.Types.ObjectId.isValid(roleRef)) {
     const roleDoc = await Role.findById(roleRef).lean();
-
-    if (roleDoc) {
-      return roleDoc;
-    }
+    if (roleDoc) return roleDoc;
   }
-
   return await Role.findOne({ name: roleRef }).lean();
 };
 
-/**
- * Get permissions for a role reference (ID or Name)
- */
 const getRolePermissions = async (roleRef) => {
   const roleDoc = await getRoleDocument(roleRef);
-
-  if (!roleDoc) {
-    return [];
-  }
-
+  if (!roleDoc) return [];
   return normalizePermissions(roleDoc.permissions);
 };
 
-/**
- * Generate and store JWT tokens
- */
 const generateAndStoreTokens = async (userId, roleName) => {
   const token = createAccessToken(userId, roleName);
   const refreshToken = createRefreshToken(userId);
-
   const hashedRefreshToken = await bcrypt.hash(refreshToken, 10);
-
-  await User.findByIdAndUpdate(userId, {
-    refreshToken: hashedRefreshToken,
-  });
-
-  return {
-    token,
-    refreshToken,
-  };
+  await User.findByIdAndUpdate(userId, { refreshToken: hashedRefreshToken });
+  return { token, refreshToken };
 };
 
-/**
- * Register user (public signup)
- */
 const registerUser = async ({ name, email, username, password, role }) => {
   if (!name || !email || !username || !password) {
     const error = new Error("Name, email, username and password are required");
-
     error.statusCode = 400;
     throw error;
   }
@@ -144,81 +83,49 @@ const registerUser = async ({ name, email, username, password, role }) => {
     const error = new Error(
       "Name must contain at least two words with at least 2 letters each",
     );
-
     error.statusCode = 400;
     throw error;
   }
-
   if (!emailRegex.test(normalizedEmail)) {
     const error = new Error("Please enter a valid email address");
-
     error.statusCode = 400;
     throw error;
   }
-
   if (!userNameRegex.test(normalizedUsername)) {
     const error = new Error(
       "Username must be 3-16 characters and contain only letters, numbers, or underscores",
     );
-
     error.statusCode = 400;
     throw error;
   }
-
   if (!passwordRegex.test(String(password))) {
     const error = new Error(
       "Password must be at least 8 characters and include uppercase, lowercase, a number, and a special character",
     );
-
     error.statusCode = 400;
     throw error;
   }
 
   const existingUser = await User.findOne({
-    $or: [
-      {
-        email: normalizedEmail,
-      },
-      {
-        username: normalizedUsername,
-      },
-    ],
+    $or: [{ email: normalizedEmail }, { username: normalizedUsername }],
   });
-
   if (existingUser) {
     const error = new Error("Email or username already exists");
-
     error.statusCode = 409;
     throw error;
   }
 
   let roleDoc = null;
-
-  if (role) {
-    roleDoc = await getRoleDocument(role);
-  }
-
-  if (!roleDoc) {
-    roleDoc = await Role.findOne({
-      isDefault: true,
-    }).lean();
-  }
-
-  if (!roleDoc) {
-    roleDoc = await Role.findOne({
-      name: "Member",
-    }).lean();
-  }
-
+  if (role) roleDoc = await getRoleDocument(role);
+  if (!roleDoc) roleDoc = await Role.findOne({ isDefault: true }).lean();
+  if (!roleDoc) roleDoc = await Role.findOne({ name: "Member" }).lean();
   if (!roleDoc) {
     const error = new Error("No default role found in system");
-
     error.statusCode = 400;
     throw error;
   }
 
   const hashedPassword = await bcrypt.hash(String(password), 10);
-
   const user = await User.create({
     name: normalizedName,
     email: normalizedEmail,
@@ -237,63 +144,45 @@ const registerUser = async ({ name, email, username, password, role }) => {
   };
 };
 
-/**
- * Login user
- */
 const loginUser = async (identifier, password) => {
   if (!identifier || !password) {
     const error = new Error("Email/username and password are required");
-
     error.statusCode = 400;
     throw error;
   }
 
   const normalizedIdentifier = String(identifier).trim();
-
   if (!normalizedIdentifier) {
     const error = new Error("Email/username and password are required");
-
     error.statusCode = 400;
     throw error;
   }
 
   const user = await User.findOne({
     $or: [
-      {
-        email: normalizedIdentifier.toLowerCase(),
-      },
-      {
-        username: normalizedIdentifier.toLowerCase(),
-      },
+      { email: normalizedIdentifier.toLowerCase() },
+      { username: normalizedIdentifier.toLowerCase() },
     ],
   }).populate("role");
 
   if (!user) {
     const error = new Error("Invalid credentials");
-
     error.statusCode = 401;
     throw error;
   }
 
   const passwordMatch = await bcrypt.compare(String(password), user.password);
-
   if (!passwordMatch) {
     const error = new Error("Invalid credentials");
-
     error.statusCode = 401;
     throw error;
   }
 
-  let roleDoc = user.role;
-
-  if (!roleDoc?.name) {
-    roleDoc = await getRoleDocument(user.role);
-  }
-
+  const roleDoc = user.role?.name
+    ? user.role
+    : await getRoleDocument(user.role);
   const roleName = roleDoc?.name || "Member";
-
   const permissions = normalizePermissions(roleDoc?.permissions || []);
-
   const tokens = await generateAndStoreTokens(user._id, roleName);
 
   return {
@@ -313,42 +202,32 @@ const loginUser = async (identifier, password) => {
   };
 };
 
-/**
- * Refresh access token
- */
 const refreshAccessToken = async (refreshToken) => {
   if (!refreshToken) {
     const error = new Error("Refresh token is required");
-
     error.statusCode = 400;
     throw error;
   }
 
   let decoded;
-
   try {
     decoded = jwt.verify(refreshToken, refreshSecret);
   } catch (error) {
     const authError = new Error("Invalid or expired refresh token");
-
     authError.statusCode = 401;
     throw authError;
   }
 
   const userId = decoded.userId || decoded.sub;
-
   if (!userId) {
     const error = new Error("Invalid refresh token payload");
-
     error.statusCode = 401;
     throw error;
   }
 
   const user = await User.findById(userId).populate("role");
-
   if (!user?.refreshToken) {
     const error = new Error("Invalid refresh token");
-
     error.statusCode = 401;
     throw error;
   }
@@ -357,33 +236,21 @@ const refreshAccessToken = async (refreshToken) => {
     refreshToken,
     user.refreshToken,
   );
-
   if (!refreshTokenMatch) {
     const error = new Error("Invalid refresh token");
-
     error.statusCode = 401;
     throw error;
   }
 
-  let roleDoc = user.role;
-
-  if (!roleDoc?.name) {
-    roleDoc = await getRoleDocument(user.role);
-  }
-
+  const roleDoc = user.role?.name
+    ? user.role
+    : await getRoleDocument(user.role);
   const roleName = roleDoc?.name || "Member";
-
   const permissions = normalizePermissions(roleDoc?.permissions || []);
-
   const newToken = createAccessToken(user._id, roleName);
-
   const newRefreshToken = createRefreshToken(user._id);
-
   const hashedRefreshToken = await bcrypt.hash(newRefreshToken, 10);
-
-  await User.findByIdAndUpdate(user._id, {
-    refreshToken: hashedRefreshToken,
-  });
+  await User.findByIdAndUpdate(user._id, { refreshToken: hashedRefreshToken });
 
   return {
     token: newToken,
@@ -393,24 +260,14 @@ const refreshAccessToken = async (refreshToken) => {
   };
 };
 
-/**
- * Get logged-in user's profile
- */
 const getProfile = async (userId) => {
   const user = await User.findById(userId).populate("role").lean();
+  if (!user) return null;
 
-  if (!user) {
-    return null;
-  }
-
-  let roleDoc = user.role;
-
-  if (!roleDoc?.name) {
-    roleDoc = await getRoleDocument(user.role);
-  }
-
+  const roleDoc = user.role?.name
+    ? user.role
+    : await getRoleDocument(user.role);
   const roleName = roleDoc?.name || "Member";
-
   const permissions = normalizePermissions(roleDoc?.permissions || []);
 
   return {
@@ -428,143 +285,83 @@ const getProfile = async (userId) => {
   };
 };
 
-/**
- * Update only the authenticated user's own profile.
- *
- * This intentionally does not use users.update/managed-user rules.
- * Authorization is provided by the profile.update route middleware
- * and the target user is always req.user._id.
- */
+const throwValidationError = (message) => {
+  const error = new Error(message);
+  error.statusCode = 400;
+  throw error;
+};
+
+const validateProfileName = (value) => {
+  const name = String(value).trim();
+  if (!name) throwValidationError("Name is required");
+  if (!nameRegex.test(name)) {
+    throwValidationError(
+      "Name must contain at least two words with at least 2 letters each",
+    );
+  }
+  return name;
+};
+
+const validateProfileEmail = async (value, userId) => {
+  const email = String(value).trim().toLowerCase();
+  if (!email) throwValidationError("Email is required");
+  if (!emailRegex.test(email)) throwValidationError("Please enter a valid email address");
+  const existing = await User.findOne({ email, _id: { $ne: userId } });
+  if (existing) {
+    const error = new Error("Email already exists");
+    error.statusCode = 409;
+    throw error;
+  }
+  return email;
+};
+
+const validateProfileUsername = async (value, userId) => {
+  const username = String(value).trim().toLowerCase();
+  if (!username) throwValidationError("Username is required");
+  if (!userNameRegex.test(username)) {
+    throwValidationError(
+      "Username must be 3-16 characters and contain only letters, numbers, or underscores",
+    );
+  }
+  const existing = await User.findOne({ username, _id: { $ne: userId } });
+  if (existing) {
+    const error = new Error("Username already exists");
+    error.statusCode = 409;
+    throw error;
+  }
+  return username;
+};
+
+const validateAndHashProfilePassword = async (value) => {
+  const password = String(value);
+  if (!password.trim()) throwValidationError("Password cannot be empty");
+  if (!passwordRegex.test(password)) {
+    throwValidationError(
+      "Password must be at least 8 characters and include uppercase, lowercase, a number, and a special character",
+    );
+  }
+  return await bcrypt.hash(password, 10);
+};
+
 const updateOwnProfile = async (userId, payload) => {
   const user = await User.findById(userId);
-
   if (!user) {
     const error = new Error("User not found");
-
     error.statusCode = 404;
     throw error;
   }
 
-  if (payload.name !== undefined) {
-    const name = String(payload.name).trim();
-
-    if (!name) {
-      const error = new Error("Name is required");
-
-      error.statusCode = 400;
-      throw error;
-    }
-
-    if (!nameRegex.test(name)) {
-      const error = new Error(
-        "Name must contain at least two words with at least 2 letters each",
-      );
-
-      error.statusCode = 400;
-      throw error;
-    }
-
-    user.name = name;
-  }
-
-  if (payload.email !== undefined) {
-    const email = String(payload.email).trim().toLowerCase();
-
-    if (!email) {
-      const error = new Error("Email is required");
-
-      error.statusCode = 400;
-      throw error;
-    }
-
-    if (!emailRegex.test(email)) {
-      const error = new Error("Please enter a valid email address");
-
-      error.statusCode = 400;
-      throw error;
-    }
-
-    const existing = await User.findOne({
-      email,
-      _id: {
-        $ne: userId,
-      },
-    });
-
-    if (existing) {
-      const error = new Error("Email already exists");
-
-      error.statusCode = 409;
-      throw error;
-    }
-
-    user.email = email;
-  }
-
-  if (payload.username !== undefined) {
-    const username = String(payload.username).trim().toLowerCase();
-
-    if (!username) {
-      const error = new Error("Username is required");
-
-      error.statusCode = 400;
-      throw error;
-    }
-
-    if (!userNameRegex.test(username)) {
-      const error = new Error(
-        "Username must be 3-16 characters and contain only letters, numbers, or underscores",
-      );
-
-      error.statusCode = 400;
-      throw error;
-    }
-
-    const existing = await User.findOne({
-      username,
-      _id: {
-        $ne: userId,
-      },
-    });
-
-    if (existing) {
-      const error = new Error("Username already exists");
-
-      error.statusCode = 409;
-      throw error;
-    }
-
-    user.username = username;
-  }
-
-  if (payload.password !== undefined) {
-    const password = String(payload.password);
-
-    if (!password.trim()) {
-      const error = new Error("Password cannot be empty");
-
-      error.statusCode = 400;
-      throw error;
-    }
-
-    if (!passwordRegex.test(password)) {
-      const error = new Error(
-        "Password must be at least 8 characters and include uppercase, lowercase, a number, and a special character",
-      );
-
-      error.statusCode = 400;
-      throw error;
-    }
-
-    user.password = await bcrypt.hash(password, 10);
-  }
-
-  if (payload.profileImage !== undefined) {
+  if (payload.name !== undefined) user.name = validateProfileName(payload.name);
+  if (payload.email !== undefined)
+    user.email = await validateProfileEmail(payload.email, userId);
+  if (payload.username !== undefined)
+    user.username = await validateProfileUsername(payload.username, userId);
+  if (payload.password !== undefined)
+    user.password = await validateAndHashProfilePassword(payload.password);
+  if (payload.profileImage !== undefined)
     user.profileImage = payload.profileImage;
-  }
 
   await user.save();
-
   return await getProfile(user._id);
 };
 
