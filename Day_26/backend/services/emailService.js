@@ -75,15 +75,19 @@ const formatDate = (date) =>
 const getBookingDetails = (booking) => {
   const user = booking?.user || {};
   const room = booking?.room || {};
-
+  const roomType = room.type ? room.type : "";
+  let roomNumber 
+  if (room.roomNumber){
+      roomNumber=`Room ${room.roomNumber}-${roomType}`
+  } else {
+    roomNumber = "Room details unavailable"
+  };
   return {
     applicationName: getApplicationName(),
     userName: user.name || "Guest",
     email: user.email,
     bookingId: booking?._id?.toString() || "-",
-    roomInfo: room.roomNumber
-      ? `Room ${room.roomNumber}${room.type ? ` - ${room.type}` : ""}`
-      : "Room details unavailable",
+    roomInfo: roomNumber,
     startDate: formatDate(booking?.startDate),
     endDate: formatDate(booking?.endDate),
     status: booking?.bookingStatus || "-",

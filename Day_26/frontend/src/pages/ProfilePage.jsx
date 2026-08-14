@@ -163,27 +163,27 @@ function ProfilePage() {
 
   if (isUserLoading) {
     return (
-      <div className="py-10">
+      <div className="py-10" >
         <p>Loading profile...</p>
       </div>
     );
   }
   if (isUserError) {
     return (
-      <div className="py-10">
+      <div className="py-10" >
         <p>Unable to load profile data.</p>
       </div>
     );
   }
 
   return (
-    <div className="max-w-2xl mx-auto space-y-4">
+    <div className="max-w-2xl mx-auto space-y-4" >
       <Title level={4} style={{ color: isDark ? "#f0f0f0" : "#2E2A27" }}>
         My Profile
       </Title>
 
-      <Card className="rounded-2xl border border-[#ECE6DF] shadow-sm">
-        <div className="flex items-center gap-4 mb-6">
+      <Card className="rounded-2xl border border-[#ECE6DF] shadow-sm" >
+        <div className="flex items-center gap-4 mb-6" >
           <Avatar
             size={72}
             src={previewImage}
@@ -193,13 +193,13 @@ function ProfilePage() {
               (profileUser?.user?.name?.charAt(0)?.toUpperCase() || "U")}
           </Avatar>
           <div>
-            <div className="text-xl font-semibold text-[#2E2A27]">
+            <div className="text-xl font-semibold text-[#2E2A27]" >
               {profileUser?.user?.name || "Unknown"}
             </div>
-            <div className="text-[#A74E2B] text-sm">
+            <div className="text-[#A74E2B] text-sm" >
               @{profileUser?.user?.username || "user"}
             </div>
-            <Tag color={roleColor} className="mt-1">
+            <Tag color={roleColor} className="mt-1" >
               {roleName}
             </Tag>
           </div>
@@ -208,7 +208,7 @@ function ProfilePage() {
         <Divider />
 
         { !editing ? (
-          <div className="space-y-4">
+          <div className="space-y-4" >
             <Descriptions
               title="User Profile"
               column={2}
@@ -243,7 +243,7 @@ function ProfilePage() {
               ]}
             />
 
-            <PermissionGate resource="profile" action="update">
+            <PermissionGate resource="profile" action="update" >
               <Button
                 type="primary"
                 icon={<EditOutlined />}
@@ -256,7 +256,7 @@ function ProfilePage() {
           </div>
         ) : (
           <Form form={form} layout="vertical" onFinish={onFinish}>
-            <Form.Item label="Profile Photo">
+            <Form.Item label="Profile Photo" >
               <Upload
                 accept="image/*"
                 showUploadList={false}
@@ -271,7 +271,7 @@ function ProfilePage() {
                   }
                 }}
               >
-                <Button icon={<UploadOutlined />} type="default">
+                <Button icon={<UploadOutlined />} type="default" >
                   Choose Photo
                 </Button>
               </Upload>
@@ -311,7 +311,7 @@ function ProfilePage() {
               <Input.Password placeholder="Enter new password (optional)" />
             </Form.Item>
 
-            <div className="flex gap-2">
+            <div className="flex gap-2" >
               <Button
                 type="primary"
                 htmlType="submit"

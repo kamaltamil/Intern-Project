@@ -41,8 +41,8 @@ export const hasAnyPermission = (permissions, resource) => {
     return false;
   }
 
-  return Object.values(permission.action).some(
-    (value) => value === true
+  return Object.values(permission.action).includes(
+    true
   );
 };
 

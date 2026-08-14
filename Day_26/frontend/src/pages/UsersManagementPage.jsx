@@ -200,7 +200,7 @@ function UsersManagementPage() {
       title: "Name",
       dataIndex: "name",
       render: (name, record) => (
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3" >
           <Avatar
             src={resolveProfileImage(record.profileImage)}
             style={{ backgroundColor: "#C76A34" }}
@@ -208,7 +208,7 @@ function UsersManagementPage() {
             {!record.profileImage &&
               (record.name?.charAt(0)?.toUpperCase() || "U")}
           </Avatar>
-          <span className="font-medium">{name}</span>
+          <span className="font-medium" >{name}</span>
         </div>
       ),
     },
@@ -219,7 +219,7 @@ function UsersManagementPage() {
     {
       title: "Username",
       dataIndex: "username",
-      render: (username) => <span className="text-gray-500">@{username}</span>,
+      render: (username) => <span className="text-gray-500" >@{username}</span>,
     },
     {
       title: "Role",
@@ -246,8 +246,8 @@ function UsersManagementPage() {
       title: "Actions",
       key: "actions",
       render: (_, record) => (
-        <Space size="small">
-          <PermissionGate resource="users" action="update">
+        <Space size="small" >
+          <PermissionGate resource="users" action="update" >
             <Button
               size="small"
               icon={<EditOutlined />}
@@ -258,7 +258,7 @@ function UsersManagementPage() {
             </Button>
           </PermissionGate>
 
-          <PermissionGate resource="users" action="delete">
+          <PermissionGate resource="users" action="delete" >
             <Popconfirm
               title="Delete User"
               description={`Are you sure you want to delete ${record.name}?`}
@@ -310,7 +310,7 @@ function UsersManagementPage() {
   /* ---------- Loading State ---------- */
   if (usersLoading) {
     return (
-      <div className="space-y-4">
+      <div className="space-y-4" >
         <Skeleton active paragraph={{ rows: 6 }} />
       </div>
     );
@@ -518,9 +518,9 @@ function UsersManagementPage() {
     },
   ];
   return (
-    <div className="space-y-4">
+    <div className="space-y-4" >
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between" >
         <div>
           <Title
             level={4}
@@ -529,7 +529,7 @@ function UsersManagementPage() {
           >
             User Management
           </Title>
-          <Text className="text-gray-400 text-sm">
+          <Text className="text-gray-400 text-sm" >
             Manage system users and assign roles.
           </Text>
         </div>
@@ -556,7 +556,7 @@ function UsersManagementPage() {
       </div>
 
       {/* Stats Row */}
-      <div className="space-y-4">
+      <div className="space-y-4" >
         <Row gutter={[16, 16]}>
           {userStats.map((stat) => (
             <Col xs={24} sm={12} lg={6} key={stat.title}>
