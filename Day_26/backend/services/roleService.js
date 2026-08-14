@@ -1,5 +1,6 @@
 const Role = require("../models/role");
 
+// Ensures Create, Update, and Delete permissions are only assigned when View is enabled.
 const validatePermissions = (permissions = []) => {
   if (!Array.isArray(permissions)) {
     const error = new Error("Permissions must be an array");
@@ -28,6 +29,7 @@ const validatePermissions = (permissions = []) => {
 /*                              Create Role                                   */
 /* -------------------------------------------------------------------------- */
 
+// Creates a role with its permissions and manageable-role relationships.
 const createRole = async (data) => {
   try {
     const { name, permissions = [], manageableRoles = [], description = "", color, isDefault = false } = data;
@@ -55,6 +57,7 @@ const createRole = async (data) => {
 /*                              Get All Roles                                 */
 /* -------------------------------------------------------------------------- */
 
+// Loads all roles and populates manageable roles for display and management checks.
 const getAllRoles = async () => {
   try {
     return await Role.find()
@@ -69,6 +72,7 @@ const getAllRoles = async () => {
 /*                              Get Role By ID                                */
 /* -------------------------------------------------------------------------- */
 
+// Loads one role together with the names and colors of its manageable roles.
 const getRoleById = async (id) => {
   try {
     return await Role.findById(id).populate("manageableRoles", "name color");
@@ -78,9 +82,10 @@ const getRoleById = async (id) => {
 };
 
 /* -------------------------------------------------------------------------- */
-/*                              Update Role                                   */
+/*                               Update Role                                  */
 /* -------------------------------------------------------------------------- */
 
+// Updates a role while preserving permission validation and returning populated relationships.
 const updateRole = async (id, data) => {
   try {
     if (data.permissions) validatePermissions(data.permissions);
@@ -98,9 +103,10 @@ const updateRole = async (id, data) => {
 };
 
 /* -------------------------------------------------------------------------- */
-/*                              Delete Role                                   */
+/*                               Delete Role                                  */
 /* -------------------------------------------------------------------------- */
 
+// Deletes a role and reports a not-found status when the role does not exist.
 const deleteRole = async (id) => {
   try {
     const role = await Role.findByIdAndDelete(id);
