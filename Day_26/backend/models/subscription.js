@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 
+// Defines the normalized email data stored for newsletter subscriptions.
 const subscriptionSchema = new mongoose.Schema(
   {
     email: {
