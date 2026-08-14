@@ -4,24 +4,28 @@ const User = require("../models/user");
 const Role = require("../models/role");
 const { sendBookingNotification } = require("./emailService");
 
+// Creates service errors with an HTTP status for controller-level response handling.
 const createServiceError = (message, statusCode) => {
   const error = new Error(message);
   error.statusCode = statusCode;
   return error;
 };
 
+// Normalizes the current date to midnight for booking date validation.
 const getToday = () => {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   return today;
 };
 
+// Booking emails are intentionally fire-and-forget so SMTP failures do not block status changes.
 const sendBookingEmail = (type, booking) => {
   sendBookingNotification(type, booking).catch((error) => {
     console.error(`Booking email failed (${type}):`, error.message);
   });
 };
 
+// Finds rooms available for the requested dates while excluding active overlapping bookings.
 const getAvailableRoomsForBooking = async ({ startDate, endDate } = {}) => {
   const query = {};
 
@@ -53,6 +57,7 @@ const getAvailableRoomsForBooking = async ({ startDate, endDate } = {}) => {
   return Room.find(query).select("roomNumber type price").sort({ roomNumber: 1 });
 };
 
+// Validates dates and room conflicts before creating a booking in Pending Approval state.
 const varifyAndBookRoom = async ({ roomId, userId, startDate, endDate }) => {
   const start = new Date(startDate);
   const end = new Date(endDate);
@@ -108,6 +113,7 @@ const varifyAndBookRoom = async ({ roomId, userId, startDate, endDate }) => {
   return populatedBooking;
 };
 
+// Returns all bookings with room and user details for users who can view the full booking list.
 const getAllBookings = async () => {
   try {
     return await Booking.find()
@@ -123,6 +129,7 @@ const getAllBookings = async () => {
   }
 };
 
+// Returns bookings belonging to users with the Member role for approval/review views.
 const getMemberBookings = async () => {
   try {
     const memberRole = await Role.findOne({ name: "Member" });
@@ -143,6 +150,7 @@ const getMemberBookings = async () => {
   }
 };
 
+// Returns only the bookings owned by the requested user.
 const getBookingsByUserId = async (userId) => {
   try {
     return await Booking.find({ user: userId })
@@ -158,6 +166,7 @@ const getBookingsByUserId = async (userId) => {
   }
 };
 
+// Defines the allowed booking status transitions used by updateBooking.
 const STATUS_TRANSITIONS = {
   "Pending Approval": ["Payment Pending", "Rejected", "Cancelled"],
   "Payment Pending": ["Booked", "Cancelled"],
@@ -168,6 +177,7 @@ const STATUS_TRANSITIONS = {
   Rejected: [],
 };
 
+// Updates permitted booking fields and sends a notification when the booking status changes.
 const updateBooking = async (id, updateData) => {
   try {
     const booking = await Booking.findById(id);
@@ -232,6 +242,7 @@ const updateBooking = async (id, updateData) => {
   }
 };
 
+// Deletes a booking by its identifier.
 const deleteBooking = async (id) => {
   try {
     return await Booking.findByIdAndDelete(id);
