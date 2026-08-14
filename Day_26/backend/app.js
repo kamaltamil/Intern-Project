@@ -9,7 +9,7 @@ const app = express();
 
 const apiv1Router = require('./routes/api/v1/api');
 
-// Disable the X-Powered-By header to avoid exposing framework version details
+// Hide the framework header so the server does not expose Express details.
 app.disable('x-powered-by');
 
 const corsOptions = {
@@ -26,22 +26,21 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// API responses are always dynamic/DB-backed — never let the browser cache
-// and reuse a stale one (this is what makes GET /users, /roles, /booking
-// keep serving old data even after the backend has been updated/restarted).
+// Prevent browser caching of dynamic API responses backed by the database.
 app.use('/api/v1', (req, res, next) => {
   res.set('Cache-Control', 'no-store');
   next();
 });
 
+// Mount all version 1 API routes under the common API prefix.
 app.use('/api/v1', apiv1Router);
 
-// catch 404 and forward to error handler
+// Forward unmatched requests to the error handler as HTTP 404 responses.
 app.use(function(req, res, next) {
   next(createError(404));
 });
 
-// error handler
+// Return API-friendly error responses while exposing details only in development.
 app.use(function(err, req, res, next) {
   res.status(err.status || 500).json({
     message: err.message,
