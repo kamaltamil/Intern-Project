@@ -3,6 +3,7 @@ const {
   changeApprovalStatus,
 } = require("../services/approvalService");
 
+// Handles booking approval requests and delegates status changes to the service layer.
 const getPending = async (req, res) => {
   try {
     const bookings = await getPendingApprovals();
@@ -12,6 +13,7 @@ const getPending = async (req, res) => {
   }
 };
 
+// Approves a pending booking so that payment can proceed.
 const approveBooking = async (req, res) => {
   try {
     const booking = await changeApprovalStatus(req.params.id, "approve");
@@ -21,6 +23,7 @@ const approveBooking = async (req, res) => {
   }
 };
 
+// Rejects a booking that is still waiting for approval.
 const rejectBooking = async (req, res) => {
   try {
     const booking = await changeApprovalStatus(req.params.id, "reject");
