@@ -8,6 +8,7 @@ import Breadcrumb from "./common/Breadcrumb";
 
 const { Content } = Layout;
 
+// Provides the shared dashboard shell containing the sidebar, header, breadcrumb, and routed content.
 function DashboardLayout() {
   const { theme } = useSelector((state) => state.auth);
 
