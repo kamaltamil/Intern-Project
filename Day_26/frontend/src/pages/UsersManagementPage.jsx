@@ -503,19 +503,19 @@ function UsersManagementPage() {
         },
       ],
     },
-    // {
-    //   type: "password",
-    //   label: "Password",
-    //   name: "password",
-    //   placeholder: "Create password",
-    //   rules: [
-    //     {
-    //       pattern: String.raw`^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@&%*+!$])[a-zA-Z\d@&%*+!$]{8,}$`,
-    //       message:
-    //         "Password must be at least 8 characters and include uppercase, lowercase, a number, and a special character",
-    //     },
-    //   ],
-    // },
+    {
+      type: "password",
+      label: "Password",
+      name: "password",
+      placeholder: "Create password",
+      rules: [
+        {
+          pattern: String.raw`^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@&%*+!$])[a-zA-Z\d@&%*+!$]{8,}$`,
+          message:
+            "Password must be at least 8 characters and include uppercase, lowercase, a number, and a special character",
+        },
+      ],
+    },
   ];
   return (
     <div className="space-y-4">
