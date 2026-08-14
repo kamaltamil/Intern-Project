@@ -11,14 +11,17 @@ const ACTIVE_STATUSES = new Set([
 
 const REVENUE_STATUSES = new Set(["Booked", "CheckedIn", "CheckedOut"]);
 
+// Converts a date into the year-month key used by monthly report statistics.
 const getMonthKey = (date) => {
   const value = new Date(date);
   return `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, "0")}`;
 };
 
+// Formats a report month as a short human-readable label.
 const getMonthLabel = (date) =>
   new Intl.DateTimeFormat("en", { month: "short" }).format(date);
 
+// Creates six month buckets used for booking and revenue trends.
 const getLastSixMonths = () => {
   const months = [];
   const now = new Date();
@@ -36,6 +39,7 @@ const getLastSixMonths = () => {
   return months;
 };
 
+// Collects booking, user, room, status, revenue, and usage information for reports.
 const getReports = async () => {
   const [bookings, totalUsers, activeUsers, totalRooms] = await Promise.all([
     Booking.find()
