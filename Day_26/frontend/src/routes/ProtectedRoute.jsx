@@ -2,6 +2,7 @@ import { Navigate, Outlet } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { hasPermission } from "../utils/hasPermission";
 
+// Protects authenticated routes and, when requested, checks the user's RBAC permission.
 function ProtectedRoute({
   resource,
   action = "view",
