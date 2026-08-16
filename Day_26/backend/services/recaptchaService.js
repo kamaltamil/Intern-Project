@@ -35,16 +35,13 @@ const verifyRecaptcha = (token, remoteIp) => {
 
         response.on("data", (chunk) => {
           data += chunk;
-          console.log(data)
         });
 
         response.on("end", () => {
           try {
             const result = JSON.parse(data);
-            console.log(result)
             resolve(result.success === true);
           } catch (error) {
-            console.log(error)
             reject(new Error("Invalid reCAPTCHA verification response"));
           }
         });

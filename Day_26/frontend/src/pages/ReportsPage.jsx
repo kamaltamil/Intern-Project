@@ -5,7 +5,6 @@ import {
   Progress,
   Row,
   Select,
-  Statistic,
   Table,
   Tag,
   Typography,
@@ -26,6 +25,7 @@ import { fetchReports, updateBooking } from "../api/queries";
 import { bookingStatusConfig } from "../components/booking/BookingHelpers";
 import PermissionGate from "../components/PermissionGate";
 import CustomTable from "../components/CustomTable";
+import CustomCard from "../components/CustomCard";
 
 const { Title, Text } = Typography;
 
@@ -94,6 +94,56 @@ function ReportsPage() {
     status,
     count: statusCounts[status] || 0,
   }));
+
+  const primaryStats = [
+    {
+      title: "Total Bookings",
+      value: summary.totalBookings || 0,
+      icon: <CalendarOutlined />,
+    },
+    {
+      title: "Active Bookings",
+      value: summary.activeBookings || 0,
+      icon: <CheckCircleOutlined />,
+      color: "#52c41a",
+    },
+    {
+      title: "Active Users",
+      value: summary.activeUsers || 0,
+      icon: <TeamOutlined />,
+      color: "#1890ff",
+    },
+    {
+      title: "Revenue",
+      value: `₹${Number(summary.revenue || 0).toLocaleString("en-IN")}`,
+      icon: <DollarOutlined />,
+    },
+  ];
+
+  const summaryStats = [
+    {
+      title: "Completed",
+      value: summary.completedBookings || 0,
+      icon: <HomeOutlined />,
+      color: "#52c41a",
+    },
+    {
+      title: "Cancelled",
+      value: summary.cancelledBookings || 0,
+      icon: <CloseCircleOutlined />,
+      color: "#ff4d4f",
+    },
+    {
+      title: "Total Rooms",
+      value: summary.totalRooms || 0,
+      icon: <HomeOutlined />,
+    },
+    {
+      title: "Avg. Booking Value",
+      value: `₹${Number(summary.averageBookingValue || 0).toLocaleString("en-IN")}`,
+      icon: <DollarOutlined />,
+    },
+  ];
 
   const roomColumns = [
     {
@@ -185,50 +235,17 @@ function ReportsPage() {
       )}
 
       <Row gutter={[16, 16]}>
-        <Col xs={24} sm={12} lg={6}>
-          <Card className="h-full">
-            <Statistic
+        {primaryStats.map((stat) => (
+          <Col xs={24} sm={12} lg={6} key={stat.title}>
+            <CustomCard
               loading={isLoading}
-              title="Total Bookings"
-              value={summary.totalBookings || 0}
-              prefix={<CalendarOutlined />}
+              title={stat.title}
+              value={stat.value}
+              icon={stat.icon}
+              color={stat.color}
             />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card className="h-full">
-            <Statistic
-              loading={isLoading}
-              title="Active Bookings"
-              value={summary.activeBookings || 0}
-              prefix={<CheckCircleOutlined />}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card className="h-full">
-            <Statistic
-              loading={isLoading}
-              title="Active Users"
-              value={summary.activeUsers || 0}
-              prefix={<TeamOutlined />}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card className="h-full">
-            <Statistic
-              loading={isLoading}
-              title="Revenue"
-              value={summary.revenue || 0}
-              prefix={<DollarOutlined />}
-              precision={0}
-              formatter={(value) =>
-                `₹${Number(value).toLocaleString("en-IN")}`
-              }
-            />
-          </Card>
-        </Col>
+          </Col>
+        ))}
       </Row>
 
       <Row gutter={[16, 16]}>
@@ -292,39 +309,17 @@ function ReportsPage() {
       </Row>
 
       <Row gutter={[16, 16]}>
-        <Col xs={24} sm={12} lg={6}>
-          <Card>
-            <Statistic
-              title="Completed"
-              value={summary.completedBookings || 0}
-              prefix={<HomeOutlined />}
+        {summaryStats.map((stat) => (
+          <Col xs={24} sm={12} lg={6} key={stat.title}>
+            <CustomCard
+              loading={isLoading}
+              title={stat.title}
+              value={stat.value}
+              icon={stat.icon}
+              color={stat.color}
             />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card>
-            <Statistic
-              title="Cancelled"
-              value={summary.cancelledBookings || 0}
-              prefix={<CloseCircleOutlined />}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card>
-            <Statistic title="Total Rooms" value={summary.totalRooms || 0} />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card>
-            <Statistic
-              title="Avg. Booking Value"
-              value={summary.averageBookingValue || 0}
-              prefix="₹"
-              precision={0}
-            />
-          </Card>
-        </Col>
+          </Col>
+        ))}
       </Row>
 
       <Row gutter={[16, 16]}>
@@ -365,17 +360,16 @@ function ReportsPage() {
         </Col>
       </Row>
 
-      <Card title="Recent Bookings">
-        <Table
-          loading={isLoading}
-          rowKey="_id"
-          dataSource={bookings}
-          columns={bookingColumns}
-          pagination={{ pageSize: 6 }}
-          locale={{ emptyText: "No bookings found." }}
-          scroll={{ x: 650 }}
-        />
-      </Card>
+      <CustomTable
+        title="Recent Bookings"
+        isLoading={isLoading}
+        rowKey="_id"
+        dataSource={bookings}
+        columns={bookingColumns}
+        pagination={{ pageSize: 6 }}
+        locale={{ emptyText: "No bookings found." }}
+        scroll={{ x: 650 }}
+      />
     </div>
   );
 }

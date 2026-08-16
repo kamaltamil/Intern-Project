@@ -16,4 +16,11 @@ export const ROLE_COLORS = [
   { label: 'Gold',     value: '#faad14' },
 ];
 
+export const getFallbackRoleColor = (roleName) => {
+  const match = ROLE_COLORS.find(
+    (c) => c.label.toLowerCase() === roleName?.toLowerCase(),
+  );
+  return match ? match.value : '#722ed1';
+};
+
 export default ROLE_COLORS;

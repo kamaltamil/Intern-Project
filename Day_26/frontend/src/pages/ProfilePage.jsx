@@ -24,18 +24,11 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { updateProfile, fetchMe } from "../api/queries";
 import { updateUserProfile } from "../store/slices/authSlice";
 import { resolveProfileImage } from "../utils/image";
-import { ROLE_COLORS } from "../constants/roleColors";
+import { ROLE_COLORS, getFallbackRoleColor } from "../constants/roleColors";
 import PermissionGate from "../components/PermissionGate";
 import { usePermission } from "../hooks/usePermission";
 
 const { Title, Text } = Typography;
-
-const getFallbackRoleColor = (roleName) => {
-  const match = ROLE_COLORS.find(
-    (c) => c.label.toLowerCase() === roleName?.toLowerCase(),
-  );
-  return match ? match.value : "#722ed1";
-};
 
 function ProfilePage() {
   const dispatch = useDispatch();

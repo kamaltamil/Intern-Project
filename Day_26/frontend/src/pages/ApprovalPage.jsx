@@ -2,10 +2,8 @@ import { useState } from "react";
 import {
   Alert,
   Button,
-  Card,
   Popconfirm,
   Space,
-  Table,
   Tag,
   Typography,
   message,
@@ -17,6 +15,8 @@ import {
 } from "@ant-design/icons";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSelector } from "react-redux";
+
+import CustomTable from "../components/CustomTable";
 
 import {
   approveBooking,
@@ -157,8 +157,9 @@ function ApprovalPage() {
           }
         />
       )}
-      <Card>
-        <div className="flex justify-end mb-4">
+      <CustomTable
+        title={`Pending Bookings (${data.length})`}
+        extraHeader={
           <Button
             icon={<ReloadOutlined />}
             onClick={refetch}
@@ -166,17 +167,14 @@ function ApprovalPage() {
           >
             Refresh
           </Button>
-        </div>
-        <Table
-          rowKey="_id"
-          loading={isLoading}
-          dataSource={data}
-          columns={columns}
-          pagination={{ pageSize: 8 }}
-          scroll={{ x: 900 }}
-          locale={{ emptyText: "No bookings pending approval." }}
-        />
-      </Card>
+        }
+        rowKey="_id"
+        isLoading={isLoading}
+        dataSource={data}
+        columns={columns}
+        pagination={{ pageSize: 8 }}
+        scroll={{ x: 900 }}
+      />
     </div>
   );
 }

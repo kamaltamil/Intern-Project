@@ -35,14 +35,10 @@ function SignupPage() {
   });
 
   const onFinish = (values) => {
-    console.log("SIGNUP onFinish called");
-
     if (!recaptchaToken) {
       message.error("Please complete the reCAPTCHA verification");
       return;
     }
-
-    console.log(recaptchaToken);
 
     signupMutation.mutate({
       name: values.name,
@@ -77,15 +73,11 @@ function SignupPage() {
       name: "email",
       placeholder: "Enter your email",
       rules: [
-        { required: true, message: "Please enter your required" },
+        { required: true, message: "Please enter your email" },
         {
-          type: 'email',
+          type: "email",
           message: "Please enter a valid email",
         },
-        // {
-        //   pattern: String.raw`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`,
-        //   message: "Please enter a valid email",
-        // }
       ],
     },
     {

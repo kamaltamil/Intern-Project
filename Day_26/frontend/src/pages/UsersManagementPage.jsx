@@ -39,17 +39,10 @@ import {
 
 import { resolveProfileImage } from "../utils/image";
 import { usePermission } from "../hooks/usePermission";
-import { ROLE_COLORS } from "../constants/roleColors";
+import { ROLE_COLORS, getFallbackRoleColor } from "../constants/roleColors";
 import CustomForm from "../components/CustomForm";
 
 const { Title, Text } = Typography;
-
-const getFallbackRoleColor = (roleName) => {
-  const match = ROLE_COLORS.find(
-    (c) => c.label.toLowerCase() === roleName?.toLowerCase(),
-  );
-  return match ? match.value : "#722ed1";
-};
 
 /* -------------------------------------------------------------------------- */
 /*                         Users Management Page                              */
@@ -361,15 +354,11 @@ function UsersManagementPage() {
       label: "Email",
       placeholder: "Enter email",
       rules: [
-        { required: true, message: "Please enter your required" },
+        { required: true, message: "Please enter your email" },
         {
-          type: 'email',
+          type: "email",
           message: "Please enter a valid email",
         },
-        // {
-        //   pattern: String.raw`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`,
-        //   message: "Please enter a valid email",
-        // }
       ],
     },
     {
