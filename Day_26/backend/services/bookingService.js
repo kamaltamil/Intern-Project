@@ -3,6 +3,7 @@ const Booking = require("../models/booking");
 const User = require("../models/user");
 const Role = require("../models/role");
 const { sendBookingNotification } = require("./emailService");
+const logger = require("../config/logger");
 
 // Creates service errors with an HTTP status for controller-level response handling.
 const createServiceError = (message, statusCode) => {
@@ -21,7 +22,7 @@ const getToday = () => {
 // Booking emails are intentionally fire-and-forget so SMTP failures do not block status changes.
 const sendBookingEmail = (type, booking) => {
   sendBookingNotification(type, booking).catch((error) => {
-    console.error(`Booking email failed (${type}):`, error.message);
+    logger.error(`Booking email failed (${type})`, error);
   });
 };
 
@@ -109,6 +110,7 @@ const varifyAndBookRoom = async ({ roomId, userId, startDate, endDate }) => {
     });
 
   sendBookingEmail("created", populatedBooking);
+  logger.info("Booking created successfully");
 
   return populatedBooking;
 };
@@ -125,6 +127,7 @@ const getAllBookings = async () => {
       })
       .sort({ createdAt: -1 });
   } catch (error) {
+    logger.error("Failed to fetch all bookings", error);
     throw new Error("Error fetching bookings: " + error.message);
   }
 };
@@ -146,6 +149,7 @@ const getMemberBookings = async () => {
       })
       .sort({ createdAt: -1 });
   } catch (error) {
+    logger.error("Failed to fetch member bookings", error);
     throw new Error("Error fetching bookings: " + error.message);
   }
 };
@@ -162,6 +166,7 @@ const getBookingsByUserId = async (userId) => {
       })
       .sort({ createdAt: -1 });
   } catch (error) {
+    logger.error("Failed to fetch user bookings", error);
     throw new Error("Error fetching bookings: " + error.message);
   }
 };
@@ -235,8 +240,10 @@ const updateBooking = async (id, updateData) => {
       sendBookingEmail("status", updatedBooking);
     }
 
+    logger.info("Booking updated successfully");
     return updatedBooking;
   } catch (error) {
+    logger.error("Failed to update booking", error);
     if (error.statusCode) throw error;
     throw new Error("Error updating booking: " + error.message);
   }
@@ -245,8 +252,11 @@ const updateBooking = async (id, updateData) => {
 // Deletes a booking by its identifier.
 const deleteBooking = async (id) => {
   try {
-    return await Booking.findByIdAndDelete(id);
+    const booking = await Booking.findByIdAndDelete(id);
+    logger.info("Booking deleted successfully");
+    return booking;
   } catch (error) {
+    logger.error("Failed to delete booking", error);
     throw new Error("Error deleting booking: " + error.message);
   }
 };
