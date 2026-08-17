@@ -1,5 +1,6 @@
 const { getReports } = require("../services/reportService");
 
+// Aggregates monthly bookings, occupancy, revenue, and status metrics for reports.
 const getReport = async (req, res) => {
   try {
     const report = await getReports();

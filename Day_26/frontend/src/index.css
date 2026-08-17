@@ -42,3 +42,7 @@ body {
   margin: 0%;
   margin-top: 16px;
 }
+
+.ant-card-body{
+  padding-bottom: 8px !important;
+}

@@ -29,6 +29,7 @@ const ALL_MODULES = [
   { resource: "profile", key: "/profile", icon: <UserOutlined />, label: "Profile" },
 ];
 
+// Dynamically renders sidebar menu items based on the user's view permissions.
 function RoleSidebar() {
   const { permissions, theme } = useSelector((state) => state.auth);
   const { sidebarCollapsed } = useSelector((state) => state.dashboard);
@@ -37,6 +38,7 @@ function RoleSidebar() {
   const location = useLocation();
   const isDark = theme === "dark";
 
+  // Filter modules based on whether the current user's role has 'view' permission.
   const menuItems = ALL_MODULES
     .filter((module) => hasPermission(permissions, module.resource, "view"))
     .map((module) => ({

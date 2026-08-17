@@ -31,10 +31,7 @@ const isAuthRoute = (url = "") => {
   ].some((route) => url.includes(route));
 };
 
-/* -------------------------------------------------------------------------- */
-/*                         Request Interceptor                                */
-/* -------------------------------------------------------------------------- */
-
+// Attaches the current Bearer token to all outgoing API requests.
 api.interceptors.request.use(
   (config) => {
     const { token } = getAuthState();
@@ -56,6 +53,7 @@ api.interceptors.request.use(
 let isRefreshing = false;
 let refreshPromise = null;
 
+// Requests a new access token using the stored refresh token when 401 occurs.
 const refreshAccessToken = async () => {
   const { refreshToken } = getAuthState();
 
@@ -76,6 +74,7 @@ const refreshAccessToken = async () => {
       return null;
     }
 
+    // Update tokens and permissions in Redux.
     store.dispatch(
       setTokens({
         token: data.token,
@@ -99,6 +98,7 @@ const refreshAccessToken = async () => {
 /*                         Response Interceptor                               */
 /* -------------------------------------------------------------------------- */
 
+// Intercepts 401 Unauthorized responses to automatically refresh the token and retry the request.
 api.interceptors.response.use(
   (response) => response,
 
@@ -109,6 +109,7 @@ api.interceptors.response.use(
       throw error;
     }
 
+    // Skip refreshing for public auth endpoints (login, signup, refresh).
     const shouldRefresh =
       !originalRequest._retry &&
       !isAuthRoute(originalRequest.url) &&
@@ -120,6 +121,7 @@ api.interceptors.response.use(
 
     originalRequest._retry = true;
 
+    // Queue concurrent 401 requests behind a single refresh call.
     if (!isRefreshing) {
       isRefreshing = true;
 
@@ -135,6 +137,7 @@ api.interceptors.response.use(
       throw error;
     }
 
+    // Retry the original request with the fresh access token.
     originalRequest.headers = originalRequest.headers || {};
     originalRequest.headers.Authorization = `Bearer ${newToken}`;
 

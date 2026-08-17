@@ -85,7 +85,7 @@ function BookingPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between flex-wrap gap-3">
+      <div className="flex items-center justify-between sm:flex-row flex-col sm:gap-0 gap-3 sm:text-start text-center">
         <div className="flex items-center gap-2">
           <CalendarOutlined className="text-2xl text-[#C76A34]" />
           <Title

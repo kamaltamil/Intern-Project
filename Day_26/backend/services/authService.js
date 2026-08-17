@@ -198,6 +198,8 @@ const loginUser = async (identifier, password) => {
     token: tokens.token,
     refreshToken: tokens.refreshToken,
     role: roleName,
+    roleDoc,
+    dashboardConfig: roleDoc?.dashboardConfig,
     permissions,
   };
 };
@@ -281,6 +283,8 @@ const getProfile = async (userId) => {
       profileImage: user.profileImage,
     },
     role: roleName,
+    roleDoc,
+    dashboardConfig: roleDoc?.dashboardConfig,
     permissions,
   };
 };
@@ -365,12 +369,38 @@ const updateOwnProfile = async (userId, payload) => {
   return await getProfile(user._id);
 };
 
+const deleteOwnProfile = async (userId) => {
+  const user = await User.findById(userId).populate("role");
+  if (!user) {
+    const error = new Error("User not found");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  const roleName = user.role?.name || user.role;
+  if (roleName === "Admin") {
+    const adminRole = await Role.findOne({ name: "Admin" });
+    if (adminRole) {
+      const adminCount = await User.countDocuments({ role: adminRole._id });
+      if (adminCount <= 1) {
+        const error = new Error("Cannot delete the last Admin account");
+        error.statusCode = 400;
+        throw error;
+      }
+    }
+  }
+
+  await User.findByIdAndDelete(userId);
+  return true;
+};
+
 module.exports = {
   registerUser,
   loginUser,
   refreshAccessToken,
   getProfile,
   updateOwnProfile,
+  deleteOwnProfile,
   createAccessToken,
   createRefreshToken,
   generateAndStoreTokens,

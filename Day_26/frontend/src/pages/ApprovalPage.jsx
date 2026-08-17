@@ -17,6 +17,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSelector } from "react-redux";
 
 import CustomTable from "../components/CustomTable";
+import PermissionGate from "../components/PermissionGate";
 
 import {
   approveBooking,
@@ -97,39 +98,45 @@ function ApprovalPage() {
     {
       title: "Actions",
       render: (_, record) => (
-        <Space>
-          <Popconfirm
-            title="Approve this booking?"
-            onConfirm={() =>
-              mutation.mutate({ id: record._id, action: "approve" })
-            }
-            okText="Approve"
-          >
-            <Button
-              type="primary"
-              icon={<CheckOutlined />}
-              loading={busyId === record._id}
+        <PermissionGate
+          resource="approval"
+          action="update"
+          fallback={<Typography.Text type="secondary">—</Typography.Text>}
+        >
+          <Space>
+            <Popconfirm
+              title="Approve this booking?"
+              onConfirm={() =>
+                mutation.mutate({ id: record._id, action: "approve" })
+              }
+              okText="Approve"
             >
-              Approve
-            </Button>
-          </Popconfirm>
-          <Popconfirm
-            title="Reject this booking?"
-            onConfirm={() =>
-              mutation.mutate({ id: record._id, action: "reject" })
-            }
-            okText="Reject"
-            okButtonProps={{ danger: true }}
-          >
-            <Button
-              danger
-              icon={<CloseOutlined />}
-              loading={busyId === record._id}
+              <Button
+                type="primary"
+                icon={<CheckOutlined />}
+                loading={busyId === record._id}
+              >
+                Approve
+              </Button>
+            </Popconfirm>
+            <Popconfirm
+              title="Reject this booking?"
+              onConfirm={() =>
+                mutation.mutate({ id: record._id, action: "reject" })
+              }
+              okText="Reject"
+              okButtonProps={{ danger: true }}
             >
-              Reject
-            </Button>
-          </Popconfirm>
-        </Space>
+              <Button
+                danger
+                icon={<CloseOutlined />}
+                loading={busyId === record._id}
+              >
+                Reject
+              </Button>
+            </Popconfirm>
+          </Space>
+        </PermissionGate>
       ),
     },
   ];

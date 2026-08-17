@@ -11,6 +11,7 @@ import CustomForm from "../components/CustomForm";
 const { Title, Text } = Typography;
 const RECAPTCHA_SITE_KEY = process.env.REACT_APP_RECAPTCHA_SITE_KEY;
 
+// Handles authentication, reCAPTCHA validation, and Redux session initialization.
 function LoginPage() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -19,16 +20,18 @@ function LoginPage() {
   const recaptchaRef = useRef(null);
   const [recaptchaToken, setRecaptchaToken] = useState(null);
 
+  // Authenticates user and initializes user role, permissions, and tokens in Redux.
   const loginMutation = useMutation({
     mutationFn: loginUser,
     onSuccess: (data) => {
-      const { user, token, refreshToken, role, permissions } = data || {};
+      const { user, token, refreshToken, role, dashboardConfig, permissions } = data || {};
 
       if (!user || !token) {
         message.error("Invalid login response from server");
         return;
       }
 
+      // Clear stale cache and store active session credentials.
       queryClient.clear();
       dispatch(
         setAuth({
@@ -36,6 +39,7 @@ function LoginPage() {
           token,
           refreshToken,
           role,
+          dashboardConfig,
           permissions: permissions || [],
         }),
       );
@@ -52,6 +56,7 @@ function LoginPage() {
     },
   });
 
+  // Verify reCAPTCHA token before sending login request.
   const onFinish = (values) => {
     if (!recaptchaToken) {
       message.error("Please complete the reCAPTCHA verification");

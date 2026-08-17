@@ -4,6 +4,7 @@ import {
   Button,
   Checkbox,
   Col,
+  Divider,
   Dropdown,
   Form,
   Input,
@@ -54,6 +55,19 @@ const ACTIONS = [
   { key: "create", label: "Create" },
   { key: "update", label: "Update" },
   { key: "delete", label: "Delete" },
+];
+
+const DASHBOARD_WIDGET_OPTIONS = [
+  { key: "totalBookings", title: "Total Bookings", icon: "CalendarOutlined", color: "#C76A34" },
+  { key: "todayBookings", title: "Today's Bookings", icon: "CalendarOutlined", color: "#C76A34" },
+  { key: "activeBookings", title: "Active Bookings", icon: "CheckCircleOutlined", color: "#52c41a" },
+  { key: "pendingApprovals", title: "Pending Approvals", icon: "ClockCircleOutlined", color: "#faad14" },
+  { key: "availableRooms", title: "Available Rooms", icon: "HomeOutlined", color: "#13c2c2" },
+  { key: "totalRooms", title: "Total Rooms", icon: "HomeOutlined", color: "#722ed1" },
+  { key: "totalUsers", title: "Total Users", icon: "TeamOutlined", color: "#1890ff" },
+  { key: "myUpcoming", title: "My Upcoming Stay", icon: "TeamOutlined", color: "#C76A34" },
+  { key: "myHistory", title: "My Booking History", icon: "UserOutlined", color: "#8c8c8c" },
+  { key: "revenue", title: "Revenue", icon: "DollarOutlined", color: "#52c41a" },
 ];
 
 const createEmptyPermissions = () =>
@@ -226,6 +240,7 @@ function RoleManagementPage() {
     onSuccess: () => {
       message.success("Role created successfully");
       queryClient.invalidateQueries({ queryKey: ["roles"] });
+      queryClient.invalidateQueries({ queryKey: ["my-permissions"] });
       closeModal();
     },
     onError: (err) =>
@@ -237,7 +252,9 @@ function RoleManagementPage() {
     onSuccess: () => {
       message.success("Role updated successfully");
       queryClient.invalidateQueries({ queryKey: ["roles"] });
+      queryClient.invalidateQueries({ queryKey: ["my-permissions"] });
       queryClient.invalidateQueries({ queryKey: ["current-user-permissions"] });
+      queryClient.invalidateQueries({ queryKey: ["me"] });
       closeModal();
     },
     onError: (err) =>
@@ -249,17 +266,34 @@ function RoleManagementPage() {
     onSuccess: () => {
       message.success("Role deleted successfully");
       queryClient.invalidateQueries({ queryKey: ["roles"] });
+      queryClient.invalidateQueries({ queryKey: ["my-permissions"] });
     },
     onError: (err) =>
       message.error(err?.response?.data?.message || "Failed to delete role"),
   });
 
+  const [selectedDashboardStats, setSelectedDashboardStats] = useState([]);
+
   const openCreateModal = () => {
     setEditingRole(null);
     form.resetFields();
-    form.setFieldsValue({ color: "#722ed1", isDefault: false });
+    form.setFieldsValue({
+      color: "#722ed1",
+      isDefault: false,
+      bannerEnabled: true,
+      bannerTitle: "",
+      bannerSubtitle: "",
+      bannerActionLabel: "View Bookings",
+      bannerActionUrl: "/bookings",
+    });
     setPermissions(createEmptyPermissions());
     setSelectedManageableRoles([]);
+    setSelectedDashboardStats([
+      "totalBookings",
+      "activeBookings",
+      "availableRooms",
+      "todayBookings",
+    ]);
     setModalOpen(true);
   };
 
@@ -270,6 +304,12 @@ function RoleManagementPage() {
       description: role.description || "",
       color: role.color || "#722ed1",
       isDefault: Boolean(role.isDefault),
+      bannerEnabled: role.dashboardConfig?.banner?.enabled ?? true,
+      bannerTitle: role.dashboardConfig?.banner?.title || "",
+      bannerSubtitle: role.dashboardConfig?.banner?.subtitle || "",
+      bannerActionLabel:
+        role.dashboardConfig?.banner?.actionLabel || "View Bookings",
+      bannerActionUrl: role.dashboardConfig?.banner?.actionUrl || "/bookings",
     });
     setPermissions(normalizePermissions(role.permissions));
     setSelectedManageableRoles(
@@ -277,16 +317,46 @@ function RoleManagementPage() {
         typeof item === "object" ? item._id : item,
       ),
     );
+    setSelectedDashboardStats(
+      (role.dashboardConfig?.stats || []).map((s) => s.key),
+    );
     setModalOpen(true);
   };
+
+  // Variable to check if the user has view permission for the "users" module
+  const hasViewPermission = (module) => {
+    return permissions.some(
+      (permission) =>
+        permission.resource === module && permission.action?.view === true,
+    );
+  };
+
+  const hasUserViewPermission = hasViewPermission("users");
 
   const handleSubmit = async () => {
     try {
       const values = await form.validateFields();
-      const hasUserView = permissions.some(
-        (permission) =>
-          permission.resource === "users" && permission.action?.view === true,
-      );
+      const configuredStats = selectedDashboardStats.map((key) => {
+        const opt = DASHBOARD_WIDGET_OPTIONS.find((w) => w.key === key);
+        return {
+          key,
+          title: opt?.title || key,
+          icon: opt?.icon || "CalendarOutlined",
+          color: opt?.color || "#C76A34",
+        };
+      });
+
+      const dashboardConfig = {
+        stats: configuredStats,
+        banner: {
+          enabled: Boolean(values.bannerEnabled ?? true),
+          title: values.bannerTitle?.trim() || "",
+          subtitle: values.bannerSubtitle?.trim() || "",
+          actionLabel: values.bannerActionLabel?.trim() || "View Bookings",
+          actionUrl: values.bannerActionUrl?.trim() || "/bookings",
+          image: "/dashboard/manager-hero.jpg",
+        },
+      };
 
       const payload = {
         name: values.name.trim(),
@@ -294,7 +364,8 @@ function RoleManagementPage() {
         color: values.color || "#722ed1",
         isDefault: Boolean(values.isDefault),
         permissions,
-        manageableRoles: hasUserView ? selectedManageableRoles : [],
+        manageableRoles: hasUserViewPermission ? selectedManageableRoles : [],
+        dashboardConfig,
       };
 
       if (editingRole) {
@@ -405,14 +476,16 @@ function RoleManagementPage() {
     );
   }
 
-  const hasUserViewPermission = permissions.some(
+
+
+  const hasDashboardViewPermission = permissions.some(
     (permission) =>
-      permission.resource === "users" && permission.action?.view === true,
+      permission.resource === "dashboard" && permission.action?.view === true,
   );
 
   return (
     <section className="space-y-4">
-      <div className="flex justify-between items-center gap-3 flex-wrap">
+      <div className="flex items-center justify-between sm:flex-row flex-col sm:gap-0 gap-3 sm:text-start text-center">
         <div>
           <Title
             level={3}
@@ -524,6 +597,88 @@ function RoleManagementPage() {
             setPermissions={setPermissions}
           />
 
+          {hasDashboardViewPermission && (
+            <div className="mt-4 p-3 bg-gray-50 border rounded-lg">
+            <Text strong className="block mb-1">
+              Dashboard Content Configuration
+            </Text>
+            <Text type="secondary" className="block text-xs mb-3">
+              Select which cards and modules appear on the dashboard for users with this role.
+            </Text>
+            <Row gutter={[12, 8]}>
+              {DASHBOARD_WIDGET_OPTIONS.map((widget) => {
+                const checked = selectedDashboardStats.includes(widget.key);
+                return (
+                  <Col xs={24} sm={12} md={8} key={widget.key}>
+                    <Checkbox
+                      checked={checked}
+                      onChange={(event) =>
+                        setSelectedDashboardStats((current) =>
+                          event.target.checked
+                            ? [...new Set([...current, widget.key])]
+                            : current.filter((key) => key !== widget.key)
+                        )
+                      }
+                    >
+                      <Space size={4}>
+                        <span
+                          className="inline-block w-2 h-2 rounded-full"
+                          style={{ backgroundColor: widget.color }}
+                        />
+                        {widget.title}
+                      </Space>
+                    </Checkbox>
+                  </Col>
+                );
+              })}
+            </Row>
+
+            <Divider className="!my-3" />
+
+            <Text strong className="block text-xs mb-2">
+              Dashboard Banner (Optional)
+            </Text>
+            <Row gutter={12}>
+              <Col xs={24} md={12}>
+                <Form.Item
+                  name="bannerTitle"
+                  label="Banner Title"
+                  className="!mb-2"
+                >
+                  <Input placeholder="e.g. FrontDesk Operations Console" />
+                </Form.Item>
+              </Col>
+              <Col xs={24} md={12}>
+                <Form.Item
+                  name="bannerSubtitle"
+                  label="Banner Subtitle"
+                  className="!mb-2"
+                >
+                  <Input placeholder="e.g. Manage guest check-ins and room assignments" />
+                </Form.Item>
+              </Col>
+              <Col xs={24} md={12}>
+                <Form.Item
+                  name="bannerActionLabel"
+                  label="Button Label"
+                  className="!mb-2"
+                >
+                  <Input placeholder="e.g. View Bookings" />
+                </Form.Item>
+              </Col>
+              <Col xs={24} md={12}>
+                <Form.Item
+                  name="bannerActionUrl"
+                  label="Button Route"
+                  className="!mb-2"
+                >
+                  <Input placeholder="e.g. /bookings" />
+                </Form.Item>
+              </Col>
+            </Row>
+          </div>
+          )}
+
           {hasUserViewPermission && (
             <div className="mt-4 p-3 bg-gray-50 border rounded-lg">
               <Text strong className="block mb-1">
@@ -615,6 +770,24 @@ function RoleManagementPage() {
                       color={typeof role === "object" ? role.color : "#722ed1"}
                     >
                       {typeof role === "object" ? role.name : role}
+                    </Tag>
+                  ))}
+                </Space>
+              </div>
+            )}
+
+            {selectedRole.dashboardConfig?.stats?.length > 0 && (
+              <div>
+                <Text strong className="block mb-2">
+                  Configured Dashboard Widgets
+                </Text>
+                <Space wrap>
+                  {selectedRole.dashboardConfig.stats.map((stat) => (
+                    <Tag
+                      key={stat.key}
+                      color={stat.color || "#C76A34"}
+                    >
+                      {stat.title || stat.key}
                     </Tag>
                   ))}
                 </Space>

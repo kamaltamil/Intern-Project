@@ -69,6 +69,24 @@ const roleSchema = new mongoose.Schema(
                 ref: 'Role',
             },
         ],
+        dashboardConfig: {
+            stats: [
+                {
+                    key: { type: String, trim: true },
+                    title: { type: String, trim: true },
+                    icon: { type: String, trim: true },
+                    color: { type: String, trim: true },
+                },
+            ],
+            banner: {
+                enabled: { type: Boolean, default: true },
+                title: { type: String, default: '' },
+                subtitle: { type: String, default: '' },
+                actionLabel: { type: String, default: '' },
+                actionUrl: { type: String, default: '' },
+                image: { type: String, default: '' },
+            },
+        },
     },
     { timestamps: true }
 );

@@ -42,6 +42,7 @@ const verifyRecaptcha = (token, remoteIp) => {
             const result = JSON.parse(data);
             resolve(result.success === true);
           } catch (error) {
+            console.log(error);
             reject(new Error("Invalid reCAPTCHA verification response"));
           }
         });

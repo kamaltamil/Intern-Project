@@ -23,7 +23,9 @@ const getTransporter = () => {
   }
 
   if (host === "smtp.example.com") {
-    throw new Error("EMAIL_HOST is still configured with the placeholder smtp.example.com");
+    throw new Error(
+      "EMAIL_HOST is still configured with the placeholder smtp.example.com",
+    );
   }
 
   const port = Number(process.env.EMAIL_PORT || 587);
@@ -76,12 +78,12 @@ const getBookingDetails = (booking) => {
   const user = booking?.user || {};
   const room = booking?.room || {};
   const roomType = room.type ? room.type : "";
-  let roomNumber 
-  if (room.roomNumber){
-      roomNumber=`Room ${room.roomNumber}-${roomType}`
+  let roomNumber;
+  if (room.roomNumber) {
+    roomNumber = `Room ${room.roomNumber}-${roomType}`;
   } else {
-    roomNumber = "Room details unavailable"
-  };
+    roomNumber = "Room details unavailable";
+  }
   return {
     applicationName: getApplicationName(),
     userName: user.name || "Guest",
@@ -98,7 +100,7 @@ const getBookingDetails = (booking) => {
 const sendBookingNotification = async (type, booking) => {
   const details = getBookingDetails(booking);
   const safe = Object.fromEntries(
-    Object.entries(details).map(([key, value]) => [key, escapeHtml(value)])
+    Object.entries(details).map(([key, value]) => [key, escapeHtml(value)]),
   );
 
   if (type === "created") {
@@ -129,7 +131,8 @@ const sendBookingNotification = async (type, booking) => {
     message = "Your booking has been approved successfully.";
   } else if (type === "rejected") {
     subject = `Booking Update - ${details.bookingId}`;
-    message = "We are sorry to inform you that your booking request has been rejected.";
+    message =
+      "We are sorry to inform you that your booking request has been rejected.";
   }
 
   return sendEmail({

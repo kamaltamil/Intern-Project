@@ -32,7 +32,15 @@ const validatePermissions = (permissions = []) => {
 // Creates a role with its permissions and manageable-role relationships.
 const createRole = async (data) => {
   try {
-    const { name, permissions = [], manageableRoles = [], description = "", color, isDefault = false } = data;
+    const {
+      name,
+      permissions = [],
+      manageableRoles = [],
+      description = "",
+      color,
+      isDefault = false,
+      dashboardConfig,
+    } = data;
 
     validatePermissions(permissions);
 
@@ -46,6 +54,7 @@ const createRole = async (data) => {
       description,
       color,
       isDefault,
+      dashboardConfig,
     });
   } catch (error) {
     if (error.statusCode) throw error;

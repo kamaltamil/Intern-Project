@@ -16,12 +16,13 @@ const Role = require("../models/role");
  *   - ObjectId / string ID
  *   - String role name
  */
-// Resolves the user's role and permits the request only when the requested RBAC action is enabled.
+// Checks whether the authenticated user's role has the required permission for a resource before proceeding.
 const requirePermission = (resource, action) => {
   return async (req, res, next) => {
     try {
       const userRole = req.user?.role;
 
+      // User must have an assigned role.
       if (!userRole) {
         return res.status(401).json({
           message: "Unauthorized: user role not found",
@@ -34,9 +35,7 @@ const requirePermission = (resource, action) => {
         });
       }
 
-      /*
-       * Resolve the Role document from MongoDB.
-       */
+      // Resolve the role document from MongoDB if it was not already populated.
       let role = null;
 
       if (typeof userRole === "object" && userRole.permissions) {
@@ -53,9 +52,7 @@ const requirePermission = (resource, action) => {
         });
       }
 
-      /*
-       * Find the permission entry for the requested resource.
-       */
+      // Find the specific module permission matching the requested resource.
       const permission = role.permissions?.find(
         (item) =>
           item.resource?.toLowerCase() === resource.toLowerCase()
@@ -67,10 +64,7 @@ const requirePermission = (resource, action) => {
         });
       }
 
-      /*
-       * Check the requested action.
-       * Supports both `permission.action` and `permission.actions`.
-       */
+      // Verify that the requested CRUD action (view, create, update, delete) is enabled.
       const actionObj = permission.action || {};
       const allowed = actionObj[action] === true;
 
@@ -80,9 +74,7 @@ const requirePermission = (resource, action) => {
         });
       }
 
-      /*
-       * Attach resolved permission context for controllers.
-       */
+      // Attach permission details to the request for downstream controllers.
       req.permission = {
         resource,
         action,

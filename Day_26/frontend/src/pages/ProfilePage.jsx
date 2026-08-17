@@ -11,6 +11,7 @@ import {
   Tag,
   Upload,
   Descriptions,
+  Popconfirm,
 } from "antd";
 import {
   UserOutlined,
@@ -18,11 +19,13 @@ import {
   SaveOutlined,
   CloseOutlined,
   UploadOutlined,
+  DeleteOutlined,
 } from "@ant-design/icons";
 import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { updateProfile, fetchMe } from "../api/queries";
-import { updateUserProfile } from "../store/slices/authSlice";
+import { updateProfile, deleteOwnProfile, fetchMe } from "../api/queries";
+import { updateUserProfile, logout } from "../store/slices/authSlice";
 import { resolveProfileImage } from "../utils/image";
 import { ROLE_COLORS, getFallbackRoleColor } from "../constants/roleColors";
 import PermissionGate from "../components/PermissionGate";
@@ -32,9 +35,11 @@ const { Title, Text } = Typography;
 
 function ProfilePage() {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { user, theme } = useSelector((state) => state.auth);
   const canUpdateProfile = usePermission("profile", "update");
+  const canDeleteProfile = usePermission("profile", "delete");
   const isDark = theme === "dark";
 
   const {
@@ -78,16 +83,21 @@ function ProfilePage() {
   }, [canUpdateProfile, editing]);
 
   const roleName =
-    typeof profileUser?.role === "object"
-      ? profileUser.role?.name
-      : profileUser?.role || "Member";
+    typeof profileUser?.user?.role === "object"
+      ? profileUser?.user?.role?.name
+      : profileUser?.user?.role ||
+        profileUser?.role ||
+        user?.role ||
+        "Member";
+
   const roleColor =
-    typeof profileUser?.role === "object" && profileUser.role?.color
-      ? profileUser.role.color
+    ROLE_COLORS[roleName] ||
+    (typeof profileUser?.user?.role === "object"
+      ? profileUser?.user?.role?.color
       : profileUser?.user?.roleColor ||
         profileUser?.roleColor ||
         user?.roleColor ||
-        getFallbackRoleColor(roleName);
+        getFallbackRoleColor(roleName));
 
   const onEditClick = () => {
     if (!canUpdateProfile) return;
@@ -128,6 +138,21 @@ function ProfilePage() {
     onError: (error) => {
       message.error(
         error?.response?.data?.message || "Failed to update profile",
+      );
+    },
+  });
+
+  const deleteProfileMutation = useMutation({
+    mutationFn: deleteOwnProfile,
+    onSuccess: () => {
+      message.success("Your profile has been deleted successfully");
+      queryClient.clear();
+      dispatch(logout());
+      navigate("/", { replace: true });
+    },
+    onError: (error) => {
+      message.error(
+        error?.response?.data?.message || "Failed to delete profile",
       );
     },
   });
@@ -236,16 +261,40 @@ function ProfilePage() {
               ]}
             />
 
-            <PermissionGate resource="profile" action="update" >
-              <Button
-                type="primary"
-                icon={<EditOutlined />}
-                onClick={onEditClick}
-                style={{ backgroundColor: "#C76A34", borderColor: "#C76A34" }}
-              >
-                Edit Profile
-              </Button>
-            </PermissionGate>
+            <div className="flex flex-wrap items-center gap-3 pt-2">
+              <PermissionGate resource="profile" action="update">
+                <Button
+                  type="primary"
+                  icon={<EditOutlined />}
+                  onClick={onEditClick}
+                  style={{ backgroundColor: "#C76A34", borderColor: "#C76A34" }}
+                >
+                  Edit Profile
+                </Button>
+              </PermissionGate>
+
+              <PermissionGate resource="profile" action="delete">
+                <Popconfirm
+                  title="Delete Profile"
+                  description="Are you sure you want to permanently delete your account? This action cannot be undone."
+                  onConfirm={() => deleteProfileMutation.mutate()}
+                  okText="Delete Profile"
+                  cancelText="Cancel"
+                  okButtonProps={{
+                    danger: true,
+                    loading: deleteProfileMutation.isPending,
+                  }}
+                >
+                  <Button
+                    danger
+                    icon={<DeleteOutlined />}
+                    loading={deleteProfileMutation.isPending}
+                  >
+                    Delete Account
+                  </Button>
+                </Popconfirm>
+              </PermissionGate>
+            </div>
           </div>
         ) : (
           <Form form={form} layout="vertical" onFinish={onFinish}>

@@ -12,6 +12,9 @@ const initialState = {
   // User role name string (e.g. "Admin", "Manager", "Member")
   role: null,
 
+  // Role dashboard widgets and banner configuration
+  dashboardConfig: null,
+
   // RBAC permissions array from backend
   // [{ resource: "users", action: { view, create, update, delete } }]
   permissions: [],
@@ -40,15 +43,6 @@ const authSlice = createSlice({
 
     /**
      * Store complete authentication information after login.
-     *
-     * Expected payload:
-     * {
-     *   user,
-     *   token,
-     *   refreshToken,
-     *   role,
-     *   permissions
-     * }
      */
     setAuth: (state, action) => {
       const {
@@ -56,6 +50,8 @@ const authSlice = createSlice({
         token,
         refreshToken,
         role,
+        roleDoc,
+        dashboardConfig,
         permissions,
       } = action.payload;
 
@@ -66,6 +62,10 @@ const authSlice = createSlice({
       // Prefer role from payload; fall back to user object role
       state.role = role || user?.role || null;
 
+      // Store dashboard configuration
+      state.dashboardConfig =
+        dashboardConfig || roleDoc?.dashboardConfig || null;
+
       // Store permissions returned by backend
       state.permissions = Array.isArray(permissions) ? permissions : [];
 
@@ -75,16 +75,6 @@ const authSlice = createSlice({
 
     /**
      * Update only the tokens (used by the axios refresh interceptor).
-     *
-     * Also updates role and permissions if the refresh endpoint returns them.
-     *
-     * Expected payload:
-     * {
-     *   token,
-     *   refreshToken,
-     *   role?,
-     *   permissions?
-     * }
      */
     setTokens: (state, action) => {
       const { token, refreshToken, role, permissions } = action.payload;
@@ -108,7 +98,10 @@ const authSlice = createSlice({
       };
 
       if (action.payload?.role) {
-        state.role = typeof action.payload.role === 'object' ? action.payload.role.name : action.payload.role;
+        state.role =
+          typeof action.payload.role === "object"
+            ? action.payload.role.name
+            : action.payload.role;
       }
 
       if (Array.isArray(action.payload?.permissions)) {
@@ -117,14 +110,36 @@ const authSlice = createSlice({
     },
 
     /**
-     * Update role and permissions separately.
-     *
-     * Useful after a token refresh or when Admin changes a role's permissions.
+     * Update role, dashboardConfig, and permissions.
      */
     setRolePermissions: (state, action) => {
-      const { role, permissions } = action.payload;
+      const { role, permissions, roleColor, roleDoc, dashboardConfig, user } =
+        action.payload || {};
 
-      if (role) state.role = role;
+      const normalizedRole = typeof role === "object" ? role?.name : role;
+
+      if (normalizedRole) {
+        state.role = normalizedRole;
+        if (state.user) {
+          state.user.role = normalizedRole;
+        }
+      }
+
+      if (roleColor && state.user) {
+        state.user.roleColor = roleColor;
+      }
+
+      if (dashboardConfig || roleDoc?.dashboardConfig) {
+        state.dashboardConfig = dashboardConfig || roleDoc?.dashboardConfig;
+      }
+
+      if (user && state.user) {
+        state.user = {
+          ...state.user,
+          ...user,
+          role: normalizedRole || state.user.role || user.role,
+        };
+      }
 
       if (Array.isArray(permissions)) {
         state.permissions = permissions;
@@ -154,6 +169,7 @@ const authSlice = createSlice({
       state.token = null;
       state.refreshToken = null;
       state.role = null;
+      state.dashboardConfig = null;
       state.permissions = [];
       state.loading = false;
       state.error = null;

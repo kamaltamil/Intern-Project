@@ -10,12 +10,14 @@ import CustomForm from "../components/CustomForm";
 const { Title, Text } = Typography;
 const RECAPTCHA_SITE_KEY = process.env.REACT_APP_RECAPTCHA_SITE_KEY;
 
+// Handles new user registration with bot protection via reCAPTCHA.
 function SignupPage() {
   const navigate = useNavigate();
   const { token } = useSelector((state) => state.auth);
   const recaptchaRef = useRef(null);
   const [recaptchaToken, setRecaptchaToken] = useState(null);
 
+  // Submits registration payload to the backend and redirects to login on success.
   const signupMutation = useMutation({
     mutationFn: signupUser,
     retry: 0,
@@ -34,6 +36,7 @@ function SignupPage() {
     },
   });
 
+  // Verify reCAPTCHA token before creating the account.
   const onFinish = (values) => {
     if (!recaptchaToken) {
       message.error("Please complete the reCAPTCHA verification");
@@ -49,6 +52,7 @@ function SignupPage() {
     });
   };
 
+  // Redirect already authenticated users to the dashboard.
   if (token) {
     return <Navigate to="/" replace />;
   }

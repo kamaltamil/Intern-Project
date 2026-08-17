@@ -9,26 +9,13 @@ const accessSecret =
 /*                         Authenticate JWT Token                             */
 /* -------------------------------------------------------------------------- */
 
-// Verifies the access token, loads the current user, and attaches the user to the request.
-/**
- * Validates the Bearer token and attaches req.user with populated role.
- *
- * req.user shape:
- * {
- *   _id,
- *   name,
- *   email,
- *   username,
- *   role,          ← populated Role document object {_id, name, permissions}
- *   isActive,
- *   profileImage,
- * }
- */
+// Verifies the Bearer JWT token from the request header, loads the user from the database, and attaches it to req.user.
 const authenticateToken = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
 
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    // Check if the authorization header exists and starts with Bearer.
+    if (!authHeader?.startsWith("Bearer ")) {
       return res.status(401).json({
         message: "Access token required",
       });
@@ -36,8 +23,10 @@ const authenticateToken = async (req, res, next) => {
 
     const token = authHeader.split(" ")[1];
 
+    // Decode and verify token signature.
     const decoded = jwt.verify(token, accessSecret);
 
+    // Fetch user details along with populated role permissions.
     const user = await User.findById(decoded.userId)
       .populate("role")
       .select("-password -refreshToken");
@@ -48,16 +37,19 @@ const authenticateToken = async (req, res, next) => {
       });
     }
 
+    // Prevent inactive or suspended users from accessing APIs.
     if (!user.isActive) {
       return res.status(403).json({
         message: "User account is inactive",
       });
     }
 
+    // Attach active user to request context.
     req.user = user;
 
     next();
   } catch (error) {
+    console.log(error)
     return res.status(401).json({
       message: "Invalid or expired token",
     });
@@ -92,6 +84,7 @@ const hasPermission = (resource, action) => {
 
       next();
     } catch (error) {
+      console.log(error)
       return res.status(500).json({
         message: "Permission validation failed",
       });

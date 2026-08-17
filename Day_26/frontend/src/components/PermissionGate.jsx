@@ -29,6 +29,7 @@ import { usePermission } from "../hooks/usePermission";
 function PermissionGate({ resource, action, children, fallback = null }) {
   const allowed = usePermission(resource, action);
 
+  console.log(resource, action, allowed)
   if (!allowed) {
     return fallback;
   }

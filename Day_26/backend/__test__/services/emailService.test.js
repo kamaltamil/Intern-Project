@@ -1,16 +1,112 @@
-jest.mock('nodemailer', () => ({ createTransport: jest.fn() }));
-const nodemailer=require('nodemailer'); const service=require('../../services/emailService');
+jest.mock("nodemailer", () => ({ createTransport: jest.fn() }));
+const nodemailer = require("nodemailer");
+const service = require("../../services/emailService");
 
-describe('emailService',()=>{
- beforeEach(()=>{jest.clearAllMocks();process.env.EMAIL_HOST='smtp.test';process.env.EMAIL_USER='user';process.env.EMAIL_PASSWORD='pass';process.env.EMAIL_PORT='587';process.env.EMAIL_FROM='from@test.com';});
- test('rejects when SMTP configuration is missing',async()=>{delete process.env.EMAIL_HOST;await expect(service.verifyEmailConfiguration()).rejects.toThrow('Email service is not configured');});
- test('rejects placeholder host',async()=>{process.env.EMAIL_HOST='smtp.example.com';await expect(service.verifyEmailConfiguration()).rejects.toThrow('placeholder');});
- test('rejects invalid port',async()=>{process.env.EMAIL_PORT='abc';await expect(service.verifyEmailConfiguration()).rejects.toThrow('valid port');});
- test('verifies configured transporter',async()=>{const transporter={verify:jest.fn().mockResolvedValue(true)};nodemailer.createTransport.mockReturnValue(transporter);await expect(service.verifyEmailConfiguration()).resolves.toBe(true);expect(transporter.verify).toHaveBeenCalled();});
- test('requires recipient',async()=>{await expect(service.sendEmail({subject:'x'})).rejects.toThrow('Recipient email is required');});
- test('sends email and returns accepted result',async()=>{const result={accepted:['to@test.com'],rejected:[]};const transporter={sendMail:jest.fn().mockResolvedValue(result)};nodemailer.createTransport.mockReturnValue(transporter);await expect(service.sendEmail({to:'to@test.com',subject:'x',text:'t',html:'h'})).resolves.toEqual(result);});
- test('rejects unaccepted recipient',async()=>{const transporter={sendMail:jest.fn().mockResolvedValue({accepted:[],rejected:[]})};nodemailer.createTransport.mockReturnValue(transporter);await expect(service.sendEmail({to:'to@test.com'})).rejects.toThrow('did not accept');});
- test('sends created booking notification',async()=>{const transporter={sendMail:jest.fn().mockResolvedValue({accepted:['guest@test.com'],rejected:[]})};nodemailer.createTransport.mockReturnValue(transporter);await service.sendBookingNotification('created',{_id:'b1',user:{name:'Guest',email:'guest@test.com'},room:{roomNumber:'1',type:'Single'},startDate:'2026-01-01',endDate:'2026-01-02',bookingStatus:'Pending Approval'});expect(transporter.sendMail).toHaveBeenCalled();});
- test.each(['approved','rejected','other'])('sends %s status notification',async(type)=>{const transporter={sendMail:jest.fn().mockResolvedValue({accepted:['guest@test.com'],rejected:[]})};nodemailer.createTransport.mockReturnValue(transporter);await service.sendBookingNotification(type,{_id:'b1',user:{name:'Guest',email:'guest@test.com'},room:{roomNumber:'1'},startDate:null,endDate:null,bookingStatus:'Booked'});expect(transporter.sendMail).toHaveBeenCalled();});
- test('sends subscription confirmation',async()=>{const transporter={sendMail:jest.fn().mockResolvedValue({accepted:['guest@test.com'],rejected:[]})};nodemailer.createTransport.mockReturnValue(transporter);await service.sendSubscriptionConfirmation('guest@test.com');expect(transporter.sendMail).toHaveBeenCalled();});
+describe("emailService", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    process.env.EMAIL_HOST = "smtp.test";
+    process.env.EMAIL_USER = "user";
+    process.env.EMAIL_PASSWORD = "pass";
+    process.env.EMAIL_PORT = "587";
+    process.env.EMAIL_FROM = "from@test.com";
+  });
+  test("rejects when SMTP configuration is missing", async () => {
+    delete process.env.EMAIL_HOST;
+    await expect(service.verifyEmailConfiguration()).rejects.toThrow(
+      "Email service is not configured",
+    );
+  });
+  test("rejects placeholder host", async () => {
+    process.env.EMAIL_HOST = "smtp.example.com";
+    await expect(service.verifyEmailConfiguration()).rejects.toThrow(
+      "placeholder",
+    );
+  });
+  test("rejects invalid port", async () => {
+    process.env.EMAIL_PORT = "abc";
+    await expect(service.verifyEmailConfiguration()).rejects.toThrow(
+      "valid port",
+    );
+  });
+  test("verifies configured transporter", async () => {
+    const transporter = { verify: jest.fn().mockResolvedValue(true) };
+    nodemailer.createTransport.mockReturnValue(transporter);
+    await expect(service.verifyEmailConfiguration()).resolves.toBe(true);
+    expect(transporter.verify).toHaveBeenCalled();
+  });
+  test("requires recipient", async () => {
+    await expect(service.sendEmail({ subject: "x" })).rejects.toThrow(
+      "Recipient email is required",
+    );
+  });
+  test("sends email and returns accepted result", async () => {
+    const result = { accepted: ["to@test.com"], rejected: [] };
+    const transporter = { sendMail: jest.fn().mockResolvedValue(result) };
+    nodemailer.createTransport.mockReturnValue(transporter);
+    await expect(
+      service.sendEmail({
+        to: "to@test.com",
+        subject: "x",
+        text: "t",
+        html: "h",
+      }),
+    ).resolves.toEqual(result);
+  });
+  test("rejects unaccepted recipient", async () => {
+    const transporter = {
+      sendMail: jest.fn().mockResolvedValue({ accepted: [], rejected: [] }),
+    };
+    nodemailer.createTransport.mockReturnValue(transporter);
+    await expect(service.sendEmail({ to: "to@test.com" })).rejects.toThrow(
+      "did not accept",
+    );
+  });
+  test("sends created booking notification", async () => {
+    const transporter = {
+      sendMail: jest
+        .fn()
+        .mockResolvedValue({ accepted: ["guest@test.com"], rejected: [] }),
+    };
+    nodemailer.createTransport.mockReturnValue(transporter);
+    await service.sendBookingNotification("created", {
+      _id: "b1",
+      user: { name: "Guest", email: "guest@test.com" },
+      room: { roomNumber: "1", type: "Single" },
+      startDate: "2026-01-01",
+      endDate: "2026-01-02",
+      bookingStatus: "Pending Approval",
+    });
+    expect(transporter.sendMail).toHaveBeenCalled();
+  });
+  test.each(["approved", "rejected", "other"])(
+    "sends %s status notification",
+    async (type) => {
+      const transporter = {
+        sendMail: jest
+          .fn()
+          .mockResolvedValue({ accepted: ["guest@test.com"], rejected: [] }),
+      };
+      nodemailer.createTransport.mockReturnValue(transporter);
+      await service.sendBookingNotification(type, {
+        _id: "b1",
+        user: { name: "Guest", email: "guest@test.com" },
+        room: { roomNumber: "1" },
+        startDate: null,
+        endDate: null,
+        bookingStatus: "Booked",
+      });
+      expect(transporter.sendMail).toHaveBeenCalled();
+    },
+  );
+  test("sends subscription confirmation", async () => {
+    const transporter = {
+      sendMail: jest
+        .fn()
+        .mockResolvedValue({ accepted: ["guest@test.com"], rejected: [] }),
+    };
+    nodemailer.createTransport.mockReturnValue(transporter);
+    await service.sendSubscriptionConfirmation("guest@test.com");
+    expect(transporter.sendMail).toHaveBeenCalled();
+  });
 });

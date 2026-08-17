@@ -20,7 +20,7 @@ function AdminDashboardPage() {
   const getRoleName = (r) => (typeof r === 'object' ? r?.name : r) || '';
   const totalManagers = safeUsers.filter((item) => getRoleName(item.role) === 'Manager').length;
   const totalMembers = safeUsers.filter((item) => getRoleName(item.role) === 'Member').length;
-  const revenue = safeUsers.length * 125;
+  const revenue = 0;
 
   if (isLoading) {
     return (

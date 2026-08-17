@@ -47,7 +47,7 @@ const CustomTable = ({
   return (
     <Card className="rounded-2xl border overflow-hidden border-[#ECE6DF] shadow-sm">
       {(title || extraHeader) && (
-        <div className="flex justify-between items-center mb-4 flex-wrap gap-2">
+        <div className="flex justify-between items-center flex-wrap gap-2">
           {title && <span className="font-semibold text-[#2E2A27]">{title}</span>}
           {extraHeader && <div>{extraHeader}</div>}
         </div>
@@ -57,7 +57,7 @@ const CustomTable = ({
       {isLoading ? (
         <Skeleton active paragraph={{ rows: 4 }} />
       ) : (
-        <div ref={tableWrapperRef} className="w-full overflow-hidden pr-1">
+        <div ref={tableWrapperRef} className="w-full overflow-hidden">
           <Table
             className="custom-scroll-table"
             rowKey={rowKey}

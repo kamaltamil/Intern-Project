@@ -20,7 +20,6 @@ const {
 
 router.get(
   "/",
-  hasPermission("roles", "view"),
   listRoles
 );
 

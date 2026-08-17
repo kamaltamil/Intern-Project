@@ -20,6 +20,11 @@ function PermissionSync() {
         dispatch(
           setRolePermissions({
             role: data.role?.name || data.role,
+            roleColor: data.roleColor || data.user?.roleColor,
+            roleDoc: data.roleDoc,
+            dashboardConfig:
+              data.dashboardConfig || data.roleDoc?.dashboardConfig,
+            user: data.user,
             permissions: data.permissions || [],
           }),
         );
@@ -30,10 +35,13 @@ function PermissionSync() {
 
     syncPermissions();
 
-    const intervalId = window.setInterval(syncPermissions, 15000);
+    const handleFocus = () => syncPermissions();
+    window.addEventListener("focus", handleFocus);
+    const intervalId = window.setInterval(syncPermissions, 5000);
 
     return () => {
       cancelled = true;
+      window.removeEventListener("focus", handleFocus);
       window.clearInterval(intervalId);
     };
   }, [dispatch, token]);

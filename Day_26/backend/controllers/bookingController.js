@@ -10,11 +10,13 @@ const {
 
 const Booking = require("../models/booking");
 
+// Helper to extract action permissions for a specific module from the user's role.
 const getPermission = (permissions, resource) =>
   permissions.find(
     (permission) => permission.resource?.toLowerCase() === resource,
   )?.action || {};
 
+// Returns rooms that do not have conflicting active bookings for the specified date range.
 const getAvailableRooms = async (req, res) => {
   try {
     const { startDate, endDate } = req.query;
@@ -31,6 +33,7 @@ const getAvailableRooms = async (req, res) => {
   }
 };
 
+// Validates dates and availability, then creates a new booking in Pending status.
 const bookRoom = async (req, res) => {
   try {
     const userId = req.user?._id || req.user?.id || req.user?.userId;
@@ -45,6 +48,7 @@ const bookRoom = async (req, res) => {
       return res.status(400).json({ message: "roomId, startDate and endDate are required" });
     }
 
+    // Verify room availability before creating the booking record.
     const booking = await varifyAndBookRoom({ roomId, userId, startDate, endDate });
 
     return res.status(201).json({
@@ -58,6 +62,7 @@ const bookRoom = async (req, res) => {
   }
 };
 
+// Returns bookings scoped by role: Admins see all, Managers see member bookings, Members see only their own.
 const getBookings = async (req, res) => {
   try {
     const userId = req.user?._id || req.user?.id;
@@ -71,6 +76,7 @@ const getBookings = async (req, res) => {
     const approvalActions = getPermission(permissions, "approval");
     const userActions = getPermission(permissions, "users");
 
+    // Admins and managers with user view permission can inspect all bookings.
     const canViewAll =
       bookingActions.delete === true || userActions.view === true;
     const canReviewMemberBookings = approvalActions.view === true;

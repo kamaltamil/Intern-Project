@@ -232,7 +232,7 @@ function RoomManagementPage() {
 
   return (
     <div className="space-y-4">
-      <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+      <div className="flex items-center justify-between sm:flex-row flex-col sm:gap-0 gap-3 sm:text-start text-center">
         <div>
           <Title
             level={3}

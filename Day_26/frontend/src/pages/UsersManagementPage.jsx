@@ -27,19 +27,18 @@ import {
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import CustomCard from "../components/CustomCard";
 import CustomTable from "../components/CustomTable";
-import PermissionGate from "../components/PermissionGate";
 
 import {
   fetchUsers,
   fetchRoles,
-  updateUser as updateUserApi,
+  updateUser,
   deleteUser,
   createUser,
 } from "../api/queries";
 
 import { resolveProfileImage } from "../utils/image";
 import { usePermission } from "../hooks/usePermission";
-import { ROLE_COLORS, getFallbackRoleColor } from "../constants/roleColors";
+import { getFallbackRoleColor } from "../constants/roleColors";
 import CustomForm from "../components/CustomForm";
 
 const { Title, Text } = Typography;
@@ -86,7 +85,7 @@ function UsersManagementPage() {
 
   /* ---------- Update User ---------- */
   const updateUserMutation = useMutation({
-    mutationFn: updateUserApi,
+    mutationFn: updateUser,
 
     onSuccess: () => {
       message.success("User updated successfully");
@@ -188,6 +187,11 @@ function UsersManagementPage() {
   };
 
   /* ---------- Table Columns ---------- */
+
+  const canUpdate = usePermission("users", "update");
+  const canDelete = usePermission("users", "delete");
+
+  const actionColumn = canUpdate || canDelete;
   const columns = [
     {
       title: "Name",
@@ -235,44 +239,49 @@ function UsersManagementPage() {
         </Tag>
       ),
     },
-    {
-      title: "Actions",
-      key: "actions",
-      render: (_, record) => (
-        <Space size="small" >
-          <PermissionGate resource="users" action="update" >
-            <Button
-              size="small"
-              icon={<EditOutlined />}
-              onClick={() => openEditModal(record)}
-              style={{ color: "#C76A34", borderColor: "#C76A34" }}
-            >
-              Edit
-            </Button>
-          </PermissionGate>
-
-          <PermissionGate resource="users" action="delete" >
-            <Popconfirm
-              title="Delete User"
-              description={`Are you sure you want to delete ${record.name}?`}
-              onConfirm={() => handleDelete(record._id)}
-              okText="Yes"
-              cancelText="No"
-              okButtonProps={{ danger: true }}
-            >
+    ...(actionColumn ? [
+      {
+        title: "Actions",
+        key: "actions",
+        render: (_, record) => (
+          <Space size="small">
+            {canUpdate && (
               <Button
-                danger
                 size="small"
-                icon={<DeleteOutlined />}
-                loading={updatingId === record._id}
+                icon={<EditOutlined />}
+                onClick={() => openEditModal(record)}
+                style={{
+                  color: "#C76A34",
+                  borderColor: "#C76A34",
+                }}
               >
-                Delete
+                Edit
               </Button>
-            </Popconfirm>
-          </PermissionGate>
-        </Space>
-      ),
-    },
+            )}
+
+            {canDelete && (
+              <Popconfirm
+                title="Delete User"
+                description={`Are you sure you want to delete ${record.name}?`}
+                onConfirm={() => handleDelete(record._id)}
+                okText="Yes"
+                cancelText="No"
+                okButtonProps={{ danger: true }}
+              >
+                <Button
+                  danger
+                  size="small"
+                  icon={<DeleteOutlined />}
+                  loading={updatingId === record._id}
+                >
+                  Delete
+                </Button>
+              </Popconfirm>
+            )}
+          </Space>
+        ),
+      }
+     ] : []),
   ];
 
   /* ---------- Safe Users Array ---------- */
@@ -509,7 +518,7 @@ function UsersManagementPage() {
   return (
     <div className="space-y-4" >
       {/* Header */}
-      <div className="flex items-center justify-between" >
+      <div className="flex items-center justify-between sm:flex-row flex-col sm:gap-0 gap-3 sm:text-start text-center" >
         <div>
           <Title
             level={4}

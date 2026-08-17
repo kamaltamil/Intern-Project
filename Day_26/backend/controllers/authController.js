@@ -4,6 +4,7 @@ const {
   refreshAccessToken,
   getProfile,
   updateOwnProfile,
+  deleteOwnProfile,
 } = require("../services/authService");
 
 const { verifyRecaptcha } = require("../services/recaptchaService");
@@ -57,6 +58,8 @@ const login = async (req, res) => {
       token: result.token,
       refreshToken: result.refreshToken,
       role: result.role,
+      roleDoc: result.roleDoc,
+      dashboardConfig: result.dashboardConfig,
       permissions: result.permissions || [],
     });
   } catch (error) {
@@ -89,7 +92,13 @@ const profile = async (req, res) => {
     if (!userId) return res.status(401).json({ message: "Unauthorized" });
     const result = await getProfile(userId);
     if (!result) return res.status(404).json({ message: "User not found" });
-    return res.status(200).json({ user: result.user, role: result.role, permissions: result.permissions || [] });
+    return res.status(200).json({
+      user: result.user,
+      role: result.role,
+      roleDoc: result.roleDoc,
+      dashboardConfig: result.dashboardConfig || result.roleDoc?.dashboardConfig,
+      permissions: result.permissions || [],
+    });
   } catch (error) {
     return res.status(500).json({ message: error.message || "Error fetching profile" });
   }
@@ -106,7 +115,11 @@ const permissions = async (req, res) => {
 
     return res.status(200).json({
       role: result.role,
+      roleColor: result.roleColor || result.user?.roleColor,
+      roleDoc: result.roleDoc,
+      dashboardConfig: result.dashboardConfig || result.roleDoc?.dashboardConfig,
       permissions: result.permissions || [],
+      user: result.user,
     });
   } catch (error) {
     return res.status(500).json({ message: error.message || "Error fetching permissions" });
@@ -135,6 +148,19 @@ const updateProfile = async (req, res) => {
   }
 };
 
+// Deletes the authenticated user's own profile after permission verification.
+const deleteProfile = async (req, res) => {
+  try {
+    const userId = req.user?._id;
+    if (!userId) return res.status(401).json({ message: "Unauthorized" });
+
+    await deleteOwnProfile(userId);
+    return res.status(200).json({ message: "Profile deleted successfully" });
+  } catch (error) {
+    return res.status(error.statusCode || 500).json({ message: error.message || "Error deleting profile" });
+  }
+};
+
 // Invalidates the stored refresh token for the authenticated user.
 const logout = async (req, res) => {
   try {
@@ -146,4 +172,5 @@ const logout = async (req, res) => {
   }
 };
 
-module.exports = { register, login, refresh, profile, permissions, updateProfile, logout };
+module.exports = { register, login, refresh, profile, permissions, updateProfile, deleteProfile, logout };
+

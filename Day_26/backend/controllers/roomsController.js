@@ -5,6 +5,7 @@ const {
   deleteExistingRoom,
 } = require("../services/roomService");
 
+// Creates a new hotel room in the inventory.
 const createRoom = async (req, res) => {
   try {
     const { roomNumber, type, price } = req.body;
@@ -21,6 +22,7 @@ const createRoom = async (req, res) => {
   }
 };
 
+// Returns all rooms sorted by room number.
 const getAllRooms = async (req, res) => {
   try {
     const rooms = await listRooms();
@@ -36,6 +38,7 @@ const getAllRooms = async (req, res) => {
   }
 };
 
+// Updates room details such as pricing, type, or availability status.
 const updateRoom = async (req, res) => {
   try {
     const { id } = req.params;
@@ -52,6 +55,7 @@ const updateRoom = async (req, res) => {
   }
 };
 
+// Deletes a room from inventory after checking for active bookings.
 const deleteRoom = async (req, res) => {
   try {
     const { id } = req.params;

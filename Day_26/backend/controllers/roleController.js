@@ -10,6 +10,7 @@ const {
 /*                               Create Role                                  */
 /* -------------------------------------------------------------------------- */
 
+// Creates a new custom or system role with configured permissions and dashboard widgets.
 const createRoleHandler = async (req, res) => {
   try {
     const role = await createRole(req.body);
@@ -25,10 +26,7 @@ const createRoleHandler = async (req, res) => {
   }
 };
 
-/* -------------------------------------------------------------------------- */
-/*                               List Roles                                   */
-/* -------------------------------------------------------------------------- */
-
+// Returns all configured roles populated with manageable role relationships.
 const listRoles = async (req, res) => {
   try {
     const roles = await getAllRoles();
@@ -41,10 +39,7 @@ const listRoles = async (req, res) => {
   }
 };
 
-/* -------------------------------------------------------------------------- */
-/*                              Get Role By Id                                */
-/* -------------------------------------------------------------------------- */
-
+// Fetches a single role by ID for detailed inspection.
 const getRole = async (req, res) => {
   try {
     const role = await getRoleById(req.params.id);
@@ -63,10 +58,7 @@ const getRole = async (req, res) => {
   }
 };
 
-/* -------------------------------------------------------------------------- */
-/*                               Update Role                                  */
-/* -------------------------------------------------------------------------- */
-
+// Updates role permissions, manageable roles, or dashboard configuration.
 const updateRoleHandler = async (req, res) => {
   try {
     const role = await updateRole(
@@ -91,10 +83,7 @@ const updateRoleHandler = async (req, res) => {
   }
 };
 
-/* -------------------------------------------------------------------------- */
-/*                               Delete Role                                  */
-/* -------------------------------------------------------------------------- */
-
+// Deletes a custom role from the database.
 const deleteRoleHandler = async (req, res) => {
   try {
     await deleteRole(req.params.id);

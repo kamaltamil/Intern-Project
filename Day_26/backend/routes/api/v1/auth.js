@@ -9,6 +9,7 @@ const {
   profile,
   permissions,
   updateProfile,
+  deleteProfile,
   logout,
 } = require("../../../controllers/authController");
 
@@ -34,6 +35,13 @@ router.patch(
   requirePermission("profile", "update"),
   profileUpload.single("profileImage"),
   updateProfile
+);
+
+router.delete(
+  "/profile",
+  authenticateToken,
+  requirePermission("profile", "delete"),
+  deleteProfile
 );
 
 router.post("/logout", authenticateToken, logout);
