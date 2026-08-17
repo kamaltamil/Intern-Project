@@ -228,7 +228,7 @@ function ProfilePage() {
           <div className="space-y-4" >
             <Descriptions
               title="User Profile"
-              column={2}
+              column={{ sm:1, md:1, lg:2 }}
               bordered
               items={[
                 {

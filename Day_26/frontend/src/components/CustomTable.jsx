@@ -45,7 +45,7 @@ const CustomTable = ({
   }, [dataSource]); // Recalculate if dataset updates or filters change
 
   return (
-    <Card className="rounded-2xl border overflow-hidden border-[#ECE6DF] shadow-sm">
+    <Card className="rounded-2xl border overflow-hidden border-[#ECE6DF] shadow-sm custom-table">
       {(title || extraHeader) && (
         <div className="flex justify-between items-center flex-wrap gap-2">
           {title && <span className="font-semibold text-[#2E2A27]">{title}</span>}

@@ -42,13 +42,13 @@ function TopHeader() {
       await persistor.flush();
 
       // 4. Force navigation to public landing page
-      window.location.replace("/");
+      navigate("/", {replace: true});
     } catch (error) {
       console.error("Logout cleanup error:", error);
 
       // Even if persistence flush fails,
       // still go to landing page.
-      window.location.replace("/");
+      navigate("/", {replace: true});
     }
   };
 

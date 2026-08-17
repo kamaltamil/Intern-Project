@@ -43,6 +43,6 @@ body {
   margin-top: 16px;
 }
 
-.ant-card-body{
+.custom-table .ant-card-body{
   padding-bottom: 8px !important;
 }
