@@ -2,13 +2,16 @@ const {
   getPendingApprovals,
   changeApprovalStatus,
 } = require("../services/approvalService");
+const logger = require("../config/logger");
 
 // Handles booking approval requests and delegates status changes to the service layer.
 const getPending = async (req, res) => {
   try {
     const bookings = await getPendingApprovals();
+    logger.info("Pending booking approvals fetched successfully");
     return res.status(200).json({ message: "Pending bookings fetched successfully", bookings });
   } catch (error) {
+    logger.error("Failed to fetch pending booking approvals", error);
     return res.status(error.statusCode || 500).json({ message: error.message || "Error fetching pending bookings" });
   }
 };
@@ -17,8 +20,10 @@ const getPending = async (req, res) => {
 const approveBooking = async (req, res) => {
   try {
     const booking = await changeApprovalStatus(req.params.id, "approve");
+    logger.info("Booking approved successfully");
     return res.status(200).json({ message: "Booking approved. Payment is now pending.", booking });
   } catch (error) {
+    logger.error("Failed to approve booking", error);
     return res.status(error.statusCode || 500).json({ message: error.message || "Error approving booking" });
   }
 };
@@ -27,8 +32,10 @@ const approveBooking = async (req, res) => {
 const rejectBooking = async (req, res) => {
   try {
     const booking = await changeApprovalStatus(req.params.id, "reject");
+    logger.info("Booking rejected successfully");
     return res.status(200).json({ message: "Booking rejected.", booking });
   } catch (error) {
+    logger.error("Failed to reject booking", error);
     return res.status(error.statusCode || 500).json({ message: error.message || "Error rejecting booking" });
   }
 };
