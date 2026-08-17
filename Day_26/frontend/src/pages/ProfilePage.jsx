@@ -39,7 +39,6 @@ function ProfilePage() {
   const queryClient = useQueryClient();
   const { user, theme } = useSelector((state) => state.auth);
   const canUpdateProfile = usePermission("profile", "update");
-  const canDeleteProfile = usePermission("profile", "delete");
   const isDark = theme === "dark";
 
   const {
