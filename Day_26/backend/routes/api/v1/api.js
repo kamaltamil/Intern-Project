@@ -2,6 +2,7 @@ const express = require("express");
 
 const router = express.Router();
 
+const openApiRouter = require("./openApi");
 const authRouter = require("./auth");
 const usersRouter = require("./users");
 const bookingRouter = require("./booking");
@@ -14,13 +15,21 @@ const subscriptionsRouter = require("./subscriptions");
 const { authenticateToken } = require("../../../middleware/auth");
 const { rateLimiter } = require("../../../config/rateLimiting");
 
+
+// Public APIs
+router.use("/users", openApiRouter);
+
+
+// Authenticated api
+router.use(rateLimiter)
+router.use(authenticateToken)
+
 router.use("/users", authRouter);
-router.use("/manage/users", rateLimiter, authenticateToken, usersRouter);
-router.use("/booking", rateLimiter, authenticateToken, bookingRouter);
-router.use("/rooms", rateLimiter, authenticateToken, roomsRouter);
-router.use("/roles", rateLimiter, authenticateToken, rolesRouter);
-router.use("/approval", rateLimiter, authenticateToken, approvalRouter);
-router.use("/reports", rateLimiter, authenticateToken, reportsRouter);
-router.use("/subscriptions", rateLimiter, subscriptionsRouter);
+router.use("/manage/users", usersRouter);
+router.use("/booking", bookingRouter);
+router.use("/rooms", roomsRouter);
+router.use("/roles", rolesRouter);
+router.use("/approval", approvalRouter);
+router.use("/reports", reportsRouter);
 
 module.exports = router;

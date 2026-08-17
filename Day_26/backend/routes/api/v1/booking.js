@@ -10,38 +10,16 @@ const {
   deleteBookingHandler,
 } = require("../../../controllers/bookingController");
 
-const {
-  requirePermission,
-} = require("../../../middleware/permissionMiddleware");
+const { requirePermission,} = require("../../../middleware/permissionMiddleware");
 
-router.get(
-  "/available-rooms",
-  requirePermission("bookings", "create"),
-  getAvailableRooms,
-);
+router.get("/available-rooms", requirePermission("bookings", "create"),  getAvailableRooms,);
 
-router.get(
-  "/",
-  requirePermission("bookings", "view"),
-  getBookings,
-);
+router.get("/", requirePermission("bookings", "view"),  getBookings,);
 
-router.post(
-  "/new",
-  requirePermission("bookings", "create"),
-  bookRoom,
-);
+router.post("/new", requirePermission("bookings", "create"),  bookRoom,);
 
-router.patch(
-  "/:id",
-  requirePermission("bookings", "update"),
-  updateBookingHandler,
-);
+router.patch("/:id", requirePermission("bookings", "update"),  updateBookingHandler,);
 
-router.delete(
-  "/:id",
-  requirePermission("bookings", "delete"),
-  deleteBookingHandler,
-);
+router.delete("/:id", requirePermission("bookings", "delete"),  deleteBookingHandler,);
 
 module.exports = router;

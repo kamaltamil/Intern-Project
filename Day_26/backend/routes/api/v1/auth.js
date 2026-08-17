@@ -3,9 +3,6 @@ const express = require("express");
 const router = express.Router();
 
 const {
-  register,
-  login,
-  refresh,
   profile,
   permissions,
   updateProfile,
@@ -13,37 +10,26 @@ const {
   logout,
 } = require("../../../controllers/authController");
 
-const { authenticateToken } = require("../../../middleware/auth");
 const { requirePermission } = require("../../../middleware/permissionMiddleware");
 const profileUpload = require("../../../middleware/profileUpload");
 
-router.post("/signup", register);
-router.post("/login", login);
-router.post("/refresh", refresh);
-router.get("/permissions", authenticateToken, permissions);
+// Get current user's permissions
+router.get("/permissions",  permissions);
 
-router.get(
-  "/profile",
-  authenticateToken,
-  requirePermission("profile", "view"),
-  profile
+// Get current user's profile
+router.get("/profile",  requirePermission("profile", "view"),  profile
 );
 
-router.patch(
-  "/profile",
-  authenticateToken,
-  requirePermission("profile", "update"),
-  profileUpload.single("profileImage"),
+// Update current user's profile
+router.patch("/profile",  requirePermission("profile", "update"),  profileUpload.single("profileImage"),
   updateProfile
 );
 
-router.delete(
-  "/profile",
-  authenticateToken,
-  requirePermission("profile", "delete"),
-  deleteProfile
+// Delete current user's profile
+router.delete("/profile",  requirePermission("profile", "delete"),  deleteProfile
 );
 
-router.post("/logout", authenticateToken, logout);
+// Logout
+router.post("/logout",  logout);
 
 module.exports = router;

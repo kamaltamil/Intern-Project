@@ -16,73 +16,20 @@ const {
 
 const profileUpload = require("../../../middleware/profileUpload");
 
-/*
-|--------------------------------------------------------------------------
-| USER ROUTES
-|--------------------------------------------------------------------------
-|
-| Every route requires:
-|   1. Valid JWT (authenticateToken)
-|   2. Required RBAC permission (requirePermission)
-|
-| Permission structure:
-|   users.view   — list + get
-|   users.create — create
-|   users.update — update
-|   users.delete — delete
-|
-|--------------------------------------------------------------------------
-*/
 
-/* -------------------------------------------------------------------------- */
-/*                               GET ALL USERS                                */
-/* -------------------------------------------------------------------------- */
+/* GET ALL USERS  */
+router.get("/", requirePermission("users", "view"), listUsers);
 
-router.get(
-  "/",
-  requirePermission("users", "view"),
-  listUsers
-);
+/* GET USER BY ID  */
+router.get("/:id", requirePermission("users", "view"), getUserById);
 
-/* -------------------------------------------------------------------------- */
-/*                              GET USER BY ID                                */
-/* -------------------------------------------------------------------------- */
+/* CREATE USER */
+router.post("/", requirePermission("users", "create"), createUser);
 
-router.get(
-  "/:id",
-  requirePermission("users", "view"),
-  getUserById
-);
+/* UPDATE USER */
+router.patch("/:id", requirePermission("users", "update"), profileUpload.single("profileImage"), updateUser);
 
-/* -------------------------------------------------------------------------- */
-/*                               CREATE USER                                  */
-/* -------------------------------------------------------------------------- */
-
-router.post(
-  "/",
-  requirePermission("users", "create"),
-  createUser
-);
-
-/* -------------------------------------------------------------------------- */
-/*                               UPDATE USER                                  */
-/* -------------------------------------------------------------------------- */
-
-router.patch(
-  "/:id",
-  requirePermission("users", "update"),
-  profileUpload.single("profileImage"),
-  updateUser
-);
-
-/* -------------------------------------------------------------------------- */
-/*                               DELETE USER                                  */
-/* -------------------------------------------------------------------------- */
-
-router.delete(
-  "/:id",
-  requirePermission("users", "delete"),
-  deleteUser
-);
+/* DELETE USER */
+router.delete("/:id", requirePermission("users", "delete"), deleteUser);
 
 module.exports = router;

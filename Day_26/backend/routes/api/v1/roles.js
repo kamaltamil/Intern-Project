@@ -10,57 +10,21 @@ const {
   deleteRoleHandler,
 } = require("../../../controllers/roleController");
 
-const {
-  hasPermission,
-} = require("../../../middleware/auth");
+const { hasPermission,} = require("../../../middleware/auth");
 
-/* -------------------------------------------------------------------------- */
-/*                               Get All Roles                                */
-/* -------------------------------------------------------------------------- */
+/* Get All Roles  */
+router.get("/", listRoles);
 
-router.get(
-  "/",
-  listRoles
-);
+/* Get Single Role */
+router.get("/:id", hasPermission("roles", "view"),  getRole);
 
-/* -------------------------------------------------------------------------- */
-/*                              Get Single Role                               */
-/* -------------------------------------------------------------------------- */
+/*  Create Role   */
+router.post("/", hasPermission("roles", "create"),  createRoleHandler);
 
-router.get(
-  "/:id",
-  hasPermission("roles", "view"),
-  getRole
-);
+/*  Update Role   */
+router.patch("/:id", hasPermission("roles", "update"),  updateRoleHandler);
 
-/* -------------------------------------------------------------------------- */
-/*                                Create Role                                 */
-/* -------------------------------------------------------------------------- */
-
-router.post(
-  "/",
-  hasPermission("roles", "create"),
-  createRoleHandler
-);
-
-/* -------------------------------------------------------------------------- */
-/*                                Update Role                                 */
-/* -------------------------------------------------------------------------- */
-
-router.patch(
-  "/:id",
-  hasPermission("roles", "update"),
-  updateRoleHandler
-);
-
-/* -------------------------------------------------------------------------- */
-/*                                Delete Role                                 */
-/* -------------------------------------------------------------------------- */
-
-router.delete(
-  "/:id",
-  hasPermission("roles", "delete"),
-  deleteRoleHandler
-);
+/*  Delete Role   */
+router.delete("/:id", hasPermission("roles", "delete"),  deleteRoleHandler);
 
 module.exports = router;

@@ -164,6 +164,6 @@ export const fetchReports = async () => {
 };
 
 export const subscribeToNewsletter = async (email) => {
-  const response = await api.post("/subscriptions", { email });
+  const response = await api.post("/users/subscriptions", { email });
   return response.data || {};
 };
