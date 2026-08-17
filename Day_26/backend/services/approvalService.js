@@ -1,5 +1,6 @@
 const Booking = require("../models/booking");
 const { sendBookingNotification } = require("./emailService");
+const logger = require("../config/logger");
 
 const populateBooking = (query) =>
   query
@@ -13,7 +14,7 @@ const populateBooking = (query) =>
 // Sends approval-related notifications without making email delivery part of the booking response.
 const sendApprovalEmail = (type, booking) => {
   sendBookingNotification(type, booking).catch((error) => {
-    console.error(`Booking email failed (${type}):`, error.message);
+    logger.error(`Booking email failed (${type})`, error);
   });
 };
 
@@ -53,6 +54,7 @@ const changeApprovalStatus = async (id, decision) => {
 
   const updatedBooking = await populateBooking(Booking.findById(booking._id));
   sendApprovalEmail(decision === "approve" ? "approved" : "rejected", updatedBooking);
+  logger.info(`Booking ${decision}d successfully`);
 
   return updatedBooking;
 };
