@@ -6,6 +6,7 @@ const {
   bookRoom,
   getBookings,
   updateBookingHandler,
+  cancelBookingHandler,
   deleteBookingHandler,
 } = require("../../../controllers/bookingController");
 
@@ -29,6 +30,9 @@ router.post("/new", requirePermission("bookings", "create"), createBookingPayloa
 
 // Update an existing booking.
 router.patch("/:id", requirePermission("bookings", "update"), updateBookingPayload, validateRequest, updateBookingHandler);
+
+// Cancel a booking without removing its history.
+router.patch("/:id/cancel", requirePermission("bookings", "update"), bookingIdPayload, validateRequest, cancelBookingHandler);
 
 // Delete an existing booking.
 router.delete("/:id", requirePermission("bookings", "delete"), bookingIdPayload, validateRequest, deleteBookingHandler);
