@@ -135,7 +135,9 @@ const createRole = async (data, currentRole) => {
     } = data;
 
     validatePermissions(permissions);
-    validateManageableRoles(currentRole, manageableRoles);
+    if (currentRole?.name !== "Admin") {
+      validateManageableRoles(currentRole, manageableRoles);
+    }
 
     const existingRole = await Role.findOne({ name: name.trim() });
     if (existingRole) throw new Error("Role already exists");
@@ -146,7 +148,7 @@ const createRole = async (data, currentRole) => {
     const role = await Role.create({
       name: name.trim(),
       permissions,
-      manageableRoles,
+      manageableRoles: currentRole?.name === "Admin" ? [] : manageableRoles,
       description,
       color,
       isDefault,
@@ -208,7 +210,7 @@ const updateRole = async (id, data, currentRole) => {
     validateRoleManagementAccess(currentRole, "update", id);
 
     if (data.permissions) validatePermissions(data.permissions);
-    if (data.manageableRoles) {
+    if (data.manageableRoles && currentRole?.name !== "Admin") {
       validateManageableRoles(currentRole, data.manageableRoles);
     }
 
@@ -221,7 +223,12 @@ const updateRole = async (id, data, currentRole) => {
       await ensureSingleDefaultRole();
     }
 
-    const role = await Role.findByIdAndUpdate(id, data, {
+    const updateData = { ...data };
+    if (currentRole?.name === "Admin") {
+      delete updateData.manageableRoles;
+    }
+
+    const role = await Role.findByIdAndUpdate(id, updateData, {
       new: true,
       runValidators: true,
     }).populate("manageableRoles", "name color");
