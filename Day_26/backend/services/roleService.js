@@ -135,10 +135,7 @@ const createRole = async (data, currentRole) => {
 // Loads only roles that the current user is allowed to manage.
 const getAllRoles = async (currentRole) => {
   try {
-    logger.info("Current role", currentRole);
     validateRoleManagementAccess(currentRole, "view");
-
-    // logger.info("Current role", currentRole);
 
     const manageableRoleIds = currentRole?.manageableRoles || [];
 
