@@ -42,31 +42,35 @@ function DynamicRoleDashboard({ dashboardConfig = {}, roleName = "Custom Role" }
   const statsConfig = dashboardConfig?.stats || [];
   const bannerConfig = dashboardConfig?.banner || {};
 
-  // Check which data sets are needed based on configured widgets
+  // Check which data sets are needed based on configured widgets.
   const needsUsers = useMemo(
     () => statsConfig.some((s) => s.key === "totalUsers"),
-    [statsConfig]
+    [statsConfig],
   );
   const needsBookings = useMemo(
     () =>
       statsConfig.some((s) =>
-        ["totalBookings", "todayBookings", "activeBookings", "myUpcoming", "myHistory"].includes(
-          s.key
-        )
+        [
+          "totalBookings",
+          "todayBookings",
+          "activeBookings",
+          "myUpcoming",
+          "myHistory",
+        ].includes(s.key),
       ),
-    [statsConfig]
+    [statsConfig],
   );
   const needsRooms = useMemo(
     () => statsConfig.some((s) => ["availableRooms", "totalRooms"].includes(s.key)),
-    [statsConfig]
+    [statsConfig],
   );
   const needsPending = useMemo(
     () => statsConfig.some((s) => s.key === "pendingApprovals"),
-    [statsConfig]
+    [statsConfig],
   );
   const needsReports = useMemo(
     () => statsConfig.some((s) => s.key === "revenue"),
-    [statsConfig]
+    [statsConfig],
   );
 
   const { data: users = [], isLoading: isUsersLoading } = useQuery({
@@ -120,44 +124,77 @@ function DynamicRoleDashboard({ dashboardConfig = {}, roleName = "Custom Role" }
     return <Skeleton active paragraph={{ rows: 4 }} />;
   }
 
-  // Calculate live values for configured widgets
+  // Calculate dashboard values from the API data instead of configured sample values.
   const safeUsers = Array.isArray(users) ? users : [];
   const safeBookings = Array.isArray(bookings) ? bookings : [];
   const safeRooms = Array.isArray(rooms) ? rooms : [];
   const safePending = Array.isArray(pending) ? pending : [];
 
-  const todayStr = new Date().toISOString().split("T")[0];
+  const today = new Date();
+  const todayStr = today.toISOString().split("T")[0];
+  const todayStart = new Date(todayStr);
+  const tomorrowStart = new Date(todayStart);
+  tomorrowStart.setDate(tomorrowStart.getDate() + 1);
+
+  // Keep room availability based on bookings because rooms do not store a status field.
+  const occupiedRoomIds = new Set(
+    safeBookings
+      .filter(
+        (booking) =>
+          ["Pending Approval", "Booked", "CheckedIn"].includes(
+            booking.bookingStatus,
+          ) &&
+          new Date(booking.startDate) < tomorrowStart &&
+          new Date(booking.endDate) > todayStart,
+      )
+      .map((booking) =>
+        typeof booking.room === "object" ? booking.room?._id : booking.room,
+      )
+      .filter(Boolean)
+      .map(String),
+  );
 
   const statValues = {
     totalUsers: safeUsers.length,
     totalBookings: safeBookings.length,
-    todayBookings: safeBookings.filter((b) => b.checkIn?.startsWith(todayStr)).length,
-    activeBookings: safeBookings.filter((b) => ["Booked", "CheckedIn"].includes(b.bookingStatus))
-      .length,
+    todayBookings: safeBookings.filter(
+      (booking) => booking.startDate?.startsWith(todayStr),
+    ).length,
+    activeBookings: safeBookings.filter((booking) =>
+      ["Booked", "CheckedIn"].includes(booking.bookingStatus),
+    ).length,
     pendingApprovals: safePending.length,
-    availableRooms: safeRooms.filter((r) => r.status === "Available").length,
+    availableRooms: safeRooms.filter(
+      (room) => !occupiedRoomIds.has(String(room._id)),
+    ).length,
     totalRooms: safeRooms.length,
-    myUpcoming:
-      user?.upcomingBookings?.length ||
-      safeBookings.filter(
-        (b) =>
-          (b.user?._id === user?._id || b.user === user?._id) &&
-          ["Booked", "Pending"].includes(b.bookingStatus)
-      ).length,
-    myHistory:
-      user?.bookingHistory?.length ||
-      safeBookings.filter(
-        (b) =>
-          (b.user?._id === user?._id || b.user === user?._id) &&
-          ["CheckedOut", "Cancelled"].includes(b.bookingStatus)
-      ).length,
-    revenue: reports.summary?.revenue
-      ? `₹${Number(reports.summary.revenue).toLocaleString("en-IN")}`
-      : `₹${(safeBookings.length * 1250).toLocaleString("en-IN")}`,
+    myUpcoming: safeBookings.filter(
+      (booking) =>
+        (booking.user?._id === user?._id ||
+          String(booking.user) === String(user?._id)) &&
+        ["Pending Approval", "Payment Pending", "Booked"].includes(
+          booking.bookingStatus,
+        ) &&
+        new Date(booking.endDate) >= todayStart,
+    ).length,
+    myHistory: safeBookings.filter(
+      (booking) =>
+        (booking.user?._id === user?._id ||
+          String(booking.user) === String(user?._id)) &&
+        ["CheckedOut", "Cancelled", "Rejected"].includes(
+          booking.bookingStatus,
+        ),
+    ).length,
+    revenue:
+      reports.summary?.revenue !== undefined
+        ? `₹${Number(reports.summary.revenue).toLocaleString("en-IN")}`
+        : "₹0",
   };
 
   const hasStats = statsConfig.length > 0;
-  const hasBanner = bannerConfig.enabled !== false && (bannerConfig.title || bannerConfig.subtitle);
+  const hasBanner =
+    bannerConfig.enabled !== false &&
+    (bannerConfig.title || bannerConfig.subtitle);
 
   if (!hasStats && !hasBanner) {
     return (
@@ -184,11 +221,16 @@ function DynamicRoleDashboard({ dashboardConfig = {}, roleName = "Custom Role" }
         <Row gutter={[16, 16]}>
           {statsConfig.map((stat) => {
             const rawVal = statValues[stat.key];
-            const displayVal = rawVal !== undefined ? rawVal : stat.value || 0;
+            const displayVal = rawVal !== undefined ? rawVal : 0;
             const iconEl = ICON_MAP[stat.icon] || <CalendarOutlined />;
 
             return (
-              <Col xs={24} sm={12} lg={statsConfig.length <= 3 ? 8 : 6} key={stat.key || stat.title}>
+              <Col
+                xs={24}
+                sm={12}
+                lg={statsConfig.length <= 3 ? 8 : 6}
+                key={stat.key || stat.title}
+              >
                 <CustomCard
                   title={stat.title || stat.key}
                   value={displayVal}
