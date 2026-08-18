@@ -12,16 +12,30 @@ import BookingDetailsModal from "../components/booking/BookingDetailsModal";
 import BookingStats from "../components/booking/BookingStats";
 import { getBookingColumns } from "../components/booking/BookingColumns";
 import { getPageTitle } from "../components/booking/BookingHelpers";
-import { fetchBookingRooms, fetchBookings, fetchRoles, createBooking } from "../api/queries";
+import {
+  fetchBookingRooms,
+  fetchBookings,
+  fetchRoles,
+  createBooking,
+  cancelBooking,
+} from "../api/queries";
 import { usePermission } from "../hooks/usePermission";
 
 const { Title } = Typography;
+
+// Extract the first readable API error message returned by the backend.
+const getErrorMessage = (error, fallback) =>
+  error?.response?.data?.message ||
+  error?.response?.data?.errors?.[0]?.msg ||
+  error?.response?.data?.errors?.[0]?.message ||
+  fallback;
 
 function BookingPage() {
   const queryClient = useQueryClient();
   const { role, theme, user, _id: authId } = useSelector((state) => state.auth);
   const canViewUsers = usePermission("users", "view");
   const canCreateBooking = usePermission("bookings", "create");
+  const canUpdateBooking = usePermission("bookings", "update");
   const isDark = theme === "dark";
 
   const [bookModalOpen, setBookModalOpen] = useState(false);
@@ -40,8 +54,6 @@ function BookingPage() {
     enabled: canCreateBooking,
   });
 
-  console.log(rooms);
-  
   const {
     data: bookings = [],
     isLoading: bookingsLoading,
@@ -59,11 +71,19 @@ function BookingPage() {
       setBookModalOpen(false);
     },
     onError: (error) =>
-      message.error(
-        error?.response?.data?.message ||
-          error?.response?.data?.error ||
-          "Booking failed",
-      ),
+      message.error(getErrorMessage(error, "Booking failed")),
+  });
+
+  const cancelMutation = useMutation({
+    mutationFn: cancelBooking,
+    onSuccess: () => {
+      message.success("Booking cancelled successfully.");
+      queryClient.invalidateQueries({ queryKey: ["bookings"] });
+      queryClient.invalidateQueries({ queryKey: ["pendingApprovals"] });
+      queryClient.invalidateQueries({ queryKey: ["reports"] });
+    },
+    onError: (error) =>
+      message.error(getErrorMessage(error, "Unable to cancel booking.")),
   });
 
   const canViewRoles = usePermission("roles", "view");
@@ -117,7 +137,12 @@ function BookingPage() {
   };
 
   const pageTitle = getPageTitle(role);
-  const columns = getBookingColumns(canViewUsers, openViewModal);
+  const columns = getBookingColumns(
+    canViewUsers,
+    openViewModal,
+    canUpdateBooking,
+    (bookingId) => cancelMutation.mutate(bookingId),
+  );
   const stats = BookingStats(bookings);
 
   return (
@@ -150,11 +175,10 @@ function BookingPage() {
         <Alert
           type="error"
           showIcon
-          message={
-            bookingsQueryError?.response?.data?.message ||
-            bookingsQueryError?.message ||
-            "Unable to load bookings."
-          }
+          message={getErrorMessage(
+            bookingsQueryError,
+            "Unable to load bookings.",
+          )}
         />
       )}
 
@@ -162,11 +186,10 @@ function BookingPage() {
         <Alert
           type="error"
           showIcon
-          message={
-            roomsQueryError?.response?.data?.message ||
-            roomsQueryError?.message ||
-            "Unable to load available rooms."
-          }
+          message={getErrorMessage(
+            roomsQueryError,
+            "Unable to load available rooms.",
+          )}
         />
       )}
 
