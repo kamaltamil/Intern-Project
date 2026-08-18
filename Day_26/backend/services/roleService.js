@@ -33,11 +33,14 @@ const hasRolePermission = (currentRole, action) =>
       permission.resource === "roles" && permission.action?.[action] === true,
   );
 
-// Check whether the target role is included in the current role's manageableRoles.
-const canManageRole = (currentRole, targetRoleId) =>
-  currentRole?.manageableRoles?.some(
+// Admin can manage every role; other roles are limited by manageableRoles.
+const canManageRole = (currentRole, targetRoleId) => {
+  if (currentRole?.name === "Admin") return true;
+
+  return currentRole?.manageableRoles?.some(
     (role) => String(role?._id || role) === String(targetRoleId),
   );
+};
 
 // Enforce both the module permission and manageable-role relationship on the backend.
 const validateRoleManagementAccess = (currentRole, action, targetRoleId) => {
@@ -132,11 +135,20 @@ const createRole = async (data, currentRole) => {
 /*                              Get All Roles                                 */
 /* -------------------------------------------------------------------------- */
 
-// Loads only roles that the current user is allowed to manage.
+// Admin can see every role; other roles only see roles in manageableRoles.
 const getAllRoles = async (currentRole) => {
   try {
     validateRoleManagementAccess(currentRole, "view");
 
+<<<<<<< HEAD
+=======
+    if (currentRole?.name === "Admin") {
+      return await Role.find()
+        .populate("manageableRoles", "name color")
+        .sort({ createdAt: 1 });
+    }
+
+>>>>>>> 433a45a6907540bb49264e65bb74c2a5cdbdf36b
     const manageableRoleIds = currentRole?.manageableRoles || [];
 
     return await Role.find({ _id: { $in: manageableRoleIds } })
