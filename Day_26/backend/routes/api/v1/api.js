@@ -10,7 +10,6 @@ const roomsRouter = require("./rooms");
 const rolesRouter = require("./roles");
 const approvalRouter = require("./approval");
 const reportsRouter = require("./reports");
-const subscriptionsRouter = require("./subscriptions");
 
 const { authenticateToken } = require("../../../middleware/auth");
 const { rateLimiter } = require("../../../config/rateLimiting");
