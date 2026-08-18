@@ -76,9 +76,9 @@ const validateManageableRoles = (currentRole, manageableRoles = []) => {
   }
 };
 
-/* -------------------------------------------------------------------------- */
-/*                              Create Role                                   */
-/* -------------------------------------------------------------------------- */
+
+/*Create Role     */
+
 
 // Creates a role with its permissions and manageable-role relationships.
 const createRole = async (data, currentRole) => {
@@ -131,24 +131,21 @@ const createRole = async (data, currentRole) => {
   }
 };
 
-/* -------------------------------------------------------------------------- */
-/*                              Get All Roles                                 */
-/* -------------------------------------------------------------------------- */
+
+/*Get All Roles   */
+
 
 // Admin can see every role; other roles only see roles in manageableRoles.
 const getAllRoles = async (currentRole) => {
   try {
     validateRoleManagementAccess(currentRole, "view");
 
-<<<<<<< HEAD
-=======
     if (currentRole?.name === "Admin") {
       return await Role.find()
         .populate("manageableRoles", "name color")
         .sort({ createdAt: 1 });
     }
 
->>>>>>> 433a45a6907540bb49264e65bb74c2a5cdbdf36b
     const manageableRoleIds = currentRole?.manageableRoles || [];
 
     return await Role.find({ _id: { $in: manageableRoleIds } })
@@ -160,10 +157,8 @@ const getAllRoles = async (currentRole) => {
   }
 };
 
-/* -------------------------------------------------------------------------- */
-/*                              Get Role By ID                                */
-/* -------------------------------------------------------------------------- */
 
+/*Get Role by ID  */
 // Loads a role only when the current user is allowed to manage it.
 const getRoleById = async (id, currentRole) => {
   try {
@@ -176,9 +171,9 @@ const getRoleById = async (id, currentRole) => {
   }
 };
 
-/* -------------------------------------------------------------------------- */
-/*                               Update Role                                  */
-/* -------------------------------------------------------------------------- */
+
+/* Update Role    */
+
 
 // Updates a manageable role while preserving permission and relationship validation.
 const updateRole = async (id, data, currentRole) => {
@@ -202,9 +197,9 @@ const updateRole = async (id, data, currentRole) => {
   }
 };
 
-/* -------------------------------------------------------------------------- */
-/*                               Delete Role                                  */
-/* -------------------------------------------------------------------------- */
+
+/* Delete Role    */
+
 
 // Deletes a role only when it is included in the current user's manageable roles.
 const deleteRole = async (id, currentRole) => {

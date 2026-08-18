@@ -3,10 +3,10 @@ import { useEffect, useState } from "react";
 import {
   Alert,
   Button,
+  Dropdown,
   Empty,
   Form,
   Modal,
-  Popconfirm,
   Space,
   Tag,
   Typography,
@@ -15,8 +15,10 @@ import {
 
 import {
   DeleteOutlined,
+  DownOutlined,
   EditOutlined,
   HomeOutlined,
+  MoreOutlined,
   PlusOutlined,
   ReloadOutlined,
 } from "@ant-design/icons";
@@ -33,6 +35,7 @@ import {
   fetchRooms,
   updateRoom,
 } from "../store/slices/roomSlice";
+import usePermission from "../hooks/usePermission";
 
 const { Title, Text } = Typography;
 
@@ -159,6 +162,43 @@ function RoomManagementPage() {
       message.error(result.payload || "Failed to delete room");
     }
   };
+  const canUpdate = usePermission("rooms", "update");
+  const canDelete = usePermission("rooms", "delete");
+
+  const actionColumn = canUpdate || canDelete;
+
+  const roomActionItems = (record) => {
+      const items = [];
+
+      if (canUpdate) {
+        items.push({
+          key: "edit",
+          icon: <EditOutlined />,
+          label: "Edit Room",
+          onClick: () => openEditModal(record),
+        });
+      }
+
+      if (canDelete) {
+        items.push({
+          key: "delete",
+          icon: <DeleteOutlined />,
+          label: "Delete Room",
+          danger: true,
+          onClick: () => {
+            Modal.confirm({
+              title: "Delete Room",
+              content: `Are you sure you want to delete room ${record.roomNumber}?`,
+              okText: "Delete",
+              okType: "danger",
+              onOk: () => handleDeleteRoom(record._id),
+            });
+          },
+        });
+      }
+
+      return items;
+    };
 
   const columns = [
     {
@@ -191,43 +231,20 @@ function RoomManagementPage() {
       key: "price",
       render: (value) => <Text strong>₹{Number(value).toLocaleString("en-IN")}</Text>,
     },
-    {
-      title: "Actions",
-      key: "actions",
-      render: (_, record) => (
-        <Space>
-          <PermissionGate resource="rooms" action="update">
-            <Button
-              size="small"
-              icon={<EditOutlined />}
-              onClick={() => openEditModal(record)}
-            >
-              Edit
+    ...(actionColumn ? [
+      {
+        title: "Actions",
+        key: "actions",
+        width: 130,
+        render: (_, record) => (
+          <Dropdown menu={{ items: roomActionItems(record) }} trigger={["click"]}>
+            <Button icon={<MoreOutlined />} loading={deleting}>
+              Actions <DownOutlined style={{ fontSize: 10 }} />
             </Button>
-          </PermissionGate>
-
-          <PermissionGate resource="rooms" action="delete">
-            <Popconfirm
-              title="Delete this room?"
-              description={`Are you sure you want to delete room ${record.roomNumber}?`}
-              okText="Delete"
-              cancelText="Cancel"
-              okButtonProps={{ danger: true, loading: deleting }}
-              onConfirm={() => handleDeleteRoom(record._id)}
-            >
-              <Button
-                danger
-                size="small"
-                icon={<DeleteOutlined />}
-                loading={deleting}
-              >
-                Delete
-              </Button>
-            </Popconfirm>
-          </PermissionGate>
-        </Space>
-      ),
-    },
+          </Dropdown>
+        ),
+      }
+    ] : []),
   ];
 
   return (
@@ -315,7 +332,6 @@ function RoomManagementPage() {
         rowKey="_id"
         dataSource={rooms}
         columns={columns}
-        pagination={{ pageSize: 8, showSizeChanger: true }}
       />
 
       {!loading && rooms.length === 0 && !error && (

@@ -15,7 +15,7 @@ const createLimiter = (windowMs, max, message) => (
 
 const rateLimiter = createLimiter(
     4 * 60 * 1000,
-    100,
+    500,
     "Too many attempts, Please try again"
 )
 

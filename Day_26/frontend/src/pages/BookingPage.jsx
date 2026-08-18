@@ -40,6 +40,8 @@ function BookingPage() {
     enabled: canCreateBooking,
   });
 
+  console.log(rooms);
+  
   const {
     data: bookings = [],
     isLoading: bookingsLoading,
