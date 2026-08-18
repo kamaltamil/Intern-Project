@@ -224,6 +224,7 @@ const cancelBookingHandler = async (req, res) => {
   }
 };
 
+// Deletes a booking after checking delete permission and booking scope.
 const deleteBookingHandler = async (req, res) => {
   try {
     const { id } = req.params;
@@ -236,7 +237,12 @@ const deleteBookingHandler = async (req, res) => {
 
     const userPermissions = req.user?.role?.permissions || [];
     const bookingActions = getPermission(userPermissions, "bookings");
-    const isOwner = booking.user._id.toString() === userId.toString();
+    if (bookingActions.delete !== true) {
+      return res.status(403).json({
+        message: "Forbidden: You do not have permission to delete bookings",
+      });
+    }
+
     const canManageBooking = canAccessBooking(
       req.user?.role,
       booking.user.role,
@@ -244,7 +250,7 @@ const deleteBookingHandler = async (req, res) => {
       booking.user._id,
     );
 
-    if (!canManageBooking || (!isOwner && bookingActions.delete !== true)) {
+    if (!canManageBooking) {
       return res.status(403).json({
         message: "Forbidden: You cannot delete this booking",
       });
