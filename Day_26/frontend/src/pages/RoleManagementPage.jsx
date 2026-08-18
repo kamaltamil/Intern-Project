@@ -323,16 +323,6 @@ function RoleManagementPage() {
     setModalOpen(true);
   };
 
-  // Variable to check if the user has view permission for the "users" module
-  const hasViewPermission = (module) => {
-    return permissions.some(
-      (permission) =>
-        permission.resource === module && permission.action?.view === true,
-    );
-  };
-
-  const hasUserViewPermission = hasViewPermission("users");
-
   const handleSubmit = async () => {
     try {
       const values = await form.validateFields();
@@ -364,7 +354,7 @@ function RoleManagementPage() {
         color: values.color || "#722ed1",
         isDefault: Boolean(values.isDefault),
         permissions,
-        manageableRoles: hasUserViewPermission ? selectedManageableRoles : [],
+        manageableRoles: selectedManageableRoles,
         dashboardConfig,
       };
 
@@ -475,8 +465,6 @@ function RoleManagementPage() {
       />
     );
   }
-
-
 
   const hasDashboardViewPermission = permissions.some(
     (permission) =>
@@ -599,123 +587,122 @@ function RoleManagementPage() {
 
           {hasDashboardViewPermission && (
             <div className="mt-4 p-3 bg-gray-50 border rounded-lg">
-            <Text strong className="block mb-1">
-              Dashboard Content Configuration
-            </Text>
-            <Text type="secondary" className="block text-xs mb-3">
-              Select which cards and modules appear on the dashboard for users with this role.
-            </Text>
-            <Row gutter={[12, 8]}>
-              {DASHBOARD_WIDGET_OPTIONS.map((widget) => {
-                const checked = selectedDashboardStats.includes(widget.key);
-                return (
-                  <Col xs={24} sm={12} md={8} key={widget.key}>
-                    <Checkbox
-                      checked={checked}
-                      onChange={(event) =>
-                        setSelectedDashboardStats((current) =>
-                          event.target.checked
-                            ? [...new Set([...current, widget.key])]
-                            : current.filter((key) => key !== widget.key)
-                        )
-                      }
-                    >
-                      <Space size={4}>
-                        <span
-                          className="inline-block w-2 h-2 rounded-full"
-                          style={{ backgroundColor: widget.color }}
-                        />
-                        {widget.title}
-                      </Space>
-                    </Checkbox>
-                  </Col>
-                );
-              })}
-            </Row>
-
-            <Divider className="!my-3" />
-
-            <Text strong className="block text-xs mb-2">
-              Dashboard Banner (Optional)
-            </Text>
-            <Row gutter={12}>
-              <Col xs={24} md={12}>
-                <Form.Item
-                  name="bannerTitle"
-                  label="Banner Title"
-                  className="!mb-2"
-                >
-                  <Input placeholder="e.g. FrontDesk Operations Console" />
-                </Form.Item>
-              </Col>
-              <Col xs={24} md={12}>
-                <Form.Item
-                  name="bannerSubtitle"
-                  label="Banner Subtitle"
-                  className="!mb-2"
-                >
-                  <Input placeholder="e.g. Manage guest check-ins and room assignments" />
-                </Form.Item>
-              </Col>
-              <Col xs={24} md={12}>
-                <Form.Item
-                  name="bannerActionLabel"
-                  label="Button Label"
-                  className="!mb-2"
-                >
-                  <Input placeholder="e.g. View Bookings" />
-                </Form.Item>
-              </Col>
-              <Col xs={24} md={12}>
-                <Form.Item
-                  name="bannerActionUrl"
-                  label="Button Route"
-                  className="!mb-2"
-                >
-                  <Input placeholder="e.g. /bookings" />
-                </Form.Item>
-              </Col>
-            </Row>
-          </div>
-          )}
-
-          {hasUserViewPermission && (
-            <div className="mt-4 p-3 bg-gray-50 border rounded-lg">
               <Text strong className="block mb-1">
-                User Management Role Access
+                Dashboard Content Configuration
               </Text>
               <Text type="secondary" className="block text-xs mb-3">
-                Select which roles this role can manage.
+                Select which cards and modules appear on the dashboard for users with this role.
               </Text>
               <Row gutter={[12, 8]}>
-                {roles.map((role) => {
-                  const checked = selectedManageableRoles.includes(role._id);
+                {DASHBOARD_WIDGET_OPTIONS.map((widget) => {
+                  const checked = selectedDashboardStats.includes(widget.key);
                   return (
-                    <Col xs={24} sm={12} md={8} key={role._id}>
+                    <Col xs={24} sm={12} md={8} key={widget.key}>
                       <Checkbox
                         checked={checked}
                         onChange={(event) =>
-                          setSelectedManageableRoles((current) =>
+                          setSelectedDashboardStats((current) =>
                             event.target.checked
-                              ? [...new Set([...current, role._id])]
-                              : current.filter((id) => id !== role._id),
+                              ? [...new Set([...current, widget.key])]
+                              : current.filter((key) => key !== widget.key),
                           )
                         }
                       >
                         <Space size={4}>
                           <span
-                            className="inline-block w-2.5 h-2.5 rounded-full"
-                            style={{ backgroundColor: role.color || "#722ed1" }}
+                            className="inline-block w-2 h-2 rounded-full"
+                            style={{ backgroundColor: widget.color }}
                           />
-                          {role.name}
+                          {widget.title}
                         </Space>
                       </Checkbox>
                     </Col>
                   );
                 })}
               </Row>
+
+              <Divider className="!my-3" />
+
+              <Text strong className="block text-xs mb-2">
+                Dashboard Banner (Optional)
+              </Text>
+              <Row gutter={12}>
+                <Col xs={24} md={12}>
+                  <Form.Item
+                    name="bannerTitle"
+                    label="Banner Title"
+                    className="!mb-2"
+                  >
+                    <Input placeholder="e.g. FrontDesk Operations Console" />
+                  </Form.Item>
+                </Col>
+                <Col xs={24} md={12}>
+                  <Form.Item
+                    name="bannerSubtitle"
+                    label="Banner Subtitle"
+                    className="!mb-2"
+                  >
+                    <Input placeholder="e.g. Manage guest check-ins and room assignments" />
+                  </Form.Item>
+                </Col>
+                <Col xs={24} md={12}>
+                  <Form.Item
+                    name="bannerActionLabel"
+                    label="Button Label"
+                    className="!mb-2"
+                  >
+                    <Input placeholder="e.g. View Bookings" />
+                  </Form.Item>
+                </Col>
+                <Col xs={24} md={12}>
+                  <Form.Item
+                    name="bannerActionUrl"
+                    label="Button Route"
+                    className="!mb-2"
+                  >
+                    <Input placeholder="e.g. /bookings" />
+                  </Form.Item>
+                </Col>
+              </Row>
             </div>
           )}
+
+          <div className="mt-4 p-3 bg-gray-50 border rounded-lg">
+            <Text strong className="block mb-1">
+              Manageable Roles
+            </Text>
+            <Text type="secondary" className="block text-xs mb-3">
+              Select which roles this role can manage. The backend checks that
+              each selected role is allowed by the current user's RBAC rules.
+            </Text>
+            <Row gutter={[12, 8]}>
+              {roles.map((role) => {
+                const checked = selectedManageableRoles.includes(role._id);
+                return (
+                  <Col xs={24} sm={12} md={8} key={role._id}>
+                    <Checkbox
+                      checked={checked}
+                      onChange={(event) =>
+                        setSelectedManageableRoles((current) =>
+                          event.target.checked
+                            ? [...new Set([...current, role._id])]
+                            : current.filter((id) => id !== role._id),
+                        )
+                      }
+                    >
+                      <Space size={4}>
+                        <span
+                          className="inline-block w-2.5 h-2.5 rounded-full"
+                          style={{ backgroundColor: role.color || "#722ed1" }}
+                        />
+                        {role.name}
+                      </Space>
+                    </Checkbox>
+                  </Col>
+                );
+              })}
+            </Row>
+          </div>
         </Form>
       </Modal>
 
@@ -783,10 +770,7 @@ function RoleManagementPage() {
                 </Text>
                 <Space wrap>
                   {selectedRole.dashboardConfig.stats.map((stat) => (
-                    <Tag
-                      key={stat.key}
-                      color={stat.color || "#C76A34"}
-                    >
+                    <Tag key={stat.key} color={stat.color || "#C76A34"}>
                       {stat.title || stat.key}
                     </Tag>
                   ))}
