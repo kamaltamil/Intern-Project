@@ -18,6 +18,7 @@ import {
   fetchRoles,
   createBooking,
   cancelBooking,
+  deleteBooking,
 } from "../api/queries";
 import { usePermission } from "../hooks/usePermission";
 
@@ -36,6 +37,7 @@ function BookingPage() {
   const canViewUsers = usePermission("users", "view");
   const canCreateBooking = usePermission("bookings", "create");
   const canUpdateBooking = usePermission("bookings", "update");
+  const canDeleteBooking = usePermission("bookings", "delete");
   const isDark = theme === "dark";
 
   const [bookModalOpen, setBookModalOpen] = useState(false);
@@ -84,6 +86,18 @@ function BookingPage() {
     },
     onError: (error) =>
       message.error(getErrorMessage(error, "Unable to cancel booking.")),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: deleteBooking,
+    onSuccess: () => {
+      message.success("Booking deleted successfully.");
+      queryClient.invalidateQueries({ queryKey: ["bookings"] });
+      queryClient.invalidateQueries({ queryKey: ["pendingApprovals"] });
+      queryClient.invalidateQueries({ queryKey: ["reports"] });
+    },
+    onError: (error) =>
+      message.error(getErrorMessage(error, "Unable to delete booking.")),
   });
 
   const canViewRoles = usePermission("roles", "view");
@@ -142,6 +156,8 @@ function BookingPage() {
     openViewModal,
     canUpdateBooking,
     (bookingId) => cancelMutation.mutate(bookingId),
+    canDeleteBooking,
+    (bookingId) => deleteMutation.mutate(bookingId),
   );
   const stats = BookingStats(bookings);
 
