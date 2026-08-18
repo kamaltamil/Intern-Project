@@ -6,39 +6,39 @@ const {
   deleteRole,
 } = require("../services/roleService");
 
-// Create a role with its permissions and dashboard configuration.
+// Create a role after checking the current user's role-management permissions.
 const createRoleHandler = async (req, res) => {
   try {
-    const role = await createRole(req.body);
+    const role = await createRole(req.body, req.user?.role);
 
     return res.status(201).json({
       message: "Role created successfully",
       role,
     });
   } catch (error) {
-    return res.status(400).json({
+    return res.status(error.statusCode || 400).json({
       message: error.message,
     });
   }
 };
 
-// Return all configured roles and their manageable role relationships.
+// Return only the roles the current user is allowed to manage.
 const listRoles = async (req, res) => {
   try {
-    const roles = await getAllRoles();
+    const roles = await getAllRoles(req.user?.role);
 
     return res.status(200).json(roles);
   } catch (error) {
-    return res.status(500).json({
+    return res.status(error.statusCode || 500).json({
       message: error.message,
     });
   }
 };
 
-// Fetch a single role for detailed inspection.
+// Fetch a role only after the service verifies that it is manageable.
 const getRole = async (req, res) => {
   try {
-    const role = await getRoleById(req.params.id);
+    const role = await getRoleById(req.params.id, req.user?.role);
 
     if (!role) {
       return res.status(404).json({
@@ -48,16 +48,20 @@ const getRole = async (req, res) => {
 
     return res.status(200).json(role);
   } catch (error) {
-    return res.status(500).json({
+    return res.status(error.statusCode || 500).json({
       message: error.message,
     });
   }
 };
 
-// Update the role permissions, manageable roles, or dashboard configuration.
+// Update a role only when the current user can manage the target role.
 const updateRoleHandler = async (req, res) => {
   try {
-    const role = await updateRole(req.params.id, req.body);
+    const role = await updateRole(
+      req.params.id,
+      req.body,
+      req.user?.role,
+    );
 
     if (!role) {
       return res.status(404).json({
@@ -70,22 +74,22 @@ const updateRoleHandler = async (req, res) => {
       role,
     });
   } catch (error) {
-    return res.status(400).json({
+    return res.status(error.statusCode || 400).json({
       message: error.message,
     });
   }
 };
 
-// Delete the selected role from the database.
+// Delete a role only when it is included in the current user's manageable roles.
 const deleteRoleHandler = async (req, res) => {
   try {
-    await deleteRole(req.params.id);
+    await deleteRole(req.params.id, req.user?.role);
 
     return res.status(200).json({
       message: "Role deleted successfully",
     });
   } catch (error) {
-    return res.status(400).json({
+    return res.status(error.statusCode || 400).json({
       message: error.message,
     });
   }
