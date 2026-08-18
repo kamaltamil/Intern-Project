@@ -91,13 +91,4 @@ const roleSchema = new mongoose.Schema(
     { timestamps: true }
 );
 
-// Prevent the database from storing more than one default role.
-roleSchema.index(
-    { isDefault: 1 },
-    {
-        unique: true,
-        partialFilterExpression: { isDefault: true },
-    }
-);
-
 module.exports = mongoose.model('Role', roleSchema);
