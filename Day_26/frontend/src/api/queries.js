@@ -117,6 +117,12 @@ export const updateBooking = async ({ id, payload }) => {
   return response.data?.booking || response.data || {};
 };
 
+// Cancels a booking while keeping the booking record for history.
+export const cancelBooking = async (id) => {
+  const response = await api.patch(`/booking/${id}/cancel`);
+  return response.data?.booking || response.data || {};
+};
+
 export const fetchRooms = async () => {
   const response = await api.get("/rooms");
   return response.data?.rooms || response.data || [];
