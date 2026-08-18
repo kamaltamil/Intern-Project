@@ -31,6 +31,26 @@ const isAuthRoute = (url = "") => {
   ].some((route) => url.includes(route));
 };
 
+// Extract a readable message from the response formats used by the API.
+const getApiErrorMessage = (error) => {
+  const data = error?.response?.data;
+  const firstError = Array.isArray(data?.errors) ? data.errors[0] : null;
+
+  if (typeof data?.message === "string" && data.message.trim()) {
+    return data.message;
+  }
+
+  if (typeof firstError?.msg === "string" && firstError.msg.trim()) {
+    return firstError.msg;
+  }
+
+  if (typeof firstError?.message === "string" && firstError.message.trim()) {
+    return firstError.message;
+  }
+
+  return typeof error?.message === "string" ? error.message : "Request failed";
+};
+
 // Attaches the current Bearer token to all outgoing API requests.
 api.interceptors.request.use(
   (config) => {
@@ -43,7 +63,7 @@ api.interceptors.request.use(
 
     return config;
   },
-  (error) => Promise.reject(error)
+  (error) => Promise.reject(error),
 );
 
 /* -------------------------------------------------------------------------- */
@@ -81,7 +101,7 @@ const refreshAccessToken = async () => {
         refreshToken: data.refreshToken || refreshToken,
         role: data.role,
         permissions: data.permissions || [],
-      })
+      }),
     );
 
     return data.token;
@@ -104,6 +124,23 @@ api.interceptors.response.use(
 
   async (error) => {
     const originalRequest = error?.config;
+
+    // Keep API errors readable for pages that display validation responses directly.
+    if (error?.response?.data) {
+      const message = getApiErrorMessage(error);
+      error.userMessage = message;
+
+      if (!error.response.data.message && message) {
+        error.response.data.message = message;
+      }
+
+      if (
+        !Array.isArray(error.response.data.errors) ||
+        !error.response.data.errors[0]?.msg
+      ) {
+        error.response.data.errors = [{ msg: message }];
+      }
+    }
 
     if (!originalRequest) {
       throw error;
@@ -142,7 +179,7 @@ api.interceptors.response.use(
     originalRequest.headers.Authorization = `Bearer ${newToken}`;
 
     return api.request(originalRequest);
-  }
+  },
 );
 
 export default api;
