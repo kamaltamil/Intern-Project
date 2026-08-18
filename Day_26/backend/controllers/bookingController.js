@@ -78,9 +78,7 @@ const bookRoom = async (req, res) => {
   }
 };
 
-// Returns bookings scoped by role: full-access users see everything, users
-// with manageableRoles see their own bookings plus bookings from users whose
-// role is inside their manageableRoles, everyone else sees only their own.
+// Returns only the current user's bookings or bookings from manageable roles.
 const getBookings = async (req, res) => {
   try {
     const userId = req.user?._id || req.user?.id;
@@ -92,26 +90,16 @@ const getBookings = async (req, res) => {
     const currentRole = req.user?.role;
     const permissions = currentRole?.permissions || [];
     const bookingActions = getPermission(permissions, "bookings");
-    const userActions = getPermission(permissions, "users");
-    const approvalActions = getPermission(permissions, "approval");
-
-    const canViewAll =
-      bookingActions.delete === true || userActions.view === true;
-
     const manageableRoleIds = (currentRole?.manageableRoles || []).map(
       (role) => (typeof role === "object" ? role._id : role),
     );
 
-    // Scoped visibility requires BOTH an explicit permission (approval:view)
-    // AND manageableRoles data — never trust manageableRoles alone, since it
-    // can be stale or set independently of current permissions.
-    const canReviewManageableBookings =
-      approvalActions.view === true && manageableRoleIds.length > 0;
+    // Use manageableRoles only when the current role can view bookings.
+    const canViewManageableBookings =
+      bookingActions.view === true && manageableRoleIds.length > 0;
 
     let bookings;
-    if (canViewAll) {
-      bookings = await getAllBookings();
-    } else if (canReviewManageableBookings) {
+    if (canViewManageableBookings) {
       bookings = await getBookingsForManageableRoles({
         userId,
         manageableRoleIds,
