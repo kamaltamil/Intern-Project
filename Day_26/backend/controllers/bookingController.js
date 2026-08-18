@@ -103,17 +103,13 @@ const getBookings = async (req, res) => {
       (role) => (typeof role === "object" ? role._id : role),
     );
 
-    // Use manageableRoles only when the current role can view bookings.
-    const canViewManageableBookings =
-      bookingActions.view === true &&
-      (currentRole?.name === "Admin" || manageableRoleIds.length > 0);
-
     let bookings;
-    if (canViewManageableBookings) {
+    if (currentRole?.name === "Admin") {
+      bookings = await getAllBookings();
+    } else if (bookingActions.view === true && manageableRoleIds.length > 0) {
       bookings = await getBookingsForManageableRoles({
         userId,
-        manageableRoleIds:
-          currentRole?.name === "Admin" ? [] : manageableRoleIds,
+        manageableRoleIds,
       });
     } else {
       bookings = await getBookingsByUserId(userId);
@@ -188,7 +184,6 @@ const cancelBookingHandler = async (req, res) => {
       req.user?.role?.permissions || [],
       "bookings",
     );
-    const isOwner = booking.user._id.toString() === userId.toString();
     const canManageBooking = canAccessBooking(
       req.user?.role,
       booking.user.role,
