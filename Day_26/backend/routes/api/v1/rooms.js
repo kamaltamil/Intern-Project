@@ -9,10 +9,23 @@ const {
 } = require("../../../controllers/roomsController");
 
 const { requirePermission } = require("../../../middleware/permissionMiddleware");
+const { validateRequest } = require("../../../middleware/validationHandler");
+const {
+  createRoomPayload,
+  updateRoomPayload,
+  roomIdPayload,
+} = require("../../../validators/roomValidator");
 
+// Get all rooms.
 router.get("/", requirePermission("rooms", "view"), getAllRooms);
-router.post("/new", requirePermission("rooms", "create"), createRoom);
-router.patch("/:id", requirePermission("rooms", "update"), updateRoom);
-router.delete("/:id", requirePermission("rooms", "delete"), deleteRoom);
+
+// Create a room after validating its details.
+router.post("/new", requirePermission("rooms", "create"), createRoomPayload, validateRequest, createRoom);
+
+// Update an existing room.
+router.patch("/:id", requirePermission("rooms", "update"), updateRoomPayload, validateRequest, updateRoom);
+
+// Delete a room by ID.
+router.delete("/:id", requirePermission("rooms", "delete"), roomIdPayload, validateRequest, deleteRoom);
 
 module.exports = router;
