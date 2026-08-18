@@ -17,7 +17,7 @@ const validatePermissions = (permissions = []) => {
 
     if (hasCrudWithoutView && action.view !== true) {
       const error = new Error(
-        `View permission is required for resource '${permission.resource}' when Create, Update, or Delete is enabled.`
+        `View permission is required for resource '${permission.resource}' when Create, Update, or Delete is enabled.`,
       );
       error.statusCode = 400;
       throw error;
@@ -25,13 +25,62 @@ const validatePermissions = (permissions = []) => {
   });
 };
 
+// Check the current role's Role Management permission before accessing role data.
+const hasRolePermission = (currentRole, action) =>
+  currentRole?.permissions?.some(
+    (permission) =>
+      permission.resource === "roles" && permission.action?.[action] === true,
+  );
+
+// Check whether the target role is included in the current role's manageableRoles.
+const canManageRole = (currentRole, targetRoleId) =>
+  currentRole?.manageableRoles?.some(
+    (role) => String(role?._id || role) === String(targetRoleId),
+  );
+
+// Enforce both the module permission and manageable-role relationship on the backend.
+const validateRoleManagementAccess = (currentRole, action, targetRoleId) => {
+  if (!hasRolePermission(currentRole, action)) {
+    const error = new Error("Permission denied");
+    error.statusCode = 403;
+    throw error;
+  }
+
+  if (targetRoleId && !canManageRole(currentRole, targetRoleId)) {
+    const error = new Error("You are not allowed to manage this role");
+    error.statusCode = 403;
+    throw error;
+  }
+};
+
+// Make sure every manageable role assigned to a new or updated role can be managed by the current user.
+const validateManageableRoles = (currentRole, manageableRoles = []) => {
+  if (!Array.isArray(manageableRoles)) {
+    const error = new Error("Manageable roles must be an array");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const unauthorizedRole = manageableRoles.find(
+    (roleId) => !canManageRole(currentRole, roleId),
+  );
+
+  if (unauthorizedRole) {
+    const error = new Error("You cannot assign a role outside your manageable roles");
+    error.statusCode = 403;
+    throw error;
+  }
+};
+
 /* -------------------------------------------------------------------------- */
 /*                              Create Role                                   */
 /* -------------------------------------------------------------------------- */
 
 // Creates a role with its permissions and manageable-role relationships.
-const createRole = async (data) => {
+const createRole = async (data, currentRole) => {
   try {
+    validateRoleManagementAccess(currentRole, "create");
+
     const {
       name,
       permissions = [],
@@ -43,6 +92,7 @@ const createRole = async (data) => {
     } = data;
 
     validatePermissions(permissions);
+    validateManageableRoles(currentRole, manageableRoles);
 
     const existingRole = await Role.findOne({ name: name.trim() });
     if (existingRole) throw new Error("Role already exists");
@@ -66,13 +116,18 @@ const createRole = async (data) => {
 /*                              Get All Roles                                 */
 /* -------------------------------------------------------------------------- */
 
-// Loads all roles and populates manageable roles for display and management checks.
-const getAllRoles = async () => {
+// Loads only roles that the current user is allowed to manage.
+const getAllRoles = async (currentRole) => {
   try {
-    return await Role.find()
+    validateRoleManagementAccess(currentRole, "view");
+
+    const manageableRoleIds = currentRole?.manageableRoles || [];
+
+    return await Role.find({ _id: { $in: manageableRoleIds } })
       .populate("manageableRoles", "name color")
       .sort({ createdAt: 1 });
   } catch (error) {
+    if (error.statusCode) throw error;
     throw new Error(`Error fetching roles: ${error.message}`);
   }
 };
@@ -81,11 +136,14 @@ const getAllRoles = async () => {
 /*                              Get Role By ID                                */
 /* -------------------------------------------------------------------------- */
 
-// Loads one role together with the names and colors of its manageable roles.
-const getRoleById = async (id) => {
+// Loads a role only when the current user is allowed to manage it.
+const getRoleById = async (id, currentRole) => {
   try {
+    validateRoleManagementAccess(currentRole, "view", id);
+
     return await Role.findById(id).populate("manageableRoles", "name color");
   } catch (error) {
+    if (error.statusCode) throw error;
     throw new Error(`Error fetching role: ${error.message}`);
   }
 };
@@ -94,10 +152,15 @@ const getRoleById = async (id) => {
 /*                               Update Role                                  */
 /* -------------------------------------------------------------------------- */
 
-// Updates a role while preserving permission validation and returning populated relationships.
-const updateRole = async (id, data) => {
+// Updates a manageable role while preserving permission and relationship validation.
+const updateRole = async (id, data, currentRole) => {
   try {
+    validateRoleManagementAccess(currentRole, "update", id);
+
     if (data.permissions) validatePermissions(data.permissions);
+    if (data.manageableRoles) {
+      validateManageableRoles(currentRole, data.manageableRoles);
+    }
 
     const role = await Role.findByIdAndUpdate(id, data, {
       new: true,
@@ -115,9 +178,11 @@ const updateRole = async (id, data) => {
 /*                               Delete Role                                  */
 /* -------------------------------------------------------------------------- */
 
-// Deletes a role and reports a not-found status when the role does not exist.
-const deleteRole = async (id) => {
+// Deletes a role only when it is included in the current user's manageable roles.
+const deleteRole = async (id, currentRole) => {
   try {
+    validateRoleManagementAccess(currentRole, "delete", id);
+
     const role = await Role.findByIdAndDelete(id);
     if (!role) {
       const error = new Error("Role not found");
