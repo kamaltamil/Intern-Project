@@ -78,12 +78,28 @@ const validateManageableRoles = (currentRole, manageableRoles = []) => {
   }
 };
 
-// Remove the previous default before assigning a new default role.
-const clearDefaultRole = async (roleId = null) => {
-  const filter = roleId
-    ? { _id: { $ne: roleId }, isDefault: true }
-    : { isDefault: true };
-  await Role.updateMany(filter, { $set: { isDefault: false } });
+// Keep the database in a single-default state before applying a role change.
+const ensureSingleDefaultRole = async (selectedRoleId = null) => {
+  const defaultRoles = await Role.find({ isDefault: true })
+    .select("_id createdAt")
+    .sort({ createdAt: 1 })
+    .lean();
+
+  if (selectedRoleId) {
+    await Role.updateMany(
+      { _id: { $ne: selectedRoleId }, isDefault: true },
+      { $set: { isDefault: false } },
+    );
+    return;
+  }
+
+  if (defaultRoles.length > 1) {
+    const keepRoleId = defaultRoles[0]._id;
+    await Role.updateMany(
+      { _id: { $ne: keepRoleId }, isDefault: true },
+      { $set: { isDefault: false } },
+    );
+  }
 };
 
 // Creates a role with its permissions and manageable-role relationships.
@@ -108,7 +124,11 @@ const createRole = async (data, currentRole) => {
     if (existingRole) throw new Error("Role already exists");
 
     // Keep only the new role as default when it is marked as default.
-    if (isDefault === true) await clearDefaultRole();
+    if (isDefault === true) {
+      await ensureSingleDefaultRole("000000000000000000000000");
+    } else {
+      await ensureSingleDefaultRole();
+    }
 
     const role = await Role.create({
       name: name.trim(),
@@ -172,7 +192,11 @@ const updateRole = async (id, data, currentRole) => {
     }
 
     // Clear the previous default before making this role the default.
-    if (data.isDefault === true) await clearDefaultRole(id);
+    if (data.isDefault === true) {
+      await ensureSingleDefaultRole(id);
+    } else {
+      await ensureSingleDefaultRole();
+    }
 
     const role = await Role.findByIdAndUpdate(id, data, {
       new: true,
