@@ -6,11 +6,7 @@ const {
   deleteRole,
 } = require("../services/roleService");
 
-/* -------------------------------------------------------------------------- */
-/*                               Create Role                                  */
-/* -------------------------------------------------------------------------- */
-
-// Creates a new custom or system role with configured permissions and dashboard widgets.
+// Create a role with its permissions and dashboard configuration.
 const createRoleHandler = async (req, res) => {
   try {
     const role = await createRole(req.body);
@@ -26,7 +22,7 @@ const createRoleHandler = async (req, res) => {
   }
 };
 
-// Returns all configured roles populated with manageable role relationships.
+// Return all configured roles and their manageable role relationships.
 const listRoles = async (req, res) => {
   try {
     const roles = await getAllRoles();
@@ -39,7 +35,7 @@ const listRoles = async (req, res) => {
   }
 };
 
-// Fetches a single role by ID for detailed inspection.
+// Fetch a single role for detailed inspection.
 const getRole = async (req, res) => {
   try {
     const role = await getRoleById(req.params.id);
@@ -58,13 +54,10 @@ const getRole = async (req, res) => {
   }
 };
 
-// Updates role permissions, manageable roles, or dashboard configuration.
+// Update the role permissions, manageable roles, or dashboard configuration.
 const updateRoleHandler = async (req, res) => {
   try {
-    const role = await updateRole(
-      req.params.id,
-      req.body
-    );
+    const role = await updateRole(req.params.id, req.body);
 
     if (!role) {
       return res.status(404).json({
@@ -83,7 +76,7 @@ const updateRoleHandler = async (req, res) => {
   }
 };
 
-// Deletes a custom role from the database.
+// Delete the selected role from the database.
 const deleteRoleHandler = async (req, res) => {
   try {
     await deleteRole(req.params.id);
