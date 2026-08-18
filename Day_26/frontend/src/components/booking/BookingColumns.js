@@ -1,6 +1,11 @@
 import React from "react";
-import { Button, Space, Tag } from "antd";
-import { EyeOutlined, HomeOutlined } from "@ant-design/icons";
+import { Button, Popconfirm, Space, Tag } from "antd";
+import {
+  DownOutlined,
+  EyeOutlined,
+  HomeOutlined,
+  MoreOutlined,
+} from "@ant-design/icons";
 
 import {
   bookingStatusConfig,
@@ -11,7 +16,7 @@ import {
   getTotalCost,
 } from "./BookingHelpers";
 
-export const getBookingColumns = (showGuest, onView) => {
+export const getBookingColumns = (showGuest, onView, canCancel, onCancel) => {
   const columns = [
     {
       title: "Room",
@@ -80,16 +85,59 @@ export const getBookingColumns = (showGuest, onView) => {
     {
       title: "Actions",
       key: "actions",
-      render: (_, record) => (
-        <Button
-          icon={<EyeOutlined />}
-          size="small"
-          onClick={() => onView(record)}
-          style={{ color: "#C76A34", borderColor: "#C76A34" }}
-        >
-          View
-        </Button>
-      ),
+      render: (_, record) => {
+        const items = [
+          {
+            key: "view",
+            label: "View",
+            icon: <EyeOutlined />,
+            onClick: () => onView(record),
+          },
+        ];
+
+        const canCancelStatus = ![
+          "Cancelled",
+          "CheckedOut",
+          "Rejected",
+        ].includes(record.bookingStatus);
+
+        if (canCancel && canCancelStatus) {
+          items.push({
+            key: "cancel",
+            label: (
+              <Popconfirm
+                title="Cancel this booking?"
+                description="The booking will remain in history with Cancelled status."
+                okText="Cancel Booking"
+                cancelText="Keep Booking"
+                okButtonProps={{ danger: true }}
+                onConfirm={() => onCancel(record._id)}
+              >
+                <span className="text-red-500">Cancel</span>
+              </Popconfirm>
+            ),
+            icon: <MoreOutlined />,
+          });
+        }
+
+        return (
+          <Button
+            icon={<MoreOutlined />}
+            size="small"
+            onClick={() => {
+              const cancelItem = items.find((item) => item.key === "cancel");
+              if (cancelItem) {
+                onView(record);
+                return;
+              }
+              onView(record);
+            }}
+            style={{ color: "#C76A34", borderColor: "#C76A34" }}
+          >
+            View <DownOutlined style={{ fontSize: 10 }} />
+          </Button>
+        );
+      },
     },
   );
 
