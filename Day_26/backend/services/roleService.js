@@ -97,7 +97,7 @@ const createRole = async (data, currentRole) => {
     const existingRole = await Role.findOne({ name: name.trim() });
     if (existingRole) throw new Error("Role already exists");
 
-    return await Role.create({
+    const role = await Role.create({
       name: name.trim(),
       permissions,
       manageableRoles,
@@ -106,6 +106,21 @@ const createRole = async (data, currentRole) => {
       isDefault,
       dashboardConfig,
     });
+
+    // Keep the new role visible to its creator and any role that already manages the creator.
+    if (currentRole?._id) {
+      await Role.updateOne(
+        { _id: currentRole._id },
+        { $addToSet: { manageableRoles: role._id } },
+      );
+
+      await Role.updateMany(
+        { manageableRoles: currentRole._id },
+        { $addToSet: { manageableRoles: role._id } },
+      );
+    }
+
+    return role;
   } catch (error) {
     if (error.statusCode) throw error;
     throw new Error(error.message);
