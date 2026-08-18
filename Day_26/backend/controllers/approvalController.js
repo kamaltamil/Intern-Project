@@ -4,10 +4,10 @@ const {
 } = require("../services/approvalService");
 const logger = require("../config/logger");
 
-// Handles booking approval requests and delegates status changes to the service layer.
+// Return only pending bookings that belong to roles the current user can manage.
 const getPending = async (req, res) => {
   try {
-    const bookings = await getPendingApprovals();
+    const bookings = await getPendingApprovals(req.user?.role);
     logger.info("Pending booking approvals fetched successfully");
     return res.status(200).json({ message: "Pending bookings fetched successfully", bookings });
   } catch (error) {
@@ -16,10 +16,10 @@ const getPending = async (req, res) => {
   }
 };
 
-// Approves a pending booking so that payment can proceed.
+// Approves a pending booking after checking the target user's manageable role.
 const approveBooking = async (req, res) => {
   try {
-    const booking = await changeApprovalStatus(req.params.id, "approve");
+    const booking = await changeApprovalStatus(req.params.id, "approve", req.user?.role);
     logger.info("Booking approved successfully");
     return res.status(200).json({ message: "Booking approved. Payment is now pending.", booking });
   } catch (error) {
@@ -28,10 +28,10 @@ const approveBooking = async (req, res) => {
   }
 };
 
-// Rejects a booking that is still waiting for approval.
+// Rejects a pending booking after checking the target user's manageable role.
 const rejectBooking = async (req, res) => {
   try {
-    const booking = await changeApprovalStatus(req.params.id, "reject");
+    const booking = await changeApprovalStatus(req.params.id, "reject", req.user?.role);
     logger.info("Booking rejected successfully");
     return res.status(200).json({ message: "Booking rejected.", booking });
   } catch (error) {
