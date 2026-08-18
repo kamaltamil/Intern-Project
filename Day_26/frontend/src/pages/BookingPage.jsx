@@ -71,25 +71,33 @@ function BookingPage() {
     queryFn: fetchRoles,
     enabled: canViewRoles,
   });
-  // Adjust this to whatever shape your auth slice actually uses for the logged-in user's id.
+
   const currentUserId = user?._id || user?.id || authId;
+  const normalizedCurrentUserId = currentUserId ? String(currentUserId) : "";
 
   const [selectedRoleIds, setSelectedRoleIds] = useState([]);
   const [onlyMine, setOnlyMine] = useState(false);
-  
+
+  // Keep the frontend filter aligned with the IDs returned by the backend.
   const filteredBookings = bookings.filter((booking) => {
-  if (onlyMine && booking.user?._id !== currentUserId) return false;
+    const bookingUserId =
+      typeof booking.user === "object" ? booking.user?._id : booking.user;
 
-  if (selectedRoleIds.length) {
-    const roleId =
-      typeof booking.user?.role === "object"
-        ? booking.user.role?._id
-        : booking.user?.role;
-    if (!selectedRoleIds.includes(roleId)) return false;
-  }
+    if (onlyMine && String(bookingUserId) !== normalizedCurrentUserId) {
+      return false;
+    }
 
-  return true;
-});
+    if (selectedRoleIds.length) {
+      const roleId =
+        typeof booking.user?.role === "object"
+          ? booking.user.role?._id
+          : booking.user?.role;
+
+      if (!selectedRoleIds.includes(String(roleId))) return false;
+    }
+
+    return true;
+  });
 
   const openBookingModal = () => {
     refetchRooms();
@@ -198,9 +206,9 @@ function BookingPage() {
                 placeholder="Filter by role"
                 style={{ minWidth: 220 }}
                 value={selectedRoleIds}
-                onChange={setSelectedRoleIds}
+                onChange={(values) => setSelectedRoleIds(values.map(String))}
                 options={manageableRoles.map((r) => ({
-                  value: r._id,
+                  value: String(r._id),
                   label: (
                     <Space>
                       <span
