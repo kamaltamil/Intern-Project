@@ -13,23 +13,26 @@ const {
 const {
   requirePermission,
 } = require("../../../middleware/permissionMiddleware");
-
+const { validateRequest } = require("../../../middleware/validationHandler");
+const {
+  createUserPayload,
+  updateUserPayload,
+} = require("../../../validators/userValidator");
 const profileUpload = require("../../../middleware/profileUpload");
 
-
-/* GET ALL USERS  */
+// Get all users visible to the authenticated user.
 router.get("/", requirePermission("users", "view"), listUsers);
 
-/* GET USER BY ID  */
+// Get one user by ID.
 router.get("/:id", requirePermission("users", "view"), getUserById);
 
-/* CREATE USER */
-router.post("/", requirePermission("users", "create"), createUser);
+// Create a user after validating the request payload.
+router.post("/", requirePermission("users", "create"), createUserPayload, validateRequest, createUser);
 
-/* UPDATE USER */
-router.patch("/:id", requirePermission("users", "update"), profileUpload.single("profileImage"), updateUser);
+// Update user details and optionally upload a profile image.
+router.patch("/:id", requirePermission("users", "update"), updateUserPayload, validateRequest, profileUpload.single("profileImage"), updateUser);
 
-/* DELETE USER */
+// Delete a user by ID.
 router.delete("/:id", requirePermission("users", "delete"), deleteUser);
 
 module.exports = router;
