@@ -102,6 +102,23 @@ const ensureSingleDefaultRole = async (selectedRoleId = null) => {
   }
 };
 
+// Prevent the current default role from being unset when no replacement is selected.
+const validateDefaultRoleUpdate = async (id, isDefault) => {
+  if (isDefault !== false) return;
+
+  const role = await Role.findById(id).select("isDefault").lean();
+  if (!role?.isDefault) return;
+
+  const defaultCount = await Role.countDocuments({ isDefault: true });
+  if (defaultCount === 1) {
+    const error = new Error(
+      "A default role is required. Select another role as default before changing this role.",
+    );
+    error.statusCode = 400;
+    throw error;
+  }
+};
+
 // Creates a role with its permissions and manageable-role relationships.
 const createRole = async (data, currentRole) => {
   try {
@@ -186,6 +203,8 @@ const updateRole = async (id, data, currentRole) => {
     if (data.manageableRoles) {
       validateManageableRoles(currentRole, data.manageableRoles);
     }
+
+    await validateDefaultRoleUpdate(id, data.isDefault);
 
     // Clear the previous default before making this role the default.
     if (data.isDefault === true) {
