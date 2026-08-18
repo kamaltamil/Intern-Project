@@ -64,11 +64,13 @@ function BookingPage() {
       ),
   });
 
-  const { data: manageableRoles = [] } = useQuery({
-  queryKey: ["roles"],
-  queryFn: fetchRoles,
-  });
+  const canViewRoles = usePermission("roles", "view");
 
+  const { data: manageableRoles = [] } = useQuery({
+    queryKey: ["roles"],
+    queryFn: fetchRoles,
+    enabled: canViewRoles,
+  });
   // Adjust this to whatever shape your auth slice actually uses for the logged-in user's id.
   const currentUserId = user?._id || user?.id || authId;
 

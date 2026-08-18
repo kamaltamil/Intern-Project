@@ -93,6 +93,7 @@ const getBookings = async (req, res) => {
     const permissions = currentRole?.permissions || [];
     const bookingActions = getPermission(permissions, "bookings");
     const userActions = getPermission(permissions, "users");
+    const approvalActions = getPermission(permissions, "approval");
 
     const canViewAll =
       bookingActions.delete === true || userActions.view === true;
@@ -101,10 +102,16 @@ const getBookings = async (req, res) => {
       (role) => (typeof role === "object" ? role._id : role),
     );
 
+    // Scoped visibility requires BOTH an explicit permission (approval:view)
+    // AND manageableRoles data — never trust manageableRoles alone, since it
+    // can be stale or set independently of current permissions.
+    const canReviewManageableBookings =
+      approvalActions.view === true && manageableRoleIds.length > 0;
+
     let bookings;
     if (canViewAll) {
       bookings = await getAllBookings();
-    } else if (manageableRoleIds.length > 0) {
+    } else if (canReviewManageableBookings) {
       bookings = await getBookingsForManageableRoles({
         userId,
         manageableRoleIds,

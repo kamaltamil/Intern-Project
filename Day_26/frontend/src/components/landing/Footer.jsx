@@ -27,11 +27,12 @@ function Footer() {
 
     try {
       const response = await subscribeToNewsletter(value);
-      message.success(response.message || "Subscription successful");
+      message.success(response.message);
       setEmail("");
     } catch (error) {
       message.error(
-        error.response?.data?.message || "Unable to subscribe. Please try again."
+        error.response?.data?.message ||
+          "Unable to subscribe. Please try again.",
       );
     } finally {
       setLoading(false);
@@ -49,7 +50,10 @@ function Footer() {
                 alt="HotelPro"
                 className="h-10 w-10 rounded-full object-cover"
               />
-              <Title level={3} className="!mb-0 !text-xl !font-semibold !text-white">
+              <Title
+                level={3}
+                className="!mb-0 !text-xl !font-semibold !text-white"
+              >
                 HotelPro
               </Title>
             </div>
@@ -58,24 +62,51 @@ function Footer() {
               className="!mt-5 !max-w-xs !text-sm !leading-6"
               style={{ color: "rgba(255,255,255,0.55)" }}
             >
-              Comfortable rooms, thoughtful service, and a simpler way to plan your next stay.
+              Comfortable rooms, thoughtful service, and a simpler way to plan
+              your next stay.
             </Paragraph>
           </div>
 
           <div>
-            <Title level={4} className="!mb-0 !text-base !font-semibold !text-white">
+            <Title
+              level={4}
+              className="!mb-0 !text-base !font-semibold !text-white"
+            >
               Quick Links
             </Title>
             <div className="mt-4 flex flex-col gap-3 text-sm">
-              <a href="#home" className="text-white/55 no-underline hover:text-white">Home</a>
-              <a href="#rooms" className="text-white/55 no-underline hover:text-white">Rooms</a>
-              <a href="#services" className="text-white/55 no-underline hover:text-white">Services</a>
-              <a href="#about" className="text-white/55 no-underline hover:text-white">About</a>
+              <a
+                href="#home"
+                className="text-white/55 no-underline hover:text-white"
+              >
+                Home
+              </a>
+              <a
+                href="#rooms"
+                className="text-white/55 no-underline hover:text-white"
+              >
+                Rooms
+              </a>
+              <a
+                href="#services"
+                className="text-white/55 no-underline hover:text-white"
+              >
+                Services
+              </a>
+              <a
+                href="#about"
+                className="text-white/55 no-underline hover:text-white"
+              >
+                About
+              </a>
             </div>
           </div>
 
           <div>
-            <Title level={4} className="!mb-0 !text-base !font-semibold !text-white">
+            <Title
+              level={4}
+              className="!mb-0 !text-base !font-semibold !text-white"
+            >
               Subscribe
             </Title>
             <div className="mt-4 flex flex-col gap-3">
@@ -91,7 +122,11 @@ function Footer() {
                   disabled={loading}
                   aria-label="Subscription email"
                 />
-                <Button type="primary" loading={loading} onClick={handleSubscribe}>
+                <Button
+                  type="primary"
+                  loading={loading}
+                  onClick={handleSubscribe}
+                >
                   Subscribe
                 </Button>
               </div>
@@ -99,16 +134,38 @@ function Footer() {
           </div>
 
           <div>
-            <Title level={4} className="!mb-0 !text-base !font-semibold !text-white">
+            <Title
+              level={4}
+              className="!mb-0 !text-base !font-semibold !text-white"
+            >
               Contact Us
             </Title>
             <div className="mt-4 flex flex-col gap-3 text-sm text-white/55">
-              <span className="flex gap-2"><EnvironmentOutlined />HotelPro, Trichy</span>
-              <span className="flex gap-2"><PhoneOutlined />+91 98765 43210</span>
-              <span className="flex gap-2"><MailOutlined />hello@hotelpro.com</span>
+              <span className="flex gap-2">
+                <EnvironmentOutlined />
+                HotelPro, Trichy
+              </span>
+              <span className="flex gap-2">
+                <PhoneOutlined />
+                +91 98765 43210
+              </span>
+              <span className="flex gap-2">
+                <MailOutlined />
+                hello@hotelpro.com
+              </span>
               <div className="flex gap-4 pt-2">
-                <Link to="/login" className="text-[#E4B07A] no-underline hover:text-white">Login</Link>
-                <Link to="/signup" className="text-[#E4B07A] no-underline hover:text-white">Sign up</Link>
+                <Link
+                  to="/login"
+                  className="text-[#E4B07A] no-underline hover:text-white"
+                >
+                  Login
+                </Link>
+                <Link
+                  to="/signup"
+                  className="text-[#E4B07A] no-underline hover:text-white"
+                >
+                  Sign up
+                </Link>
               </div>
             </div>
           </div>
