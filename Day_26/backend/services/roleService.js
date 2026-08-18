@@ -153,6 +153,14 @@ const createRole = async (data, currentRole) => {
       dashboardConfig,
     });
 
+    // Add the newly created role to the creator's manageable roles.
+    if (currentRole?._id) {
+      await Role.updateOne(
+        { _id: currentRole._id },
+        { $addToSet: { manageableRoles: role._id } },
+      );
+    }
+
     return role;
   } catch (error) {
     if (error.statusCode) throw error;
