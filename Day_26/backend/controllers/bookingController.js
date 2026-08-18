@@ -3,6 +3,7 @@ const {
   varifyAndBookRoom,
   getAllBookings,
   getMemberBookings,
+  getBookingsForManageableRoles,
   getBookingsByUserId,
   updateBooking,
   deleteBooking,
@@ -42,21 +43,31 @@ const bookRoom = async (req, res) => {
     const userId = req.user?._id || req.user?.id || req.user?.userId;
 
     if (!userId) {
-      return res.status(401).json({ message: "Unauthorized: user not identified" });
+      return res
+        .status(401)
+        .json({ message: "Unauthorized: user not identified" });
     }
 
     const { roomId, startDate, endDate } = req.body;
 
     if (!roomId || !startDate || !endDate) {
-      return res.status(400).json({ message: "roomId, startDate and endDate are required" });
+      return res
+        .status(400)
+        .json({ message: "roomId, startDate and endDate are required" });
     }
 
     // Verify room availability before creating the booking record.
-    const booking = await varifyAndBookRoom({ roomId, userId, startDate, endDate });
+    const booking = await varifyAndBookRoom({
+      roomId,
+      userId,
+      startDate,
+      endDate,
+    });
     logger.info("Booking created successfully");
 
     return res.status(201).json({
-      message: "Your booking request is created successfully and is pending approval.",
+      message:
+        "Your booking request is created successfully and is pending approval.",
       booking,
     });
   } catch (error) {
@@ -67,7 +78,9 @@ const bookRoom = async (req, res) => {
   }
 };
 
-// Returns bookings scoped by role: Admins see all, Managers see member bookings, Members see only their own.
+// Returns bookings scoped by role: full-access users see everything, users
+// with manageableRoles see their own bookings plus bookings from users whose
+// role is inside their manageableRoles, everyone else sees only their own.
 const getBookings = async (req, res) => {
   try {
     const userId = req.user?._id || req.user?.id;
@@ -76,21 +89,26 @@ const getBookings = async (req, res) => {
       return res.status(401).json({ message: "Unauthorized" });
     }
 
-    const permissions = req.user?.role?.permissions || [];
+    const currentRole = req.user?.role;
+    const permissions = currentRole?.permissions || [];
     const bookingActions = getPermission(permissions, "bookings");
-    const approvalActions = getPermission(permissions, "approval");
     const userActions = getPermission(permissions, "users");
 
-    // Admins and managers with user view permission can inspect all bookings.
     const canViewAll =
       bookingActions.delete === true || userActions.view === true;
-    const canReviewMemberBookings = approvalActions.view === true;
+
+    const manageableRoleIds = (currentRole?.manageableRoles || []).map(
+      (role) => (typeof role === "object" ? role._id : role),
+    );
 
     let bookings;
     if (canViewAll) {
       bookings = await getAllBookings();
-    } else if (canReviewMemberBookings) {
-      bookings = await getMemberBookings();
+    } else if (manageableRoleIds.length > 0) {
+      bookings = await getBookingsForManageableRoles({
+        userId,
+        manageableRoleIds,
+      });
     } else {
       bookings = await getBookingsByUserId(userId);
     }

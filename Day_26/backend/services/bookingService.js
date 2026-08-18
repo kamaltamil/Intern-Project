@@ -154,6 +154,32 @@ const getMemberBookings = async () => {
   }
 };
 
+// Returns bookings owned by the current user plus bookings from users whose
+// role is inside the current user's manageableRoles (same pattern as roleService).
+const getBookingsForManageableRoles = async ({ userId, manageableRoleIds = [] }) => {
+  try {
+    const roleScopedUserIds = manageableRoleIds.length
+      ? await User.find({ role: { $in: manageableRoleIds } }).distinct("_id")
+      : [];
+
+    const scopedUserIds = [
+      ...new Set([userId.toString(), ...roleScopedUserIds.map(String)]),
+    ];
+
+    return await Booking.find({ user: { $in: scopedUserIds } })
+      .populate("room")
+      .populate({
+        path: "user",
+        select: "-password -refreshToken",
+        populate: { path: "role" },
+      })
+      .sort({ createdAt: -1 });
+  } catch (error) {
+    logger.error("Failed to fetch manageable-role bookings", error);
+    throw new Error("Error fetching bookings: " + error.message);
+  }
+};
+
 // Returns only the bookings owned by the requested user.
 const getBookingsByUserId = async (userId) => {
   try {
@@ -266,6 +292,7 @@ module.exports = {
   varifyAndBookRoom,
   getAllBookings,
   getMemberBookings,
+  getBookingsForManageableRoles,
   getBookingsByUserId,
   updateBooking,
   deleteBooking,

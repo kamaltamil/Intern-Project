@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { Button, Alert, Typography, message, Row, Col } from "antd";
-import { CalendarOutlined, PlusOutlined } from "@ant-design/icons";
+import { Button, Alert, Typography, message, Row, Col, Select, Space } from "antd";
+import { CalendarOutlined, PlusOutlined, UserOutlined } from "@ant-design/icons";
 import { useSelector } from "react-redux";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
@@ -12,14 +12,14 @@ import BookingDetailsModal from "../components/booking/BookingDetailsModal";
 import BookingStats from "../components/booking/BookingStats";
 import { getBookingColumns } from "../components/booking/BookingColumns";
 import { getPageTitle } from "../components/booking/BookingHelpers";
-import { fetchBookingRooms, fetchBookings, createBooking } from "../api/queries";
+import { fetchBookingRooms, fetchBookings, fetchRoles, createBooking } from "../api/queries";
 import { usePermission } from "../hooks/usePermission";
 
 const { Title } = Typography;
 
 function BookingPage() {
   const queryClient = useQueryClient();
-  const { role, theme } = useSelector((state) => state.auth);
+  const { role, theme, user, _id: authId } = useSelector((state) => state.auth);
   const canViewUsers = usePermission("users", "view");
   const canCreateBooking = usePermission("bookings", "create");
   const isDark = theme === "dark";
@@ -63,6 +63,31 @@ function BookingPage() {
           "Booking failed",
       ),
   });
+
+  const { data: manageableRoles = [] } = useQuery({
+  queryKey: ["roles"],
+  queryFn: fetchRoles,
+  });
+
+  // Adjust this to whatever shape your auth slice actually uses for the logged-in user's id.
+  const currentUserId = user?._id || user?.id || authId;
+
+  const [selectedRoleIds, setSelectedRoleIds] = useState([]);
+  const [onlyMine, setOnlyMine] = useState(false);
+  
+  const filteredBookings = bookings.filter((booking) => {
+  if (onlyMine && booking.user?._id !== currentUserId) return false;
+
+  if (selectedRoleIds.length) {
+    const roleId =
+      typeof booking.user?.role === "object"
+        ? booking.user.role?._id
+        : booking.user?.role;
+    if (!selectedRoleIds.includes(roleId)) return false;
+  }
+
+  return true;
+});
 
   const openBookingModal = () => {
     refetchRooms();
@@ -147,15 +172,54 @@ function BookingPage() {
       </Row>
 
       <CustomTable
-        title={`${pageTitle} (${bookings.length})`}
+        title={`${pageTitle} (${filteredBookings.length})`}
         extraHeader={
-          <Button loading={bookingsLoading} onClick={refetchBookings}>
-            Refresh
-          </Button>
+          <Space wrap>
+            <Button
+              icon={<UserOutlined />}
+              type={onlyMine ? "primary" : "default"}
+              onClick={() => setOnlyMine((prev) => !prev)}
+              style={
+                onlyMine
+                  ? { backgroundColor: "#C76A34", borderColor: "#C76A34" }
+                  : {}
+              }
+            >
+              Me
+            </Button>
+
+            {manageableRoles.length > 0 && (
+              <Select
+                mode="multiple"
+                allowClear
+                maxTagCount="responsive"
+                placeholder="Filter by role"
+                style={{ minWidth: 220 }}
+                value={selectedRoleIds}
+                onChange={setSelectedRoleIds}
+                options={manageableRoles.map((r) => ({
+                  value: r._id,
+                  label: (
+                    <Space>
+                      <span
+                        className="inline-block w-2.5 h-2.5 rounded-full"
+                        style={{ backgroundColor: r.color || "#722ed1" }}
+                      />
+                      <span>{r.name}</span>
+                    </Space>
+                  ),
+                }))}
+              />
+            )}
+
+            <Button loading={bookingsLoading} onClick={refetchBookings}>
+              Refresh
+            </Button>
+          </Space>
         }
         rowKey="_id"
         isLoading={bookingsLoading}
-        dataSource={bookings}
+        dataSource={filteredBookings}
         columns={columns}
         pagination={{ pageSize: 5, showSizeChanger: false }}
       />
