@@ -9,6 +9,7 @@ const {
 
 const { verifyRecaptcha } = require("../services/recaptchaService");
 const User = require("../models/user");
+const Role = require("../models/role");
 const logger = require("../config/logger");
 
 // Verify the CAPTCHA token before continuing with the authentication operation.
@@ -29,14 +30,21 @@ const validateRecaptcha = async (req, token) => {
   return valid;
 };
 
-// Registers a user only after the submitted reCAPTCHA token has been verified.
+// Registers a user using the role currently marked as the database default.
 const register = async (req, res) => {
   try {
     logger.info("User registration requested");
     const { recaptchaToken, ...userData } = req.body;
     await validateRecaptcha(req, recaptchaToken);
 
-    const user = await registerUser(userData);
+    const defaultRole = await Role.findOne({ isDefault: true }).lean();
+    if (!defaultRole) {
+      const error = new Error("No default role found in system");
+      error.statusCode = 400;
+      throw error;
+    }
+
+    const user = await registerUser({ ...userData, role: defaultRole._id });
     logger.info("User registered successfully");
     return res.status(201).json({ message: "User registered successfully", user });
   } catch (error) {
