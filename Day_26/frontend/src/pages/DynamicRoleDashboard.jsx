@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { Row, Col, Skeleton, Alert, Empty, Card } from "antd";
+import { Row, Col, Skeleton, Empty, Card } from "antd";
 import {
   TeamOutlined,
   UserOutlined,

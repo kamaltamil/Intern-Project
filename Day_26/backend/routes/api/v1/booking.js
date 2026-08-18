@@ -19,7 +19,7 @@ const {
 } = require("../../../validators/bookingValidator");
 
 // Get rooms available for the requested date range.
-router.get("/available-rooms", requirePermission("bookings", "create"), availabilityPayload, validateRequest, getAvailableRooms);
+router.get("/available-rooms", requirePermission("bookings", "create"), getAvailableRooms);
 
 // Get bookings visible to the authenticated user.
 router.get("/", requirePermission("bookings", "view"), getBookings);
