@@ -3,7 +3,6 @@ import { Button, Dropdown, Modal, Space, Tag } from "antd";
 import {
   DeleteOutlined,
   DownOutlined,
-  EditOutlined,
   EyeOutlined,
   HomeOutlined,
   MoreOutlined,
@@ -21,7 +20,7 @@ import {
 export const getBookingColumns = (
   showGuest,
   onView,
-  canUpdate,
+  canCancel,
   onCancel,
   canDelete,
   onDelete,
@@ -104,22 +103,13 @@ export const getBookingColumns = (
           },
         ];
 
-        if (canUpdate) {
-          items.push({
-            key: "edit",
-            icon: <EditOutlined />,
-            label: "Edit Booking",
-            onClick: () => onView(record),
-          });
-        }
-
         const canCancelStatus = ![
           "Cancelled",
           "CheckedOut",
           "Rejected",
         ].includes(record.bookingStatus);
 
-        if (canUpdate && canCancelStatus) {
+        if (canCancel && canCancelStatus) {
           items.push({
             key: "cancel",
             icon: <DeleteOutlined />,
@@ -148,7 +138,8 @@ export const getBookingColumns = (
             onClick: () => {
               Modal.confirm({
                 title: "Delete Booking",
-                content: "Are you sure you want to permanently delete this booking?",
+                content:
+                  "Are you sure you want to permanently delete this booking?",
                 okText: "Delete Booking",
                 cancelText: "Keep Booking",
                 okButtonProps: { danger: true },
