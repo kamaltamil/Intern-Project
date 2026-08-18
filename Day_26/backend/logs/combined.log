@@ -18,3 +18,26 @@
 {"level":"info","message":"Bookings fetched successfully","timestamp":"2026-08-18T04:22:22.427Z"}
 {"level":"info","message":"Available rooms fetched successfully","timestamp":"2026-08-18T04:23:01.271Z"}
 {"level":"info","message":"Access token refreshed successfully","timestamp":"2026-08-18T04:57:48.654Z"}
+{"level":"info","message":"Access token refreshed successfully","timestamp":"2026-08-18T05:57:48.647Z"}
+{"LOG_LEVEL":"debug","effectiveLevel":"debug","level":"info","message":"✅ MongoDB Connected","timestamp":"2026-08-18T06:18:50.329Z"}
+{"host":"localhost","level":"info","message":"MongoDB connected","name":"hotel_db","timestamp":"2026-08-18T06:20:44.162Z"}
+{"host":"localhost","level":"error","message":"MongoDB connected","name":"hotel_db","timestamp":"2026-08-18T06:21:09.644Z"}
+{"level":"debug","message":"Attempting MongoDB connection","timestamp":"2026-08-18T06:25:09.424Z","uri":"mongodb://localhost:27017/hotel_db"}
+{"host":"localhost","level":"info","message":"MongoDB connected","name":"hotel_db","timestamp":"2026-08-18T06:25:09.486Z"}
+{"level":"debug","message":"Attempting MongoDB connection","timestamp":"2026-08-18T06:26:09.824Z","uri":"mongodb://localhost:27017/hotel_db"}
+{"host":"localhost","level":"info","message":"MongoDB connected","name":"hotel_db","timestamp":"2026-08-18T06:26:09.876Z"}
+{"level":"info","message":"Access token refreshed successfully","timestamp":"2026-08-18T06:57:48.548Z"}
+{"level":"info","message":"Pending booking approvals fetched successfully","timestamp":"2026-08-18T06:58:49.051Z"}
+{"level":"info","message":"Bookings fetched successfully","timestamp":"2026-08-18T06:58:49.056Z"}
+{"level":"info","message":"Pending booking approvals fetched successfully","timestamp":"2026-08-18T07:00:03.315Z"}
+{"level":"info","message":"Bookings fetched successfully","timestamp":"2026-08-18T07:00:03.326Z"}
+{"level":"info","message":"Access token refreshed successfully","timestamp":"2026-08-18T07:00:30.306Z"}
+{"level":"info","message":"Access token refreshed successfully","timestamp":"2026-08-18T07:00:30.517Z"}
+{"level":"debug","message":"Attempting MongoDB connection","timestamp":"2026-08-18T07:01:53.780Z","uri":"mongodb://localhost:27017/hotel_db"}
+{"host":"localhost","level":"info","message":"MongoDB connected","name":"hotel_db","timestamp":"2026-08-18T07:01:53.855Z"}
+{"level":"info","message":"Pending booking approvals fetched successfully","timestamp":"2026-08-18T07:02:17.269Z"}
+{"level":"info","message":"Bookings fetched successfully","timestamp":"2026-08-18T07:02:17.276Z"}
+{"level":"info","message":"Pending booking approvals fetched successfully","timestamp":"2026-08-18T07:02:18.664Z"}
+{"level":"info","message":"Bookings fetched successfully","timestamp":"2026-08-18T07:02:18.672Z"}
+{"level":"info","message":"Pending booking approvals fetched successfully","timestamp":"2026-08-18T07:02:20.154Z"}
+{"level":"info","message":"Bookings fetched successfully","timestamp":"2026-08-18T07:02:20.184Z"}

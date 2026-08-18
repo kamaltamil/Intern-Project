@@ -1,4 +1,5 @@
 const winston = require("winston");
+require("dotenv").config();
 
 // Keep application logs in one place so controllers and services use the same logger.
 const logger = winston.createLogger({
