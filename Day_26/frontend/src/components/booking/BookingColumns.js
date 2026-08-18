@@ -3,6 +3,7 @@ import { Button, Dropdown, Modal, Space, Tag } from "antd";
 import {
   DeleteOutlined,
   DownOutlined,
+  EditOutlined,
   EyeOutlined,
   HomeOutlined,
   MoreOutlined,
@@ -17,7 +18,14 @@ import {
   getTotalCost,
 } from "./BookingHelpers";
 
-export const getBookingColumns = (showGuest, onView, canCancel, onCancel) => {
+export const getBookingColumns = (
+  showGuest,
+  onView,
+  canUpdate,
+  onCancel,
+  canDelete,
+  onDelete,
+) => {
   const columns = [
     {
       title: "Room",
@@ -96,13 +104,22 @@ export const getBookingColumns = (showGuest, onView, canCancel, onCancel) => {
           },
         ];
 
+        if (canUpdate) {
+          items.push({
+            key: "edit",
+            icon: <EditOutlined />,
+            label: "Edit Booking",
+            onClick: () => onView(record),
+          });
+        }
+
         const canCancelStatus = ![
           "Cancelled",
           "CheckedOut",
           "Rejected",
         ].includes(record.bookingStatus);
 
-        if (canCancel && canCancelStatus) {
+        if (canUpdate && canCancelStatus) {
           items.push({
             key: "cancel",
             icon: <DeleteOutlined />,
@@ -117,6 +134,25 @@ export const getBookingColumns = (showGuest, onView, canCancel, onCancel) => {
                 cancelText: "Keep Booking",
                 okButtonProps: { danger: true },
                 onOk: () => onCancel(record._id),
+              });
+            },
+          });
+        }
+
+        if (canDelete) {
+          items.push({
+            key: "delete",
+            icon: <DeleteOutlined />,
+            label: "Delete Booking",
+            danger: true,
+            onClick: () => {
+              Modal.confirm({
+                title: "Delete Booking",
+                content: "Are you sure you want to permanently delete this booking?",
+                okText: "Delete Booking",
+                cancelText: "Keep Booking",
+                okButtonProps: { danger: true },
+                onOk: () => onDelete(record._id),
               });
             },
           });
