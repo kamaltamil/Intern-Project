@@ -205,8 +205,9 @@ function PermissionMatrix({ permissions, setPermissions }) {
 
 function RoleManagementPage() {
   const { canUpdate, canDelete } = usePermission("roles");
-  const { theme } = useSelector((state) => state.auth);
+  const { theme, role: currentUserRole } = useSelector((state) => state.auth);
   const isDark = theme === "dark";
+  const isAdmin = currentUserRole === "Admin";
   const queryClient = useQueryClient();
   const [form] = Form.useForm();
 
@@ -287,7 +288,7 @@ function RoleManagementPage() {
       bannerActionUrl: "/bookings",
     });
     setPermissions(createEmptyPermissions());
-    setSelectedManageableRoles([]);
+    setSelectedManageableRoles(isAdmin ? roles.map((role) => role._id) : []);
     setSelectedDashboardStats([
       "totalBookings",
       "activeBookings",
@@ -313,9 +314,11 @@ function RoleManagementPage() {
     });
     setPermissions(normalizePermissions(role.permissions));
     setSelectedManageableRoles(
-      (role.manageableRoles || []).map((item) =>
-        typeof item === "object" ? item._id : item,
-      ),
+      isAdmin
+        ? roles.map((item) => item._id)
+        : (role.manageableRoles || []).map((item) =>
+            typeof item === "object" ? item._id : item,
+          ),
     );
     setSelectedDashboardStats(
       (role.dashboardConfig?.stats || []).map((s) => s.key),
@@ -354,7 +357,7 @@ function RoleManagementPage() {
         color: values.color || "#722ed1",
         isDefault: Boolean(values.isDefault),
         permissions,
-        manageableRoles: selectedManageableRoles,
+        ...(isAdmin ? {} : { manageableRoles: selectedManageableRoles }),
         dashboardConfig,
       };
 
@@ -672,8 +675,9 @@ function RoleManagementPage() {
               Manageable Roles
             </Text>
             <Text type="secondary" className="block text-xs mb-3">
-              Select which roles this role can manage. The backend checks that
-              each selected role is allowed by the current user's RBAC rules.
+              {isAdmin
+                ? "Admin can manage all roles. This list is managed automatically."
+                : "Select which roles this role can manage. The backend checks that each selected role is allowed by the current user's RBAC rules."}
             </Text>
             <Row gutter={[12, 8]}>
               {roles.map((role) => {
@@ -682,6 +686,7 @@ function RoleManagementPage() {
                   <Col xs={24} sm={12} md={8} key={role._id}>
                     <Checkbox
                       checked={checked}
+                      disabled={isAdmin}
                       onChange={(event) =>
                         setSelectedManageableRoles((current) =>
                           event.target.checked
