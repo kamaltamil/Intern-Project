@@ -1,5 +1,4 @@
 const express = require("express");
-
 const router = express.Router();
 
 const {
@@ -10,16 +9,28 @@ const {
   deleteBookingHandler,
 } = require("../../../controllers/bookingController");
 
-const { requirePermission,} = require("../../../middleware/permissionMiddleware");
+const { requirePermission } = require("../../../middleware/permissionMiddleware");
+const { validateRequest } = require("../../../middleware/validationHandler");
+const {
+  createBookingPayload,
+  bookingIdPayload,
+  availabilityPayload,
+  updateBookingPayload,
+} = require("../../../validators/bookingValidator");
 
-router.get("/available-rooms", requirePermission("bookings", "create"),  getAvailableRooms,);
+// Get rooms available for the requested date range.
+router.get("/available-rooms", requirePermission("bookings", "create"), availabilityPayload, validateRequest, getAvailableRooms);
 
-router.get("/", requirePermission("bookings", "view"),  getBookings,);
+// Get bookings visible to the authenticated user.
+router.get("/", requirePermission("bookings", "view"), getBookings);
 
-router.post("/new", requirePermission("bookings", "create"),  bookRoom,);
+// Create a new booking request.
+router.post("/new", requirePermission("bookings", "create"), createBookingPayload, validateRequest, bookRoom);
 
-router.patch("/:id", requirePermission("bookings", "update"),  updateBookingHandler,);
+// Update an existing booking.
+router.patch("/:id", requirePermission("bookings", "update"), updateBookingPayload, validateRequest, updateBookingHandler);
 
-router.delete("/:id", requirePermission("bookings", "delete"),  deleteBookingHandler,);
+// Delete an existing booking.
+router.delete("/:id", requirePermission("bookings", "delete"), bookingIdPayload, validateRequest, deleteBookingHandler);
 
 module.exports = router;
