@@ -9,7 +9,6 @@ const {
 } = require("../services/bookingService");
 
 const Booking = require("../models/booking");
-const User = require("../models/user");
 const logger = require("../config/logger");
 
 // Helper to extract action permissions for a specific module from the user's role.
@@ -17,6 +16,16 @@ const getPermission = (permissions, resource) =>
   permissions.find(
     (permission) => permission.resource?.toLowerCase() === resource,
   )?.action || {};
+
+// Check whether the current user owns or can manage the booking's role.
+const canAccessBooking = (currentRole, bookingUserRole, userId, ownerId) => {
+  if (String(userId) === String(ownerId)) return true;
+  if (currentRole?.name === "Admin") return true;
+
+  return (currentRole?.manageableRoles || []).some(
+    (role) => String(role?._id || role) === String(bookingUserRole),
+  );
+};
 
 // Returns rooms that do not have conflicting active bookings for the specified date range.
 const getAvailableRooms = async (req, res) => {
@@ -96,13 +105,15 @@ const getBookings = async (req, res) => {
 
     // Use manageableRoles only when the current role can view bookings.
     const canViewManageableBookings =
-      bookingActions.view === true && manageableRoleIds.length > 0;
+      bookingActions.view === true &&
+      (currentRole?.name === "Admin" || manageableRoleIds.length > 0);
 
     let bookings;
     if (canViewManageableBookings) {
       bookings = await getBookingsForManageableRoles({
         userId,
-        manageableRoleIds,
+        manageableRoleIds:
+          currentRole?.name === "Admin" ? [] : manageableRoleIds,
       });
     } else {
       bookings = await getBookingsByUserId(userId);
@@ -135,14 +146,14 @@ const updateBookingHandler = async (req, res) => {
     const userPermissions = req.user?.role?.permissions || [];
     const bookingActions = getPermission(userPermissions, "bookings");
     const isOwner = booking.user._id.toString() === userId.toString();
-    const manageableRoleIds = (req.user?.role?.manageableRoles || []).map(
-      (role) => (typeof role === "object" ? role._id : role),
-    );
-    const canManageBooking = manageableRoleIds.some(
-      (roleId) => String(roleId) === String(booking.user.role),
+    const canManageBooking = canAccessBooking(
+      req.user?.role,
+      booking.user.role,
+      userId,
+      booking.user._id,
     );
 
-    if (!isOwner && (!canManageBooking || bookingActions.update !== true)) {
+    if (!canManageBooking || (!isOwner && bookingActions.update !== true)) {
       return res.status(403).json({
         message: "Forbidden: You cannot update this booking",
       });
@@ -162,6 +173,62 @@ const updateBookingHandler = async (req, res) => {
   }
 };
 
+// Cancels a booking by changing its status so the booking history remains available.
+const cancelBookingHandler = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user?._id || req.user?.id;
+    const booking = await Booking.findById(id).populate("user", "role");
+
+    if (!booking) {
+      return res.status(404).json({ message: "Booking not found" });
+    }
+
+    const bookingActions = getPermission(
+      req.user?.role?.permissions || [],
+      "bookings",
+    );
+    const isOwner = booking.user._id.toString() === userId.toString();
+    const canManageBooking = canAccessBooking(
+      req.user?.role,
+      booking.user.role,
+      userId,
+      booking.user._id,
+    );
+
+    if (!canManageBooking || bookingActions.update !== true) {
+      return res.status(403).json({
+        message: "Forbidden: You cannot cancel this booking",
+      });
+    }
+
+    if (booking.bookingStatus === "Cancelled") {
+      return res.status(409).json({ message: "Booking is already cancelled" });
+    }
+
+    if (["CheckedOut", "Rejected"].includes(booking.bookingStatus)) {
+      return res.status(409).json({
+        message: `Booking cannot be cancelled from '${booking.bookingStatus}' status`,
+      });
+    }
+
+    const cancelledBooking = await updateBooking(id, {
+      bookingStatus: "Cancelled",
+    });
+
+    logger.info("Booking cancelled successfully");
+    return res.status(200).json({
+      message: "Booking cancelled successfully",
+      booking: cancelledBooking,
+    });
+  } catch (error) {
+    logger.error("Failed to cancel booking", error);
+    return res.status(error.statusCode || 500).json({
+      message: error.message || "Error cancelling booking",
+    });
+  }
+};
+
 const deleteBookingHandler = async (req, res) => {
   try {
     const { id } = req.params;
@@ -175,14 +242,14 @@ const deleteBookingHandler = async (req, res) => {
     const userPermissions = req.user?.role?.permissions || [];
     const bookingActions = getPermission(userPermissions, "bookings");
     const isOwner = booking.user._id.toString() === userId.toString();
-    const manageableRoleIds = (req.user?.role?.manageableRoles || []).map(
-      (role) => (typeof role === "object" ? role._id : role),
-    );
-    const canManageBooking = manageableRoleIds.some(
-      (roleId) => String(roleId) === String(booking.user.role),
+    const canManageBooking = canAccessBooking(
+      req.user?.role,
+      booking.user.role,
+      userId,
+      booking.user._id,
     );
 
-    if (!isOwner && (!canManageBooking || bookingActions.delete !== true)) {
+    if (!canManageBooking || (!isOwner && bookingActions.delete !== true)) {
       return res.status(403).json({
         message: "Forbidden: You cannot delete this booking",
       });
@@ -204,5 +271,6 @@ module.exports = {
   bookRoom,
   getBookings,
   updateBookingHandler,
+  cancelBookingHandler,
   deleteBookingHandler,
 };
