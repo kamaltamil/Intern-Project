@@ -23,6 +23,7 @@ function LoginPage() {
   // Authenticates user and initializes user role, permissions, and tokens in Redux.
   const loginMutation = useMutation({
     mutationFn: loginUser,
+    retry: 0,
     onSuccess: (data) => {
       const { user, token, refreshToken, role, dashboardConfig, permissions } = data || {};
 

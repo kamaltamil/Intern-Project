@@ -2,7 +2,6 @@ const {
   getAvailableRoomsForBooking,
   varifyAndBookRoom,
   getAllBookings,
-  getMemberBookings,
   getBookingsForManageableRoles,
   getBookingsByUserId,
   updateBooking,

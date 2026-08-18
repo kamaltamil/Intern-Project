@@ -1,3 +1,4 @@
+const logger = require("../config/logger");
 const {
   createRole,
   getAllRoles,
@@ -10,12 +11,14 @@ const {
 const createRoleHandler = async (req, res) => {
   try {
     const role = await createRole(req.body, req.user?.role);
+    logger.info("Role created successfully", { roleId: role._id, createdBy: req.user?._id });
 
     return res.status(201).json({
       message: "Role created successfully",
       role,
     });
   } catch (error) {
+    logger.error("Failed to create role", { error: error.message, stack: error.stack });
     return res.status(error.statusCode || 400).json({
       message: error.message,
     });
@@ -26,9 +29,11 @@ const createRoleHandler = async (req, res) => {
 const listRoles = async (req, res) => {
   try {
     const roles = await getAllRoles(req.user?.role);
+    logger.info("Roles fetched successfully", { fetchedBy: req.user?._id, roleCount: roles.length });
 
     return res.status(200).json(roles);
   } catch (error) {
+    logger.error("Roles fetched failed", { error: error.message, stack: error.stack });
     return res.status(error.statusCode || 500).json({
       message: error.message,
     });

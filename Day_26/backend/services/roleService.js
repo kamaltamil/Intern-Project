@@ -1,3 +1,4 @@
+const logger = require("../config/logger");
 const Role = require("../models/role");
 
 // Ensures Create, Update, and Delete permissions are only assigned when View is enabled.
@@ -134,7 +135,10 @@ const createRole = async (data, currentRole) => {
 // Loads only roles that the current user is allowed to manage.
 const getAllRoles = async (currentRole) => {
   try {
+    logger.info("Current role", currentRole);
     validateRoleManagementAccess(currentRole, "view");
+
+    // logger.info("Current role", currentRole);
 
     const manageableRoleIds = currentRole?.manageableRoles || [];
 

@@ -132,27 +132,27 @@ const getAllBookings = async () => {
   }
 };
 
-// Returns bookings belonging to users with the Member role for approval/review views.
-const getMemberBookings = async () => {
-  try {
-    const memberRole = await Role.findOne({ name: "Member" });
-    const memberIds = memberRole
-      ? await User.find({ role: memberRole._id }).distinct("_id")
-      : [];
+// // Returns bookings belonging to users with the Member role for approval/review views.
+// const getMemberBookings = async () => {
+//   try {
+//     const memberRole = await Role.findOne({ name: "Member" });
+//     const memberIds = memberRole
+//       ? await User.find({ role: memberRole._id }).distinct("_id")
+//       : [];
 
-    return await Booking.find({ user: { $in: memberIds } })
-      .populate("room")
-      .populate({
-        path: "user",
-        select: "-password -refreshToken",
-        populate: { path: "role" },
-      })
-      .sort({ createdAt: -1 });
-  } catch (error) {
-    logger.error("Failed to fetch member bookings", error);
-    throw new Error("Error fetching bookings: " + error.message);
-  }
-};
+//     return await Booking.find({ user: { $in: memberIds } })
+//       .populate("room")
+//       .populate({
+//         path: "user",
+//         select: "-password -refreshToken",
+//         populate: { path: "role" },
+//       })
+//       .sort({ createdAt: -1 });
+//   } catch (error) {
+//     logger.error("Failed to fetch member bookings", error);
+//     throw new Error("Error fetching bookings: " + error.message);
+//   }
+// };
 
 // Returns bookings owned by the current user plus bookings from users whose
 // role is inside the current user's manageableRoles (same pattern as roleService).
@@ -291,7 +291,6 @@ module.exports = {
   getAvailableRoomsForBooking,
   varifyAndBookRoom,
   getAllBookings,
-  getMemberBookings,
   getBookingsForManageableRoles,
   getBookingsByUserId,
   updateBooking,
