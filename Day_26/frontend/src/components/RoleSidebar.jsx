@@ -66,8 +66,8 @@ function RoleSidebar() {
       collapsible
       collapsed={sidebarCollapsed}
       onCollapse={(collapsed) => dispatch(setSidebarCollapsed(collapsed))}
+      theme={isDark ? "dark" : "light"}
       style={{
-        background: isDark ? "#1a1a2e" : "#ffffff",
         borderRight: `1px solid ${isDark ? "#2d2d44" : "#ECE6DF"}`,
         minHeight: "100vh",
         position: "sticky",
