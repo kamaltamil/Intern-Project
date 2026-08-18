@@ -10,6 +10,7 @@ const {
 } = require("../services/bookingService");
 
 const Booking = require("../models/booking");
+const User = require("../models/user");
 const logger = require("../config/logger");
 
 // Helper to extract action permissions for a specific module from the user's role.
@@ -126,7 +127,7 @@ const updateBookingHandler = async (req, res) => {
   try {
     const { id } = req.params;
     const userId = req.user?._id || req.user?.id;
-    const booking = await Booking.findById(id);
+    const booking = await Booking.findById(id).populate("user", "role");
 
     if (!booking) {
       return res.status(404).json({ message: "Booking not found" });
@@ -134,11 +135,17 @@ const updateBookingHandler = async (req, res) => {
 
     const userPermissions = req.user?.role?.permissions || [];
     const bookingActions = getPermission(userPermissions, "bookings");
-    const isOwner = booking.user.toString() === userId.toString();
+    const isOwner = booking.user._id.toString() === userId.toString();
+    const manageableRoleIds = (req.user?.role?.manageableRoles || []).map(
+      (role) => (typeof role === "object" ? role._id : role),
+    );
+    const canManageBooking = manageableRoleIds.some(
+      (roleId) => String(roleId) === String(booking.user.role),
+    );
 
-    if (!isOwner && bookingActions.update !== true) {
+    if (!isOwner && (!canManageBooking || bookingActions.update !== true)) {
       return res.status(403).json({
-        message: "Forbidden: You cannot update another user's booking",
+        message: "Forbidden: You cannot update this booking",
       });
     }
 
@@ -160,7 +167,7 @@ const deleteBookingHandler = async (req, res) => {
   try {
     const { id } = req.params;
     const userId = req.user?._id || req.user?.id;
-    const booking = await Booking.findById(id);
+    const booking = await Booking.findById(id).populate("user", "role");
 
     if (!booking) {
       return res.status(404).json({ message: "Booking not found" });
@@ -168,11 +175,17 @@ const deleteBookingHandler = async (req, res) => {
 
     const userPermissions = req.user?.role?.permissions || [];
     const bookingActions = getPermission(userPermissions, "bookings");
-    const isOwner = booking.user.toString() === userId.toString();
+    const isOwner = booking.user._id.toString() === userId.toString();
+    const manageableRoleIds = (req.user?.role?.manageableRoles || []).map(
+      (role) => (typeof role === "object" ? role._id : role),
+    );
+    const canManageBooking = manageableRoleIds.some(
+      (roleId) => String(roleId) === String(booking.user.role),
+    );
 
-    if (!isOwner && bookingActions.delete !== true) {
+    if (!isOwner && (!canManageBooking || bookingActions.delete !== true)) {
       return res.status(403).json({
-        message: "Forbidden: You cannot delete another user's booking",
+        message: "Forbidden: You cannot delete this booking",
       });
     }
 
