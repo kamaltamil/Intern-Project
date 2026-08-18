@@ -11,9 +11,15 @@ const createRolePayload = [
     .optional()
     .isArray()
     .withMessage("Manageable roles must be an array"),
-  body("description").optional().isString().withMessage("Description must be a string"),
+  body("description")
+    .optional()
+    .isString()
+    .withMessage("Description must be a string"),
   body("color").optional().isString().withMessage("Color must be a string"),
-  body("isDefault").optional().isBoolean().withMessage("isDefault must be a boolean"),
+  body("isDefault")
+    .optional()
+    .isBoolean()
+    .withMessage("isDefault must be a boolean"),
   body("dashboardConfig")
     .optional()
     .isObject()
@@ -22,7 +28,11 @@ const createRolePayload = [
 
 const updateRolePayload = [
   param("id").isMongoId().withMessage("Invalid role ID"),
-  body("name").optional().trim().notEmpty().withMessage("Role name cannot be empty"),
+  body("name")
+    .optional()
+    .trim()
+    .notEmpty()
+    .withMessage("Role name cannot be empty"),
   body("permissions")
     .optional()
     .isArray()
@@ -31,9 +41,15 @@ const updateRolePayload = [
     .optional()
     .isArray()
     .withMessage("Manageable roles must be an array"),
-  body("description").optional().isString().withMessage("Description must be a string"),
+  body("description")
+    .optional()
+    .isString()
+    .withMessage("Description must be a string"),
   body("color").optional().isString().withMessage("Color must be a string"),
-  body("isDefault").optional().isBoolean().withMessage("isDefault must be a boolean"),
+  body("isDefault")
+    .optional()
+    .isBoolean()
+    .withMessage("isDefault must be a boolean"),
   body("dashboardConfig")
     .optional()
     .isObject()

@@ -17,3 +17,4 @@
 {"level":"info","message":"Available rooms fetched successfully","timestamp":"2026-08-18T04:22:22.417Z"}
 {"level":"info","message":"Bookings fetched successfully","timestamp":"2026-08-18T04:22:22.427Z"}
 {"level":"info","message":"Available rooms fetched successfully","timestamp":"2026-08-18T04:23:01.271Z"}
+{"level":"info","message":"Access token refreshed successfully","timestamp":"2026-08-18T04:57:48.654Z"}

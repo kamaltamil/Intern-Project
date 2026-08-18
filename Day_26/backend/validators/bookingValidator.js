@@ -7,7 +7,9 @@ const createBookingPayload = [
   body("endDate").isISO8601().withMessage("Invalid end date"),
 ];
 
-const bookingIdPayload = [param("id").isMongoId().withMessage("Invalid booking ID")];
+const bookingIdPayload = [
+  param("id").isMongoId().withMessage("Invalid booking ID"),
+];
 
 const availabilityPayload = [
   query("startDate").isISO8601().withMessage("Invalid start date"),
