@@ -1,5 +1,5 @@
 import React from "react";
-import { Button, Dropdown, Popconfirm, Space, Tag } from "antd";
+import { Button, Dropdown, Modal, Space, Tag } from "antd";
 import {
   DeleteOutlined,
   DownOutlined,
@@ -106,18 +106,19 @@ export const getBookingColumns = (showGuest, onView, canCancel, onCancel) => {
           items.push({
             key: "cancel",
             icon: <DeleteOutlined />,
-            label: (
-              <Popconfirm
-                title="Cancel this booking?"
-                description="The booking will remain in history with Cancelled status."
-                okText="Cancel Booking"
-                cancelText="Keep Booking"
-                okButtonProps={{ danger: true }}
-                onConfirm={() => onCancel(record._id)}
-              >
-                <span className="text-red-500">Cancel Booking</span>
-              </Popconfirm>
-            ),
+            label: "Cancel Booking",
+            danger: true,
+            onClick: () => {
+              Modal.confirm({
+                title: "Cancel Booking",
+                content:
+                  "Are you sure you want to cancel this booking? The booking will remain in history.",
+                okText: "Cancel Booking",
+                cancelText: "Keep Booking",
+                okButtonProps: { danger: true },
+                onOk: () => onCancel(record._id),
+              });
+            },
           });
         }
 
