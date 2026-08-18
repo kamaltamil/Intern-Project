@@ -123,12 +123,8 @@ const createRole = async (data, currentRole) => {
     const existingRole = await Role.findOne({ name: name.trim() });
     if (existingRole) throw new Error("Role already exists");
 
-    // Keep only the new role as default when it is marked as default.
-    if (isDefault === true) {
-      await ensureSingleDefaultRole("000000000000000000000000");
-    } else {
-      await ensureSingleDefaultRole();
-    }
+    // Clear the existing default before creating a new default role.
+    await ensureSingleDefaultRole();
 
     const role = await Role.create({
       name: name.trim(),
