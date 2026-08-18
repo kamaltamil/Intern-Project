@@ -1,6 +1,7 @@
 import React from "react";
-import { Button, Popconfirm, Space, Tag } from "antd";
+import { Button, Dropdown, Popconfirm, Space, Tag } from "antd";
 import {
+  DeleteOutlined,
   DownOutlined,
   EyeOutlined,
   HomeOutlined,
@@ -89,8 +90,8 @@ export const getBookingColumns = (showGuest, onView, canCancel, onCancel) => {
         const items = [
           {
             key: "view",
-            label: "View",
             icon: <EyeOutlined />,
+            label: "View Details",
             onClick: () => onView(record),
           },
         ];
@@ -104,6 +105,7 @@ export const getBookingColumns = (showGuest, onView, canCancel, onCancel) => {
         if (canCancel && canCancelStatus) {
           items.push({
             key: "cancel",
+            icon: <DeleteOutlined />,
             label: (
               <Popconfirm
                 title="Cancel this booking?"
@@ -113,29 +115,18 @@ export const getBookingColumns = (showGuest, onView, canCancel, onCancel) => {
                 okButtonProps={{ danger: true }}
                 onConfirm={() => onCancel(record._id)}
               >
-                <span className="text-red-500">Cancel</span>
+                <span className="text-red-500">Cancel Booking</span>
               </Popconfirm>
             ),
-            icon: <MoreOutlined />,
           });
         }
 
         return (
-          <Button
-            icon={<MoreOutlined />}
-            size="small"
-            onClick={() => {
-              const cancelItem = items.find((item) => item.key === "cancel");
-              if (cancelItem) {
-                onView(record);
-                return;
-              }
-              onView(record);
-            }}
-            style={{ color: "#C76A34", borderColor: "#C76A34" }}
-          >
-            View <DownOutlined style={{ fontSize: 10 }} />
-          </Button>
+          <Dropdown menu={{ items }} trigger={["click"]}>
+            <Button icon={<MoreOutlined />} size="small">
+              Actions <DownOutlined style={{ fontSize: 10 }} />
+            </Button>
+          </Dropdown>
         );
       },
     },
