@@ -155,8 +155,15 @@ const createRole = async (data, currentRole) => {
       dashboardConfig,
     });
 
-    // Add the newly created role to the creator's manageable roles.
-    if (currentRole?._id) {
+    if (currentRole?.name === "Admin") {
+      // Keep Admin's manageable roles in sync with every role in the database.
+      const allRoleIds = await Role.find().distinct("_id");
+      await Role.updateOne(
+        { _id: currentRole._id },
+        { $set: { manageableRoles: allRoleIds } },
+      );
+    } else if (currentRole?._id) {
+      // Add the newly created role to the creator's manageable roles.
       await Role.updateOne(
         { _id: currentRole._id },
         { $addToSet: { manageableRoles: role._id } },
