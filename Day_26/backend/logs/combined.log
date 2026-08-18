@@ -1,3 +1,19 @@
 {"level":"info","message":"Login request received","timestamp":"2026-08-17T18:31:21.301Z"}
 {"level":"info","message":"User logged in successfully","timestamp":"2026-08-17T18:31:22.223Z"}
 {"level":"info","message":"Access token refreshed successfully","timestamp":"2026-08-18T03:57:37.455Z"}
+{"level":"info","message":"Available rooms fetched successfully","timestamp":"2026-08-18T04:21:42.453Z"}
+{"level":"info","message":"Bookings fetched successfully","timestamp":"2026-08-18T04:21:42.463Z"}
+{"level":"info","message":"Pending booking approvals fetched successfully","timestamp":"2026-08-18T04:21:47.413Z"}
+{"level":"info","message":"Pending booking approvals fetched successfully","timestamp":"2026-08-18T04:21:51.431Z"}
+{"level":"info","message":"Booking approved successfully","timestamp":"2026-08-18T04:22:12.377Z"}
+{"level":"info","message":"Booking approved successfully","timestamp":"2026-08-18T04:22:12.377Z"}
+{"level":"info","message":"Pending booking approvals fetched successfully","timestamp":"2026-08-18T04:22:12.398Z"}
+{"level":"info","message":"Booking rejectd successfully","timestamp":"2026-08-18T04:22:18.668Z"}
+{"level":"info","message":"Booking rejected successfully","timestamp":"2026-08-18T04:22:18.668Z"}
+{"level":"info","message":"Pending booking approvals fetched successfully","timestamp":"2026-08-18T04:22:18.680Z"}
+{"level":"info","message":"Booking approved successfully","timestamp":"2026-08-18T04:22:20.857Z"}
+{"level":"info","message":"Booking approved successfully","timestamp":"2026-08-18T04:22:20.857Z"}
+{"level":"info","message":"Pending booking approvals fetched successfully","timestamp":"2026-08-18T04:22:20.866Z"}
+{"level":"info","message":"Available rooms fetched successfully","timestamp":"2026-08-18T04:22:22.417Z"}
+{"level":"info","message":"Bookings fetched successfully","timestamp":"2026-08-18T04:22:22.427Z"}
+{"level":"info","message":"Available rooms fetched successfully","timestamp":"2026-08-18T04:23:01.271Z"}
