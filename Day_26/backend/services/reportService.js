@@ -39,15 +39,32 @@ const getLastSixMonths = () => {
   return months;
 };
 
-// Collects booking, user, room, status, revenue, and usage information for reports.
-const getReports = async () => {
+// Collects report data within the current user's manageable-role scope.
+const getReports = async (currentRole) => {
+  const isAdmin = currentRole?.name === "Admin";
+  let scopedUserIds = null;
+
+  if (!isAdmin) {
+    const manageableRoleIds = currentRole?.manageableRoles || [];
+    scopedUserIds = manageableRoleIds.length
+      ? await User.find({ role: { $in: manageableRoleIds } }).distinct("_id")
+      : [];
+  }
+
+  const bookingQuery = scopedUserIds
+    ? { user: { $in: scopedUserIds } }
+    : {};
+  const userQuery = scopedUserIds
+    ? { _id: { $in: scopedUserIds } }
+    : {};
+
   const [bookings, totalUsers, activeUsers, totalRooms] = await Promise.all([
-    Booking.find()
+    Booking.find(bookingQuery)
       .populate("room", "roomNumber type price")
       .populate("user", "name username email")
       .sort({ createdAt: -1 }),
-    User.countDocuments(),
-    User.countDocuments({ isActive: true }),
+    User.countDocuments(userQuery),
+    User.countDocuments({ ...userQuery, isActive: true }),
     Room.countDocuments(),
   ]);
 
