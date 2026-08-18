@@ -88,6 +88,7 @@ const getReports = async () => {
 
     const month = monthlyStatsMap.get(getMonthKey(booking.createdAt));
     if (month) {
+      // Booking Trend counts every booking record, regardless of payment status.
       month.bookings += 1;
       month.revenue += bookingRevenue;
     }
