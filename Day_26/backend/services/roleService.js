@@ -61,7 +61,7 @@ const validateManageableRoles = (currentRole, manageableRoles = []) => {
     throw error;
   }
 
-  const unauthorizedRole = manageableRoles.find(
+  const unauthorizedRole = manageableRoles.some(
     (roleId) => !canManageRole(currentRole, roleId),
   );
 

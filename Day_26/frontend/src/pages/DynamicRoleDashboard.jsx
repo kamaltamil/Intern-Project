@@ -245,7 +245,7 @@ function DynamicRoleDashboard({ dashboardConfig = {}, roleName = "Custom Role" }
 
       {hasBanner && (
         <LandingBanner
-          image={bannerConfig.image || "/dashboard/manager-hero.jpg"}
+          image={bannerConfig.image || "/dashboard/default_dashboard.jpg"}
           alt={bannerConfig.title || `${roleName} Banner`}
           title={bannerConfig.title || `HotelPro ${roleName} Console`}
           subtitle={

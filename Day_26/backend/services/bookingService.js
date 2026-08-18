@@ -221,7 +221,7 @@ const updateBooking = async (id, updateData) => {
 
     const allowedFields = ["room", "startDate", "endDate", "roomStatus"];
     for (const field of allowedFields) {
-      if (Object.prototype.hasOwnProperty.call(updateData, field)) {
+      if (Object.hasOwn(updateData, field)) {
         booking[field] = updateData[field];
       }
     }

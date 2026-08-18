@@ -14,6 +14,7 @@ import {
   Avatar,
   Row,
   Col,
+  Input,
 } from "antd";
 import {
   DeleteOutlined,
@@ -23,6 +24,7 @@ import {
   CrownOutlined,
   PlusOutlined,
   ReloadOutlined,
+  SearchOutlined,
 } from "@ant-design/icons";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import CustomCard from "../components/CustomCard";
@@ -221,6 +223,16 @@ function UsersManagementPage() {
     {
       title: "Role",
       dataIndex: "role",
+      filterSearch: true,
+      filters: roles.map((r) => ({
+        text: r.name,
+        value: r._id,
+      })),
+      onFilter: (value, record) => {
+        const roleId =
+          typeof record.role === "object" ? record.role?._id : record.role;
+        return roleId === value;
+      },
       render: (role) => {
         const roleName = typeof role === "object" ? role?.name : role;
         const color =
@@ -284,8 +296,22 @@ function UsersManagementPage() {
      ] : []),
   ];
 
+  const [searchText, setSearchText] = useState("");
+
   /* ---------- Safe Users Array ---------- */
   const safeUsers = Array.isArray(users) ? users : [];
+
+  /* ---------- Search Filtering ---------- */
+  const filteredUsers = safeUsers.filter((u) => {
+    const query = searchText.trim().toLowerCase();
+    if (!query) return true;
+
+    return (
+      u.name?.toLowerCase().includes(query) ||
+      u.email?.toLowerCase().includes(query) ||
+      u.username?.toLowerCase().includes(query) 
+    );
+  });
 
   /* ---------- Stat Computations ---------- */
   const getRoleName = (r) => (typeof r === "object" ? r?.name : r) || "";
@@ -570,9 +596,19 @@ function UsersManagementPage() {
 
       {/* Users Table */}
       <CustomTable
-        title={`All Users (${safeUsers.length})`}
+        title={`All Users (${filteredUsers.length})`}
+        extraHeader={
+          <Input
+            allowClear
+            placeholder="Search by name, email, username, or role"
+            prefix={<SearchOutlined style={{ color: "#999" }} />}
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+            style={{ width: 260 }}
+          />
+        }
         rowKey="_id"
-        dataSource={safeUsers}
+        dataSource={filteredUsers}
         columns={columns}
         pagination={{ pageSize: 8, showSizeChanger: false }}
       />

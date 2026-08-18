@@ -354,7 +354,7 @@ function RoleManagementPage() {
           subtitle: values.bannerSubtitle?.trim() || "",
           actionLabel: values.bannerActionLabel?.trim() || "View Bookings",
           actionUrl: values.bannerActionUrl?.trim() || "/bookings",
-          image: "/dashboard/manager-hero.jpg",
+          image: "/dashboard/default_dashboard.jpg",
         },
       };
 

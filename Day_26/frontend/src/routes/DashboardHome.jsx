@@ -1,9 +1,7 @@
 import { useSelector } from "react-redux";
 import { useQuery } from "@tanstack/react-query";
 import { fetchMyPermissions } from "../api/queries";
-import AdminDashboardPage from "../pages/AdminDashboardPage";
-import ManagerDashboardPage from "../pages/ManagerDashboardPage";
-import MemberDashboardPage from "../pages/MemberDashboardPage";
+import DefaultDashboardPage from "../pages/DefaultDashboardPage";
 import DynamicRoleDashboard from "../pages/DynamicRoleDashboard";
 
 /**
@@ -51,26 +49,9 @@ function DashboardHome() {
     );
   }
 
-  if (roleName === "Admin") {
-    return <AdminDashboardPage />;
+  if (!hasCustomConfig) {
+    return <DefaultDashboardPage />;
   }
-
-  if (roleName === "Manager") {
-    return <ManagerDashboardPage />;
-  }
-
-  if (roleName === "Member") {
-    return <MemberDashboardPage />;
-  }
-
-  return (
-    <DynamicRoleDashboard
-      dashboardConfig={
-        dashboardConfig || { stats: [], banner: { enabled: false } }
-      }
-      roleName={roleName}
-    />
-  );
 }
 
 export default DashboardHome;

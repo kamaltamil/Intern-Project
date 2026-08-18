@@ -1,12 +1,10 @@
 import { Row, Col, Skeleton } from "antd";
 import { useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
 import CustomCard from "../components/CustomCard";
 import LandingBanner from "../components/LandingBanner";
 import { TeamOutlined, UserOutlined } from "@ant-design/icons";
 
-function MemberDashboardPage() {
-  const navigate = useNavigate();
+function DefaultDashboardPage() {
   const { user } = useSelector((state) => state.auth);
 
   if (!user) {
@@ -41,16 +39,15 @@ function MemberDashboardPage() {
         </Row>
 
         <LandingBanner
-          image="/dashboard/member-hero.jpg"
+          image="/dashboard/default_dashboard.jpg"
           alt="Hotel room"
           title="Welcome to HotelPro"
           subtitle="Book your next stay and keep track of your reservations, all in one place."
           actionLabel="Book a Room"
-          onAction={() => navigate('/bookings')}
         />
       </div>
     
   );
 }
 
-export default MemberDashboardPage;
+export default DefaultDashboardPage;
