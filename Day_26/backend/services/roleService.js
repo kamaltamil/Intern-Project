@@ -57,7 +57,7 @@ const validateRoleManagementAccess = (currentRole, action, targetRoleId) => {
   }
 };
 
-// Make sure every manageable role assigned to a new or updated role can be managed by the current user.
+// Make sure every manageable role assigned to a role can be managed by the current user.
 const validateManageableRoles = (currentRole, manageableRoles = []) => {
   if (!Array.isArray(manageableRoles)) {
     const error = new Error("Manageable roles must be an array");
@@ -70,15 +70,21 @@ const validateManageableRoles = (currentRole, manageableRoles = []) => {
   );
 
   if (unauthorizedRole) {
-    const error = new Error("You cannot assign a role outside your manageable roles");
+    const error = new Error(
+      "You cannot assign a role outside your manageable roles",
+    );
     error.statusCode = 403;
     throw error;
   }
 };
 
-
-/*Create Role     */
-
+// Remove the previous default before assigning a new default role.
+const clearDefaultRole = async (roleId = null) => {
+  const filter = roleId
+    ? { _id: { $ne: roleId }, isDefault: true }
+    : { isDefault: true };
+  await Role.updateMany(filter, { $set: { isDefault: false } });
+};
 
 // Creates a role with its permissions and manageable-role relationships.
 const createRole = async (data, currentRole) => {
@@ -101,6 +107,9 @@ const createRole = async (data, currentRole) => {
     const existingRole = await Role.findOne({ name: name.trim() });
     if (existingRole) throw new Error("Role already exists");
 
+    // Keep only the new role as default when it is marked as default.
+    if (isDefault === true) await clearDefaultRole();
+
     const role = await Role.create({
       name: name.trim(),
       permissions,
@@ -111,29 +120,12 @@ const createRole = async (data, currentRole) => {
       dashboardConfig,
     });
 
-    // Keep the new role visible to its creator and any role that already manages the creator.
-    if (currentRole?._id) {
-      await Role.updateOne(
-        { _id: currentRole._id },
-        { $addToSet: { manageableRoles: role._id } },
-      );
-
-      await Role.updateMany(
-        { manageableRoles: currentRole._id },
-        { $addToSet: { manageableRoles: role._id } },
-      );
-    }
-
     return role;
   } catch (error) {
     if (error.statusCode) throw error;
     throw new Error(error.message);
   }
 };
-
-
-/*Get All Roles   */
-
 
 // Admin can see every role; other roles only see roles in manageableRoles.
 const getAllRoles = async (currentRole) => {
@@ -157,8 +149,6 @@ const getAllRoles = async (currentRole) => {
   }
 };
 
-
-/*Get Role by ID  */
 // Loads a role only when the current user is allowed to manage it.
 const getRoleById = async (id, currentRole) => {
   try {
@@ -171,10 +161,6 @@ const getRoleById = async (id, currentRole) => {
   }
 };
 
-
-/* Update Role    */
-
-
 // Updates a manageable role while preserving permission and relationship validation.
 const updateRole = async (id, data, currentRole) => {
   try {
@@ -184,6 +170,9 @@ const updateRole = async (id, data, currentRole) => {
     if (data.manageableRoles) {
       validateManageableRoles(currentRole, data.manageableRoles);
     }
+
+    // Clear the previous default before making this role the default.
+    if (data.isDefault === true) await clearDefaultRole(id);
 
     const role = await Role.findByIdAndUpdate(id, data, {
       new: true,
@@ -196,10 +185,6 @@ const updateRole = async (id, data, currentRole) => {
     throw new Error(`Error updating role: ${error.message}`);
   }
 };
-
-
-/* Delete Role    */
-
 
 // Deletes a role only when it is included in the current user's manageable roles.
 const deleteRole = async (id, currentRole) => {
