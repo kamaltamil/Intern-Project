@@ -123,6 +123,12 @@ export const cancelBooking = async (id) => {
   return response.data?.booking || response.data || {};
 };
 
+// Permanently deletes a booking.
+export const deleteBooking = async (id) => {
+  const response = await api.delete(`/booking/${id}`);
+  return response.data || {};
+};
+
 export const fetchRooms = async () => {
   const response = await api.get("/rooms");
   return response.data?.rooms || response.data || [];
