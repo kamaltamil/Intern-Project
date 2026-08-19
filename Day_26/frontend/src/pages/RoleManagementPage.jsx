@@ -32,7 +32,13 @@ import { useSelector } from "react-redux";
 
 import PermissionGate from "../components/PermissionGate";
 import { usePermission } from "../hooks/usePermission";
-import { fetchRoles, createRole, updateRole, deleteRole } from "../api/queries";
+import {
+  fetchMe,
+  fetchRoles,
+  createRole,
+  updateRole,
+  deleteRole,
+} from "../api/queries";
 import { ROLE_COLORS } from "../constants/roleColors";
 import CustomTable from "../components/CustomTable";
 
@@ -228,10 +234,19 @@ function RoleManagementPage() {
     queryFn: fetchRoles,
   });
 
+  const { data: me = {} } = useQuery({
+    queryKey: ["me"],
+    queryFn: fetchMe,
+  });
+
   const manageableRoleOptions = isAdmin
     ? roles
-    : (roles.find((role) => role.name === currentUserRole)?.manageableRoles || [])
-        .map((role) => (typeof role === "object" ? role : roles.find((item) => item._id === role)))
+    : (me?.roleDoc?.manageableRoles || [])
+        .map((roleId) =>
+          typeof roleId === "object"
+            ? roleId
+            : roles.find((role) => role._id === roleId),
+        )
         .filter(Boolean);
 
   const closeModal = () => {
@@ -248,6 +263,7 @@ function RoleManagementPage() {
       message.success("Role created successfully");
       queryClient.invalidateQueries({ queryKey: ["roles"] });
       queryClient.invalidateQueries({ queryKey: ["my-permissions"] });
+      queryClient.invalidateQueries({ queryKey: ["me"] });
       closeModal();
     },
     onError: (err) =>
