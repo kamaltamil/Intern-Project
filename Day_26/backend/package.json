@@ -6,7 +6,8 @@
     "start": "node ./bin/www",
     "seed": "node seed.js",
     "seed:force": "node seed.js --force",
-    "test": "jest --coverage --runInBand"
+    "test": "jest --coverage --runInBand",
+    "swagger": "node ./config/swagger.js"
   },
   "dependencies": {
     "bcrypt": "^6.0.0",
@@ -24,6 +25,9 @@
     "morgan": "~1.9.1",
     "multer": "^2.2.0",
     "nodemailer": "^9.0.3",
+    "swagger-autogen": "^2.23.7",
+    "swagger-jsdoc": "^6.3.0",
+    "swagger-ui-express": "^5.0.1",
     "winston": "^3.19.0"
   }
 }

@@ -5,6 +5,10 @@ const cookieParser = require('cookie-parser');
 const logger = require('morgan');
 const cors = require('cors');
 
+const swaggerUi = require('swagger-ui-express')
+const swaggerDoc = require('./swagger-output.json')
+
+
 const app = express();
 
 const apiv1Router = require('./routes/api/v1/api');
@@ -25,6 +29,11 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
+
+// SwaggerAutogen api doc
+app.use("/api-documents", swaggerUi.serve, swaggerUi.setup(swaggerDoc));
+
+
 
 // Prevent browser caching of dynamic API responses backed by the database.
 app.use('/api/v1', (req, res, next) => {

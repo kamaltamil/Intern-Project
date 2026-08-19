@@ -279,7 +279,7 @@ function UsersManagementPage() {
                 onConfirm={() => handleDelete(record._id)}
                 okText="Yes"
                 cancelText="No"
-                okButtonProps={{ danger: true }}
+                okButtonProps={{ danger: true }}  
               >
                 <Button
                   danger

@@ -14,9 +14,24 @@ const { signupPayload, loginPayload } = require("../../../validators/authValidat
 const { subscriptionPayload } = require("../../../validators/subscriptionValidator");
 const { rateLimiter } = require("../../../config/rateLimiting");
 
-router.post("/signup", signupPayload, validateRequest, register);
-router.post("/login", loginPayload, validateRequest, login);
-router.post("/refresh", refresh);
+
+router.post("/signup", 
+  /*
+    #swagger.tags = ['OpenApi']
+  */
+  signupPayload, validateRequest, register);
+
+router.post("/login", 
+  /*
+    #swagger.tags = ['OpenApi']
+  */
+    loginPayload, validateRequest, login);
+
+router.post("/refresh", 
+  /*
+    #swagger.tags = ['OpenApi']
+  */
+  refresh);
 
 router.use("/subscriptions", rateLimiter, subscriptionPayload, validateRequest, subscribe);
 
