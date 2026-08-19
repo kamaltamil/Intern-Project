@@ -278,18 +278,37 @@ const registerUser = async ({ name, email, username, password, role }) => {
   const hashedPassword = await validateAndHashPassword(password);
 
   // Step 6: Check whether the email or username is already registered.
-  const existingUser = await User.findOne({
-    $or: [{ email: normalizedEmail }, { username: normalizedUsername }],
-  });
+  // const existingUser = await User.findOne({
+  //   $or: [{ email: normalizedEmail }, { username: normalizedUsername }],
+  // });
 
   // Step 7: Stop registration if a duplicate user is found.
-  if (existingUser) {
-    const error = new Error("Email or username already exists");
+  // if (existingUser) {
+  //   const error = new Error("Email or username already exists");
 
+  //   error.statusCode = 409;
+
+  //   throw error;
+  // }
+
+  const existingUserMail = await User.findOne({
+    email: normalizedEmail
+  });
+  if (existingUserMail) {
+    const error = new Error("Email already exists");
     error.statusCode = 409;
-
     throw error;
   }
+  const existingUsername = await User.findOne({
+    username: normalizedUsername
+  });
+  if (existingUsername) {
+    const error = new Error("Username already exists");
+    error.statusCode = 409;
+    throw error;
+  }
+
+
 
   // Step 8: Try to resolve the requested role.
   let roleDoc = null;
