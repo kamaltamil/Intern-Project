@@ -12,10 +12,7 @@ const validatePermissions = (permissions = []) => {
   permissions.forEach((permission) => {
     const action = permission?.action || {};
     const hasCrudWithoutView =
-      action.create === true ||
-      action.update === true ||
-      action.delete === true;
-
+      action.create === true || action.update === true || action.delete === true;
     if (hasCrudWithoutView && action.view !== true) {
       const error = new Error(
         `View permission is required for resource '${permission.resource}' when Create, Update, or Delete is enabled.`,
@@ -36,7 +33,6 @@ const hasRolePermission = (currentRole, action) =>
 // Admin can manage every role; other roles are limited by manageableRoles.
 const canManageRole = (currentRole, targetRoleId) => {
   if (currentRole?.name === "Admin") return true;
-
   return currentRole?.manageableRoles?.some(
     (role) => String(role?._id || role) === String(targetRoleId),
   );
@@ -49,7 +45,6 @@ const validateRoleManagementAccess = (currentRole, action, targetRoleId) => {
     error.statusCode = 403;
     throw error;
   }
-
   if (targetRoleId && !canManageRole(currentRole, targetRoleId)) {
     const error = new Error("You are not allowed to manage this role");
     error.statusCode = 403;
@@ -64,11 +59,9 @@ const validateManageableRoles = (currentRole, manageableRoles = []) => {
     error.statusCode = 400;
     throw error;
   }
-
   const unauthorizedRole = manageableRoles.some(
     (roleId) => !canManageRole(currentRole, roleId),
   );
-
   if (unauthorizedRole) {
     const error = new Error(
       "You cannot assign a role outside your manageable roles",
@@ -84,7 +77,6 @@ const ensureSingleDefaultRole = async (selectedRoleId = null) => {
     .select("_id createdAt")
     .sort({ createdAt: 1 })
     .lean();
-
   if (selectedRoleId) {
     await Role.updateMany(
       { _id: { $ne: selectedRoleId }, isDefault: true },
@@ -92,7 +84,6 @@ const ensureSingleDefaultRole = async (selectedRoleId = null) => {
     );
     return;
   }
-
   if (defaultRoles.length > 1) {
     const keepRoleId = defaultRoles[0]._id;
     await Role.updateMany(
@@ -105,10 +96,8 @@ const ensureSingleDefaultRole = async (selectedRoleId = null) => {
 // Prevent the current default role from being unset when no replacement is selected.
 const validateDefaultRoleUpdate = async (id, isDefault) => {
   if (isDefault !== false) return;
-
   const role = await Role.findById(id).select("isDefault").lean();
   if (!role?.isDefault) return;
-
   const defaultCount = await Role.countDocuments({ isDefault: true });
   if (defaultCount === 1) {
     const error = new Error(
@@ -123,7 +112,6 @@ const validateDefaultRoleUpdate = async (id, isDefault) => {
 const createRole = async (data, currentRole) => {
   try {
     validateRoleManagementAccess(currentRole, "create");
-
     const {
       name,
       permissions = [],
@@ -148,21 +136,14 @@ const createRole = async (data, currentRole) => {
     const role = await Role.create({
       name: name.trim(),
       permissions,
-      manageableRoles: currentRole?.name === "Admin" ? [] : manageableRoles,
+      manageableRoles,
       description,
       color,
       isDefault,
       dashboardConfig,
     });
 
-    if (currentRole?.name === "Admin") {
-      // Keep Admin's manageable roles in sync with every role in the database.
-      const allRoleIds = await Role.find().distinct("_id");
-      await Role.updateOne(
-        { _id: currentRole._id },
-        { $set: { manageableRoles: allRoleIds } },
-      );
-    } else if (currentRole?._id) {
+    if (currentRole?.name !== "Admin" && currentRole?._id) {
       // Add the newly created role to the creator's manageable roles.
       await Role.updateOne(
         { _id: currentRole._id },
@@ -181,7 +162,6 @@ const createRole = async (data, currentRole) => {
 const getAllRoles = async (currentRole) => {
   try {
     validateRoleManagementAccess(currentRole, "view");
-
     return await Role.find()
       .populate("manageableRoles", "name color")
       .sort({ createdAt: 1 });
@@ -195,7 +175,6 @@ const getAllRoles = async (currentRole) => {
 const getRoleById = async (id, currentRole) => {
   try {
     validateRoleManagementAccess(currentRole, "view", id);
-
     return await Role.findById(id).populate("manageableRoles", "name color");
   } catch (error) {
     if (error.statusCode) throw error;
@@ -207,12 +186,10 @@ const getRoleById = async (id, currentRole) => {
 const updateRole = async (id, data, currentRole) => {
   try {
     validateRoleManagementAccess(currentRole, "update", id);
-
     if (data.permissions) validatePermissions(data.permissions);
     if (data.manageableRoles && currentRole?.name !== "Admin") {
       validateManageableRoles(currentRole, data.manageableRoles);
     }
-
     await validateDefaultRoleUpdate(id, data.isDefault);
 
     // Clear the previous default before making this role the default.
@@ -222,16 +199,10 @@ const updateRole = async (id, data, currentRole) => {
       await ensureSingleDefaultRole();
     }
 
-    const updateData = { ...data };
-    if (currentRole?.name === "Admin") {
-      delete updateData.manageableRoles;
-    }
-
-    const role = await Role.findByIdAndUpdate(id, updateData, {
+    const role = await Role.findByIdAndUpdate(id, data, {
       new: true,
       runValidators: true,
     }).populate("manageableRoles", "name color");
-
     return role;
   } catch (error) {
     if (error.statusCode) throw error;
@@ -243,7 +214,6 @@ const updateRole = async (id, data, currentRole) => {
 const deleteRole = async (id, currentRole) => {
   try {
     validateRoleManagementAccess(currentRole, "delete", id);
-
     const role = await Role.findByIdAndDelete(id);
     if (!role) {
       const error = new Error("Role not found");
