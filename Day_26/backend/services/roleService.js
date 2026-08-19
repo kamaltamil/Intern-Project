@@ -11,8 +11,7 @@ const validatePermissions = (permissions = []) => {
 
   permissions.forEach((permission) => {
     const action = permission?.action || {};
-    const hasCrudWithoutView =
-      action.create === true || action.update === true || action.delete === true;
+    const hasCrudWithoutView = action.create === true || action.update === true || action.delete === true;
     if (hasCrudWithoutView && action.view !== true) {
       const error = new Error(
         `View permission is required for resource '${permission.resource}' when Create, Update, or Delete is enabled.`,
@@ -158,11 +157,19 @@ const createRole = async (data, currentRole) => {
   }
 };
 
-// Return all roles so the UI can show manageable and non-manageable roles together.
+// Return every role to Admin and only manageable roles to other users.
 const getAllRoles = async (currentRole) => {
   try {
     validateRoleManagementAccess(currentRole, "view");
-    return await Role.find()
+
+    if (currentRole?.name === "Admin") {
+      return await Role.find()
+        .populate("manageableRoles", "name color")
+        .sort({ createdAt: 1 });
+    }
+
+    const manageableRoleIds = currentRole?.manageableRoles || [];
+    return await Role.find({ _id: { $in: manageableRoleIds } })
       .populate("manageableRoles", "name color")
       .sort({ createdAt: 1 });
   } catch (error) {
