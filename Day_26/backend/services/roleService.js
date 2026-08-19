@@ -177,20 +177,12 @@ const createRole = async (data, currentRole) => {
   }
 };
 
-// Admin can see every role; other roles only see roles in manageableRoles.
+// Return all roles so the UI can show manageable and non-manageable roles together.
 const getAllRoles = async (currentRole) => {
   try {
     validateRoleManagementAccess(currentRole, "view");
 
-    if (currentRole?.name === "Admin") {
-      return await Role.find()
-        .populate("manageableRoles", "name color")
-        .sort({ createdAt: 1 });
-    }
-
-    const manageableRoleIds = currentRole?.manageableRoles || [];
-
-    return await Role.find({ _id: { $in: manageableRoleIds } })
+    return await Role.find()
       .populate("manageableRoles", "name color")
       .sort({ createdAt: 1 });
   } catch (error) {
