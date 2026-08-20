@@ -51,7 +51,7 @@ export const refreshToken = async (payload) => {
 // Fetches users that the current user has permission to manage.
 export const fetchUsers = async () => {
   const response = await api.get("/manage/users");
-  return Array.isArray(response.data) ? response.data : [];
+  return response.data?.users || response.data || [];
 };
 
 // Fetches single user record by ID.
@@ -81,7 +81,7 @@ export const deleteUser = async (id) => {
 // Fetches all configured roles for Role Management.
 export const fetchRoles = async () => {
   const response = await api.get("/roles");
-  return Array.isArray(response.data) ? response.data : [];
+  return response.data?.roles || response.data || [];
 };
 export const fetchRoleById = async (id) => {
   const response = await api.get(`/roles/${id}`);

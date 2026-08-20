@@ -35,7 +35,7 @@ const listRoles = async (req, res) => {
   try {
     const roles = await getAllRoles(req.user?.role);
     logger.info("Roles fetched successfully", { fetchedBy: req.user?._id, roleCount: roles.length });
-    return ok(res, "Roles fetched successfully", roles);
+    return ok(res, "Roles fetched successfully", { roles });
   } catch (error) {
     logger.error("Roles fetched failed", { error: error.message, stack: error.stack });
     const statusCode = error.statusCode || 500;
@@ -49,7 +49,7 @@ const getRole = async (req, res) => {
   try {
     const role = await getRoleById(req.params.id, req.user?.role);
     if (!role) return notFound(res, "Role not found");
-    return ok(res, "Role fetched successfully", role);
+    return ok(res, "Role fetched successfully", {role});
   } catch (error) {
     const statusCode = error.statusCode || 500;
     if (statusCode === 400) return badRequest(res, error.message || "Error fetching role");

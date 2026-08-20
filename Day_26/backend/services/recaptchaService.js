@@ -1,4 +1,5 @@
 const https = require("node:https");
+const logger = require("../config/logger");
 
 // Verifies the reCAPTCHA token with Google's verification endpoint from the backend.
 const verifyRecaptcha = (token, remoteIp) => {
@@ -42,7 +43,7 @@ const verifyRecaptcha = (token, remoteIp) => {
             const result = JSON.parse(data);
             resolve(result.success === true);
           } catch (error) {
-            console.log(error);
+            logger.error(error);
             reject(new Error("Invalid reCAPTCHA verification response"));
           }
         });

@@ -304,8 +304,8 @@ function RoleManagementPage() {
       color: "#722ed1",
       isDefault: false,
       bannerEnabled: true,
-      bannerTitle: "",
-      bannerSubtitle: "",
+      bannerTitle: "HotelPro Dashboard",
+      bannerSubtitle: "Welcome to HotelPro",
       bannerActionLabel: "View Bookings",
       bannerActionUrl: "/bookings",
     });

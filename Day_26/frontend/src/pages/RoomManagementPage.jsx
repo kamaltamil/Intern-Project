@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import {
   Alert,
@@ -23,18 +23,24 @@ import {
   ReloadOutlined,
 } from "@ant-design/icons";
 
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 
 import PermissionGate from "../components/PermissionGate";
 import CustomForm from "../components/CustomForm";
 import CustomTable from "../components/CustomTable";
 
 import {
-  createRoom,
-  deleteRoom,
   fetchRooms,
+  createRoom,
   updateRoom,
-} from "../store/slices/roomSlice";
+  deleteRoom,
+} from "../api/queries";
+
 import usePermission from "../hooks/usePermission";
 
 const { Title, Text } = Typography;
@@ -45,11 +51,22 @@ const roomFormFields = [
     label: "Room Number",
     name: "roomNumber",
     placeholder: "Enter room number",
-    props: { maxLength: 10 },
+    props: {
+      maxLength: 10,
+    },
     rules: [
-      { required: true, message: "Room number is required" },
-      { whitespace: true, message: "Room number cannot be empty" },
-      { max: 10, message: "Room number cannot exceed 10 characters" },
+      {
+        required: true,
+        message: "Room number is required",
+      },
+      {
+        whitespace: true,
+        message: "Room number cannot be empty",
+      },
+      {
+        max: 10,
+        message: "Room number cannot exceed 10 characters",
+      },
     ],
   },
   {
@@ -58,51 +75,172 @@ const roomFormFields = [
     name: "type",
     placeholder: "Select room type",
     options: [
-      { value: "Single", label: "Single" },
-      { value: "Double", label: "Double" },
-      { value: "Suite", label: "Suite" },
+      {
+        value: "Single",
+        label: "Single",
+      },
+      {
+        value: "Double",
+        label: "Double",
+      },
+      {
+        value: "Suite",
+        label: "Suite",
+      },
     ],
-    rules: [{ required: true, message: "Room type is required" }],
+    rules: [
+      {
+        required: true,
+        message: "Room type is required",
+      },
+    ],
   },
   {
     type: "number",
     label: "Price Per Day",
     name: "price",
     placeholder: "Enter price",
-    props: { min: 0, precision: 2 },
+    props: {
+      min: 0,
+      precision: 2,
+    },
     rules: [
-      { required: true, message: "Price is required" },
-      { type: "number", min: 0, message: "Price cannot be negative" },
+      {
+        required: true,
+        message: "Price is required",
+      },
+      {
+        type: "number",
+        min: 0,
+        message: "Price cannot be negative",
+      },
     ],
   },
 ];
 
+const getErrorMessage = (error, fallback) =>
+  error?.response?.data?.message ||
+  error?.response?.data?.error ||
+  error?.response?.data?.errors?.[0]?.msg ||
+  error?.response?.data?.errors?.[0]?.message ||
+  error?.message ||
+  fallback;
+
 function RoomManagementPage() {
-  const dispatch = useDispatch();
-  const {
-    rooms = [],
-    loading,
-    creating,
-    updating,
-    deleting,
-    error,
-    createError,
-    updateError,
-    deleteError,
-  } = useSelector((state) => state.room);
+  const queryClient = useQueryClient();
+
   const { theme } = useSelector((state) => state.auth);
 
   const [form] = Form.useForm();
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+
+  const [isCreateModalOpen, setIsCreateModalOpen] =
+    useState(false);
+
   const [editingRoom, setEditingRoom] = useState(null);
+
   const isDark = theme === "dark";
 
-  useEffect(() => {
-    dispatch(fetchRooms());
-  }, [dispatch]);
+  const canUpdate = usePermission("rooms", "update");
+  const canDelete = usePermission("rooms", "delete");
+
+  const actionColumn = canUpdate || canDelete;
+
+  /* -------------------------------------------------------------------------- */
+  /*                              Fetch Rooms                                   */
+  /* -------------------------------------------------------------------------- */
+
+  const {
+    data: rooms = [],
+    isLoading: roomsLoading,
+    isError: roomsError,
+    error: roomsQueryError,
+    refetch: refetchRooms,
+  } = useQuery({
+    queryKey: ["rooms"],
+    queryFn: fetchRooms,
+  });
+
+  /* -------------------------------------------------------------------------- */
+  /*                              Create Room                                   */
+  /* -------------------------------------------------------------------------- */
+
+  const createRoomMutation = useMutation({
+    mutationFn: createRoom,
+
+    onSuccess: (response) => {
+      message.success(
+        response?.message || "Room created successfully"
+      );
+
+      setIsCreateModalOpen(false);
+      form.resetFields();
+
+      queryClient.invalidateQueries({
+        queryKey: ["rooms"],
+      });
+    },
+
+    onError: (error) => {
+      message.error(
+        getErrorMessage(error, "Failed to create room")
+      );
+    },
+  });
+
+  /* -------------------------------------------------------------------------- */
+  /*                              Update Room                                   */
+  /* -------------------------------------------------------------------------- */
+
+  const updateRoomMutation = useMutation({
+    mutationFn: updateRoom,
+
+    onSuccess: (response) => {
+      message.success(
+        response?.message || "Room updated successfully"
+      );
+
+      setEditingRoom(null);
+      form.resetFields();
+
+      queryClient.invalidateQueries({
+        queryKey: ["rooms"],
+      });
+    },
+
+    onError: (error) => {
+      message.error(
+        getErrorMessage(error, "Failed to update room")
+      );
+    },
+  });
+
+  /* -------------------------------------------------------------------------- */
+  /*                              Delete Room                                   */
+  /* -------------------------------------------------------------------------- */
+
+  const deleteRoomMutation = useMutation({
+    mutationFn: deleteRoom,
+
+    onSuccess: (response) => {
+      message.success(
+        response?.message || "Room deleted successfully"
+      );
+
+      queryClient.invalidateQueries({
+        queryKey: ["rooms"],
+      });
+    },
+
+    onError: (error) => {
+      message.error(
+        getErrorMessage(error, "Failed to delete room")
+      );
+    },
+  });
 
   const openCreateModal = () => {
     form.resetFields();
+    setEditingRoom(null);
     setIsCreateModalOpen(true);
   };
 
@@ -112,11 +250,19 @@ function RoomManagementPage() {
       type: room.type,
       price: Number(room.price),
     });
+
     setEditingRoom(room);
+    setIsCreateModalOpen(false);
   };
 
   const closeModal = () => {
-    if (creating || updating) return;
+    if (
+      createRoomMutation.isPending ||
+      updateRoomMutation.isPending
+    ) {
+      return;
+    }
+
     form.resetFields();
     setIsCreateModalOpen(false);
     setEditingRoom(null);
@@ -130,174 +276,231 @@ function RoomManagementPage() {
     };
 
     if (editingRoom) {
-      const result = await dispatch(
-        updateRoom({ id: editingRoom._id, payload })
-      );
+      updateRoomMutation.mutate({
+        id: editingRoom._id,
+        payload,
+      });
 
-      if (updateRoom.fulfilled.match(result)) {
-        message.success("Room updated successfully");
-        closeModal();
-      } else {
-        message.error(result.payload || "Failed to update room");
-      }
       return;
     }
 
-    const result = await dispatch(createRoom(payload));
-
-    if (createRoom.fulfilled.match(result)) {
-      message.success("Room created successfully");
-      closeModal();
-    } else {
-      message.error(result.payload || "Failed to create room");
-    }
+    createRoomMutation.mutate(payload);
   };
 
-  const handleDeleteRoom = async (roomId) => {
-    const result = await dispatch(deleteRoom(roomId));
-
-    if (deleteRoom.fulfilled.match(result)) {
-      message.success("Room deleted successfully");
-    } else {
-      message.error(result.payload || "Failed to delete room");
-    }
+  const handleDeleteRoom = (roomId) => {
+    deleteRoomMutation.mutate(roomId);
   };
-  const canUpdate = usePermission("rooms", "update");
-  const canDelete = usePermission("rooms", "delete");
-
-  const actionColumn = canUpdate || canDelete;
 
   const roomActionItems = (record) => {
-      const items = [];
+    const items = [];
 
-      if (canUpdate) {
-        items.push({
-          key: "edit",
-          icon: <EditOutlined />,
-          label: "Edit Room",
-          onClick: () => openEditModal(record),
-        });
-      }
+    if (canUpdate) {
+      items.push({
+        key: "edit",
+        icon: <EditOutlined />,
+        label: "Edit Room",
+        onClick: () => openEditModal(record),
+      });
+    }
 
-      if (canDelete) {
-        items.push({
-          key: "delete",
-          icon: <DeleteOutlined />,
-          label: "Delete Room",
-          danger: true,
-          onClick: () => {
-            Modal.confirm({
-              title: "Delete Room",
-              content: `Are you sure you want to delete room ${record.roomNumber}?`,
-              okText: "Delete",
-              okType: "danger",
-              onOk: () => handleDeleteRoom(record._id),
-            });
-          },
-        });
-      }
+    if (canDelete) {
+      items.push({
+        key: "delete",
+        icon: <DeleteOutlined />,
+        label: "Delete Room",
+        danger: true,
 
-      return items;
-    };
+        onClick: () => {
+          Modal.confirm({
+            title: "Delete Room",
+            content: `Are you sure you want to delete room ${record.roomNumber}?`,
+            okText: "Delete",
+            okType: "danger",
+            onOk: () => handleDeleteRoom(record._id),
+          });
+        },
+      });
+    }
+
+    return items;
+  };
 
   const columns = [
     {
       title: "Room Number",
       dataIndex: "roomNumber",
       key: "roomNumber",
+
       render: (value) => (
         <Space>
-          <HomeOutlined style={{ color: "#C76A34" }} />
+          <HomeOutlined
+            style={{ color: "#C76A34" }}
+          />
+
           <Text strong>{value}</Text>
         </Space>
       ),
     },
+
     {
       title: "Room Type",
       dataIndex: "type",
       key: "type",
+
       render: (value) => {
         const colorMap = {
           Single: "blue",
           Double: "green",
           Suite: "purple",
         };
-        return <Tag color={colorMap[value] || "default"}>{value}</Tag>;
+
+        return (
+          <Tag color={colorMap[value] || "default"}>
+            {value}
+          </Tag>
+        );
       },
     },
+
     {
       title: "Price / Day",
       dataIndex: "price",
       key: "price",
-      render: (value) => <Text strong>₹{Number(value).toLocaleString("en-IN")}</Text>,
+
+      render: (value) => (
+        <Text strong>
+          ₹{Number(value).toLocaleString("en-IN")}
+        </Text>
+      ),
     },
-    ...(actionColumn ? [
-      {
-        title: "Actions",
-        key: "actions",
-        width: 130,
-        render: (_, record) => (
-          <Dropdown menu={{ items: roomActionItems(record) }} trigger={["click"]}>
-            <Button icon={<MoreOutlined />} loading={deleting}>
-              Actions <DownOutlined style={{ fontSize: 10 }} />
-            </Button>
-          </Dropdown>
-        ),
-      }
-    ] : []),
+
+    ...(actionColumn
+      ? [
+          {
+            title: "Actions",
+            key: "actions",
+            width: 130,
+
+            render: (_, record) => (
+              <Dropdown
+                menu={{
+                  items: roomActionItems(record),
+                }}
+                trigger={["click"]}
+              >
+                <Button
+                  icon={<MoreOutlined />}
+                  loading={deleteRoomMutation.isPending}
+                >
+                  Actions{" "}
+                  <DownOutlined
+                    style={{ fontSize: 10 }}
+                  />
+                </Button>
+              </Dropdown>
+            ),
+          },
+        ]
+      : []),
   ];
+
+  const roomError = roomsError
+    ? getErrorMessage(
+        roomsQueryError,
+        "Unable to load rooms."
+      )
+    : null;
 
   return (
     <div className="space-y-4">
+      {/* Page Header */}
+
       <div className="flex items-center justify-between sm:flex-row flex-col sm:gap-0 gap-3 sm:text-start text-center">
         <div>
           <Title
             level={3}
             className="!mb-1"
-            style={{ color: isDark ? "#f0f0f0" : "#2E2A27" }}
+            style={{
+              color: isDark
+                ? "#f0f0f0"
+                : "#2E2A27",
+            }}
           >
             Room Management
           </Title>
-          <Text className="text-gray-400 text-sm">Create, update and view hotel room inventory.</Text>
+
+          <Text className="text-gray-400 text-sm">
+            Create, update and view hotel room
+            inventory.
+          </Text>
         </div>
 
-        <PermissionGate resource="rooms" action="create">
+        <PermissionGate
+          resource="rooms"
+          action="create"
+        >
           <Button
             type="primary"
             icon={<PlusOutlined />}
             onClick={openCreateModal}
-            style={{ backgroundColor: "#C76A34", borderColor: "#C76A34" }}
+            style={{
+              backgroundColor: "#C76A34",
+              borderColor: "#C76A34",
+            }}
           >
             Create Room
           </Button>
         </PermissionGate>
       </div>
 
-      {(error || createError || updateError || deleteError) && (
+      {/* API Error */}
+
+      {roomError && (
         <Alert
-          className="mb-4"
           type="error"
           showIcon
-          message={error || createError || updateError || deleteError}
+          message={roomError}
         />
       )}
+
+      {/* Create / Edit Modal */}
 
       <Modal
         title={
           <Space>
-            <HomeOutlined style={{ color: "#C76A34" }} />
-            <span>{editingRoom ? "Edit Room" : "Create New Room"}</span>
+            <HomeOutlined
+              style={{ color: "#C76A34" }}
+            />
+
+            <span>
+              {editingRoom
+                ? "Edit Room"
+                : "Create New Room"}
+            </span>
           </Space>
         }
-        open={isCreateModalOpen || Boolean(editingRoom)}
+        open={
+          isCreateModalOpen ||
+          Boolean(editingRoom)
+        }
         width={520}
         centered
         destroyOnHidden
-        okText={editingRoom ? "Save Changes" : "Create Room"}
+        okText={
+          editingRoom
+            ? "Save Changes"
+            : "Create Room"
+        }
         cancelText="Cancel"
-        confirmLoading={creating || updating}
+        confirmLoading={
+          createRoomMutation.isPending ||
+          updateRoomMutation.isPending
+        }
         okButtonProps={{
-          style: { backgroundColor: "#C76A34", borderColor: "#C76A34" },
+          style: {
+            backgroundColor: "#C76A34",
+            borderColor: "#C76A34",
+          },
         }}
         onCancel={closeModal}
         onOk={() => form.submit()}
@@ -311,34 +514,43 @@ function RoomManagementPage() {
         />
       </Modal>
 
+      {/* Rooms Table */}
+
       <CustomTable
         title={
           <Space>
-            <HomeOutlined style={{ color: "#C76A34" }} />
+            <HomeOutlined
+              style={{ color: "#C76A34" }}
+            />
+
             <span>Hotel Rooms</span>
           </Space>
         }
+
         extraHeader={
           <Button
             icon={<ReloadOutlined />}
-            onClick={() => dispatch(fetchRooms())}
-            loading={loading}
+            onClick={() => refetchRooms()}
+            loading={roomsLoading}
           >
             Refresh
           </Button>
         }
-        isLoading={loading}
-        isError={Boolean(error)}
+
+        isLoading={roomsLoading}
+        isError={roomsError}
         rowKey="_id"
-        dataSource={rooms}
+        dataSource={Array.isArray(rooms) ? rooms : []}
         columns={columns}
       />
 
-      {!loading && rooms.length === 0 && !error && (
-        <div className="hidden">
-          <Empty description="No rooms found" />
-        </div>
-      )}
+      {!roomsLoading &&
+        rooms.length === 0 &&
+        !roomsError && (
+          <div className="hidden">
+            <Empty description="No rooms found" />
+          </div>
+        )}
     </div>
   );
 }

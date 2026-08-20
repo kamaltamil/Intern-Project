@@ -29,9 +29,7 @@ function TopHeader() {
 
   const isAdmin = user?.role === "Admin";
 
-const API_url = process.env.REACT_APP_HOTEL_PRO_APP_API_DOCUMENT_URL;
-
-console.log("TopHeader Rendered: ", { isAdmin, API_url });
+  const API_url = process.env.REACT_APP_HOTEL_PRO_APP_API_DOCUMENT_URL;
 
   // --------------------------------------------------
   // Complete Logout

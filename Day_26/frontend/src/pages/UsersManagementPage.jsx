@@ -98,7 +98,6 @@ function UsersManagementPage() {
     },
 
     onError: (error) => {
-      console.log(error?.response?.data?.errors[0]?.msg);
       message.error(error?.response?.data?.errors[0]?.msg || "Failed to update user");
     },
   });

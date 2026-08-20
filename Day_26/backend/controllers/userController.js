@@ -22,7 +22,8 @@ const {
 const listUsers = async (req, res) => {
   try {
     const users = await getAllUsers(req.user);
-    return ok(res, "Users fetched successfully", users);
+    return ok(res, "Users fetched successfully", {users});
+    // return res.status(200).json(users);
   } catch (error) {
     console.error("List users error:", error);
     const statusCode = error.statusCode || 500;
@@ -42,7 +43,7 @@ const getUserById = async (req, res) => {
     const user = await getUserByIdService(id);
 
     if (!user) return notFound(res, "User not found");
-    return ok(res, "User fetched successfully", user);
+    return ok(res, "User fetched successfully", {user});
   } catch (error) {
     console.error("Get user error:", error);
     const statusCode = error.statusCode || 500;

@@ -49,7 +49,7 @@ const authenticateToken = async (req, res, next) => {
 
     next();
   } catch (error) {
-    console.log(error)
+    logger.error(error);
     return res.status(401).json({
       message: "Invalid or expired token",
     });
@@ -84,7 +84,7 @@ const hasPermission = (resource, action) => {
 
       next();
     } catch (error) {
-      console.log(error)
+      logger.error(error)
       return res.status(500).json({
         message: "Permission validation failed",
       });
