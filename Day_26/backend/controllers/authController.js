@@ -11,6 +11,14 @@ const { verifyRecaptcha } = require("../services/recaptchaService");
 const User = require("../models/user");
 const Role = require("../models/role");
 const logger = require("../config/logger");
+const {
+  ok,
+  created,
+  badRequest,
+  unauthorized,
+  notFound,
+  internalServerError,
+} = require("../utils/response");
 
 // Verify the CAPTCHA token before continuing with the authentication operation.
 const validateRecaptcha = async (req, token) => {
@@ -46,10 +54,12 @@ const register = async (req, res) => {
 
     const user = await registerUser({ ...userData, role: defaultRole._id });
     logger.info("User registered successfully");
-    return res.status(201).json({ message: "User registered successfully", user });
+    return created(res, "User registered successfully", { user });
   } catch (error) {
     logger.error("User registration failed", error);
-    return res.status(error.statusCode || 500).json({ message: error.message || "Error registering user" });
+    const statusCode = error.statusCode || 500;
+    if (statusCode === 400) return badRequest(res, error.message || "Error registering user");
+    return internalServerError(res, error.message || "Error registering user");
   }
 };
 
@@ -59,15 +69,14 @@ const login = async (req, res) => {
     logger.info("Login request received");
     const { identifier, password, recaptchaToken } = req.body;
     if (!identifier || !password) {
-      return res.status(400).json({ message: "Identifier and password are required" });
+      return badRequest(res, "Identifier and password are required");
     }
 
     await validateRecaptcha(req, recaptchaToken);
 
     const result = await loginUser(identifier, password);
     logger.info("User logged in successfully");
-    return res.status(200).json({
-      message: "Login successful",
+    return ok(res, "Login successful", {
       user: result.user,
       token: result.token,
       refreshToken: result.refreshToken,
@@ -78,7 +87,10 @@ const login = async (req, res) => {
     });
   } catch (error) {
     logger.error("Login failed", error);
-    return res.status(error.statusCode || 500).json({ message: error.message || "Login failed" });
+    const statusCode = error.statusCode || 500;
+    if (statusCode === 400) return badRequest(res, error.message || "Login failed");
+    if (statusCode === 401) return unauthorized(res, error.message || "Invalid credentials");
+    return internalServerError(res, error.message || "Login failed");
   }
 };
 
@@ -86,11 +98,10 @@ const login = async (req, res) => {
 const refresh = async (req, res) => {
   try {
     const { refreshToken } = req.body;
-    if (!refreshToken) return res.status(400).json({ message: "Refresh token is required" });
+    if (!refreshToken) return badRequest(res, "Refresh token is required");
     const result = await refreshAccessToken(refreshToken);
     logger.info("Access token refreshed successfully");
-    return res.status(200).json({
-      message: "Access token refreshed successfully",
+    return ok(res, "Access token refreshed successfully", {
       token: result.token,
       refreshToken: result.refreshToken,
       role: result.role,
@@ -98,7 +109,9 @@ const refresh = async (req, res) => {
     });
   } catch (error) {
     logger.error("Token refresh failed", error);
-    return res.status(error.statusCode || 401).json({ message: error.message || "Invalid refresh token" });
+    const statusCode = error.statusCode || 401;
+    if (statusCode === 400) return badRequest(res, error.message || "Refresh token is required");
+    return unauthorized(res, error.message || "Invalid refresh token");
   }
 };
 
@@ -106,10 +119,10 @@ const refresh = async (req, res) => {
 const profile = async (req, res) => {
   try {
     const userId = req.user?._id;
-    if (!userId) return res.status(401).json({ message: "Unauthorized" });
+    if (!userId) return unauthorized(res, "Unauthorized");
     const result = await getProfile(userId);
-    if (!result) return res.status(404).json({ message: "User not found" });
-    return res.status(200).json({
+    if (!result) return notFound(res, "User not found");
+    return ok(res, "Profile fetched successfully", {
       user: result.user,
       role: result.role,
       roleDoc: result.roleDoc,
@@ -118,7 +131,7 @@ const profile = async (req, res) => {
     });
   } catch (error) {
     logger.error("Failed to fetch profile", error);
-    return res.status(500).json({ message: error.message || "Error fetching profile" });
+    return internalServerError(res, error.message || "Error fetching profile");
   }
 };
 
@@ -126,12 +139,12 @@ const profile = async (req, res) => {
 const permissions = async (req, res) => {
   try {
     const userId = req.user?._id;
-    if (!userId) return res.status(401).json({ message: "Unauthorized" });
+    if (!userId) return unauthorized(res, "Unauthorized");
 
     const result = await getProfile(userId);
-    if (!result) return res.status(404).json({ message: "User not found" });
+    if (!result) return notFound(res, "User not found");
 
-    return res.status(200).json({
+    return ok(res, "Permissions fetched successfully", {
       role: result.role,
       roleColor: result.roleColor || result.user?.roleColor,
       roleDoc: result.roleDoc,
@@ -141,7 +154,7 @@ const permissions = async (req, res) => {
     });
   } catch (error) {
     logger.error("Failed to fetch permissions", error);
-    return res.status(500).json({ message: error.message || "Error fetching permissions" });
+    return internalServerError(res, error.message || "Error fetching permissions");
   }
 };
 
@@ -149,7 +162,7 @@ const permissions = async (req, res) => {
 const updateProfile = async (req, res) => {
   try {
     const userId = req.user?._id;
-    if (!userId) return res.status(401).json({ message: "Unauthorized" });
+    if (!userId) return unauthorized(res, "Unauthorized");
 
     const updateData = { ...req.body };
     if (req.file) updateData.profileImage = `/uploads/profile/${req.file.filename}`;
@@ -157,15 +170,17 @@ const updateProfile = async (req, res) => {
     const result = await updateOwnProfile(userId, updateData);
     logger.info("User profile updated successfully");
 
-    return res.status(200).json({
-      message: "Profile updated successfully",
+    return ok(res, "Profile updated successfully", {
       user: result.user,
       role: result.role,
       permissions: result.permissions || [],
     });
   } catch (error) {
     logger.error("Failed to update user profile", error);
-    return res.status(error.statusCode || 500).json({ message: error.message || "Error updating profile" });
+    const statusCode = error.statusCode || 500;
+    if (statusCode === 400) return badRequest(res, error.message || "Error updating profile");
+    if (statusCode === 401) return unauthorized(res, error.message || "Unauthorized");
+    return internalServerError(res, error.message || "Error updating profile");
   }
 };
 
@@ -173,14 +188,17 @@ const updateProfile = async (req, res) => {
 const deleteProfile = async (req, res) => {
   try {
     const userId = req.user?._id;
-    if (!userId) return res.status(401).json({ message: "Unauthorized" });
+    if (!userId) return unauthorized(res, "Unauthorized");
 
     await deleteOwnProfile(userId);
     logger.info("User profile deleted successfully");
-    return res.status(200).json({ message: "Profile deleted successfully" });
+    return ok(res, "Profile deleted successfully");
   } catch (error) {
     logger.error("Failed to delete user profile", error);
-    return res.status(error.statusCode || 500).json({ message: error.message || "Error deleting profile" });
+    const statusCode = error.statusCode || 500;
+    if (statusCode === 400) return badRequest(res, error.message || "Error deleting profile");
+    if (statusCode === 401) return unauthorized(res, error.message || "Unauthorized");
+    return internalServerError(res, error.message || "Error deleting profile");
   }
 };
 
@@ -190,10 +208,10 @@ const logout = async (req, res) => {
     const userId = req.user?._id;
     if (userId) await User.findByIdAndUpdate(userId, { refreshToken: null });
     logger.info("User logged out successfully");
-    return res.status(200).json({ message: "Logged out successfully" });
+    return ok(res, "Logged out successfully");
   } catch (error) {
     logger.error("Logout failed", error);
-    return res.status(500).json({ message: error.message || "Error logging out" });
+    return internalServerError(res, error.message || "Error logging out");
   }
 };
 
