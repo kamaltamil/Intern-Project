@@ -5,20 +5,25 @@ const {
   deleteExistingRoom,
 } = require("../services/roomService");
 
+const {
+  ok,
+  created,
+  badRequest,
+  notFound,
+  internalServerError,
+} = require("../utils/response");
+
 // Creates a new hotel room in the inventory.
 const createRoom = async (req, res) => {
   try {
     const { roomNumber, type, price } = req.body;
     const result = await createNewRoom({ roomNumber, type, price });
-
-    return res.status(201).json({
-      message: "Room created successfully",
-      result,
-    });
+    return created(res, "Room created successfully", { result });
   } catch (error) {
-    return res.status(error.statusCode || 500).json({
-      error: error.message,
-    });
+    const statusCode = error.statusCode || 500;
+    if (statusCode === 400) return badRequest(res, error.message || "Error creating room");
+    if (statusCode === 404) return notFound(res, error.message || "Room not found");
+    return internalServerError(res, error.message || "Error creating room");
   }
 };
 
@@ -26,15 +31,9 @@ const createRoom = async (req, res) => {
 const getAllRooms = async (req, res) => {
   try {
     const rooms = await listRooms();
-
-    return res.status(200).json({
-      message: "Rooms fetched successfully",
-      rooms,
-    });
+    return ok(res, "Rooms fetched successfully", { rooms });
   } catch (error) {
-    return res.status(500).json({
-      error: error.message,
-    });
+    return internalServerError(res, error.message || "Error fetching rooms");
   }
 };
 
@@ -43,15 +42,13 @@ const updateRoom = async (req, res) => {
   try {
     const { id } = req.params;
     const room = await updateExistingRoom(id, req.body);
-
-    return res.status(200).json({
-      message: "Room updated successfully",
-      room,
-    });
+    if (!room) return notFound(res, "Room not found");
+    return ok(res, "Room updated successfully", { room });
   } catch (error) {
-    return res.status(error.statusCode || 500).json({
-      error: error.message,
-    });
+    const statusCode = error.statusCode || 500;
+    if (statusCode === 400) return badRequest(res, error.message || "Error updating room");
+    if (statusCode === 404) return notFound(res, error.message || "Room not found");
+    return internalServerError(res, error.message || "Error updating room");
   }
 };
 
@@ -60,14 +57,12 @@ const deleteRoom = async (req, res) => {
   try {
     const { id } = req.params;
     await deleteExistingRoom(id);
-
-    return res.status(200).json({
-      message: "Room deleted successfully",
-    });
+    return ok(res, "Room deleted successfully");
   } catch (error) {
-    return res.status(error.statusCode || 500).json({
-      error: error.message,
-    });
+    const statusCode = error.statusCode || 500;
+    if (statusCode === 400) return badRequest(res, error.message || "Error deleting room");
+    if (statusCode === 404) return notFound(res, error.message || "Room not found");
+    return internalServerError(res, error.message || "Error deleting room");
   }
 };
 
