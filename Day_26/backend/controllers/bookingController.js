@@ -10,14 +10,22 @@ const {
 
 const Booking = require("../models/booking");
 const logger = require("../config/logger");
+const {
+  ok,
+  created,
+  badRequest,
+  unauthorized,
+  forbidden,
+  notFound,
+  conflict,
+  internalServerError,
+} = require("../utils/response");
 
-// Helper to extract action permissions for a specific module from the user's role.
 const getPermission = (permissions, resource) =>
   permissions.find(
     (permission) => permission.resource?.toLowerCase() === resource,
   )?.action || {};
 
-// Check whether the current user owns or can manage the booking's role.
 const canAccessBooking = (currentRole, bookingUserRole, userId, ownerId) => {
   if (String(userId) === String(ownerId)) return true;
   if (currentRole?.name === "Admin") return true;
@@ -27,74 +35,46 @@ const canAccessBooking = (currentRole, bookingUserRole, userId, ownerId) => {
   );
 };
 
-// Returns rooms that do not have conflicting active bookings for the specified date range.
 const getAvailableRooms = async (req, res) => {
   try {
     const { startDate, endDate } = req.query;
     const rooms = await getAvailableRoomsForBooking({ startDate, endDate });
     logger.info("Available rooms fetched successfully");
-
-    return res.status(200).json({
-      message: "Available rooms fetched successfully",
-      rooms,
-    });
+    return ok(res, "Available rooms fetched successfully", { rooms });
   } catch (error) {
     logger.error("Failed to fetch available rooms", error);
-    return res.status(error.statusCode || 500).json({
-      message: error.message || "Error fetching available rooms",
-    });
+    const statusCode = error.statusCode || 500;
+    if (statusCode === 400) return badRequest(res, error.message || "Error fetching available rooms");
+    return internalServerError(res, error.message || "Error fetching available rooms");
   }
 };
 
-// Validates dates and availability, then creates a new booking in Pending status.
 const bookRoom = async (req, res) => {
   try {
     const userId = req.user?._id || req.user?.id || req.user?.userId;
-
-    if (!userId) {
-      return res
-        .status(401)
-        .json({ message: "Unauthorized: user not identified" });
-    }
+    if (!userId) return unauthorized(res, "Unauthorized: user not identified");
 
     const { roomId, startDate, endDate } = req.body;
-
     if (!roomId || !startDate || !endDate) {
-      return res
-        .status(400)
-        .json({ message: "roomId, startDate and endDate are required" });
+      return badRequest(res, "roomId, startDate and endDate are required");
     }
 
-    // Verify room availability before creating the booking record.
-    const booking = await varifyAndBookRoom({
-      roomId,
-      userId,
-      startDate,
-      endDate,
-    });
+    const booking = await varifyAndBookRoom({ roomId, userId, startDate, endDate });
     logger.info("Booking created successfully");
-
-    return res.status(201).json({
-      message:
-        "Your booking request is created successfully and is pending approval.",
-      booking,
-    });
+    return created(res, "Your booking request is created successfully and is pending approval.", { booking });
   } catch (error) {
     logger.error("Failed to create booking", error);
-    return res.status(error.statusCode || 500).json({
-      message: error.message || "Error booking room",
-    });
+    const statusCode = error.statusCode || 500;
+    if (statusCode === 400) return badRequest(res, error.message || "Error booking room");
+    if (statusCode === 409) return conflict(res, error.message || "Room is not available for the selected dates");
+    return internalServerError(res, error.message || "Error booking room");
   }
 };
 
-// Returns only the current user's bookings or bookings from manageable roles.
 const getBookings = async (req, res) => {
   try {
     const userId = req.user?._id || req.user?.id;
-
-    if (!userId) {
-      return res.status(401).json({ message: "Unauthorized" });
-    }
+    if (!userId) return unauthorized(res, "Unauthorized");
 
     const currentRole = req.user?.role;
     const permissions = currentRole?.permissions || [];
@@ -107,25 +87,18 @@ const getBookings = async (req, res) => {
     if (currentRole?.name === "Admin") {
       bookings = await getAllBookings();
     } else if (bookingActions.view === true && manageableRoleIds.length > 0) {
-      bookings = await getBookingsForManageableRoles({
-        userId,
-        manageableRoleIds,
-      });
+      bookings = await getBookingsForManageableRoles({ userId, manageableRoleIds });
     } else {
       bookings = await getBookingsByUserId(userId);
     }
 
     logger.info("Bookings fetched successfully");
-    return res.status(200).json({
-      message: "Bookings fetched successfully",
-      bookings,
-    });
+    return ok(res, "Bookings fetched successfully", { bookings });
   } catch (error) {
     logger.error("Failed to fetch bookings", error);
-    return res.status(500).json({
-      message: "Error fetching bookings",
-      error: error.message,
-    });
+    const statusCode = error.statusCode || 500;
+    if (statusCode === 400) return badRequest(res, error.message || "Error fetching bookings");
+    return internalServerError(res, error.message || "Error fetching bookings");
   }
 };
 
@@ -134,136 +107,89 @@ const updateBookingHandler = async (req, res) => {
     const { id } = req.params;
     const userId = req.user?._id || req.user?.id;
     const booking = await Booking.findById(id).populate("user", "role");
-
-    if (!booking) {
-      return res.status(404).json({ message: "Booking not found" });
-    }
+    if (!booking) return notFound(res, "Booking not found");
 
     const userPermissions = req.user?.role?.permissions || [];
     const bookingActions = getPermission(userPermissions, "bookings");
     const isOwner = booking.user._id.toString() === userId.toString();
-    const canManageBooking = canAccessBooking(
-      req.user?.role,
-      booking.user.role,
-      userId,
-      booking.user._id,
-    );
+    const canManageBooking = canAccessBooking(req.user?.role, booking.user.role, userId, booking.user._id);
 
     if (!canManageBooking || (!isOwner && bookingActions.update !== true)) {
-      return res.status(403).json({
-        message: "Forbidden: You cannot update this booking",
-      });
+      return forbidden(res, "Forbidden: You cannot update this booking");
     }
 
     const updatedBooking = await updateBooking(id, req.body);
     logger.info("Booking updated successfully");
-    return res.status(200).json({
-      message: "Booking updated successfully",
-      booking: updatedBooking,
-    });
+    return ok(res, "Booking updated successfully", { booking: updatedBooking });
   } catch (error) {
     logger.error("Failed to update booking", error);
-    return res.status(error.statusCode || 500).json({
-      message: error.message || "Error updating booking",
-    });
+    const statusCode = error.statusCode || 500;
+    if (statusCode === 400) return badRequest(res, error.message || "Error updating booking");
+    if (statusCode === 404) return notFound(res, error.message || "Booking not found");
+    return internalServerError(res, error.message || "Error updating booking");
   }
 };
 
-// Cancels a booking by changing its status so the booking history remains available.
 const cancelBookingHandler = async (req, res) => {
   try {
     const { id } = req.params;
     const userId = req.user?._id || req.user?.id;
     const booking = await Booking.findById(id).populate("user", "role");
+    if (!booking) return notFound(res, "Booking not found");
 
-    if (!booking) {
-      return res.status(404).json({ message: "Booking not found" });
-    }
-
-    const bookingActions = getPermission(
-      req.user?.role?.permissions || [],
-      "bookings",
-    );
-    const canManageBooking = canAccessBooking(
-      req.user?.role,
-      booking.user.role,
-      userId,
-      booking.user._id,
-    );
-
+    const bookingActions = getPermission(req.user?.role?.permissions || [], "bookings");
+    const canManageBooking = canAccessBooking(req.user?.role, booking.user.role, userId, booking.user._id);
     if (!canManageBooking || bookingActions.update !== true) {
-      return res.status(403).json({
-        message: "Forbidden: You cannot cancel this booking",
-      });
+      return forbidden(res, "Forbidden: You cannot cancel this booking");
     }
 
     if (booking.bookingStatus === "Cancelled") {
-      return res.status(409).json({ message: "Booking is already cancelled" });
+      return conflict(res, "Booking is already cancelled");
     }
 
     if (["CheckedOut", "Rejected"].includes(booking.bookingStatus)) {
-      return res.status(409).json({
-        message: `Booking cannot be cancelled from '${booking.bookingStatus}' status`,
-      });
+      return conflict(res, `Booking cannot be cancelled from '${booking.bookingStatus}' status`);
     }
 
-    const cancelledBooking = await updateBooking(id, {
-      bookingStatus: "Cancelled",
-    });
-
+    const cancelledBooking = await updateBooking(id, { bookingStatus: "Cancelled" });
     logger.info("Booking cancelled successfully");
-    return res.status(200).json({
-      message: "Booking cancelled successfully",
-      booking: cancelledBooking,
-    });
+    return ok(res, "Booking cancelled successfully", { booking: cancelledBooking });
   } catch (error) {
     logger.error("Failed to cancel booking", error);
-    return res.status(error.statusCode || 500).json({
-      message: error.message || "Error cancelling booking",
-    });
+    const statusCode = error.statusCode || 500;
+    if (statusCode === 400) return badRequest(res, error.message || "Error cancelling booking");
+    if (statusCode === 404) return notFound(res, error.message || "Booking not found");
+    if (statusCode === 409) return conflict(res, error.message || "Booking cannot be cancelled");
+    return internalServerError(res, error.message || "Error cancelling booking");
   }
 };
 
-// Deletes a booking after checking delete permission and booking scope.
 const deleteBookingHandler = async (req, res) => {
   try {
     const { id } = req.params;
     const userId = req.user?._id || req.user?.id;
     const booking = await Booking.findById(id).populate("user", "role");
-
-    if (!booking) {
-      return res.status(404).json({ message: "Booking not found" });
-    }
+    if (!booking) return notFound(res, "Booking not found");
 
     const userPermissions = req.user?.role?.permissions || [];
     const bookingActions = getPermission(userPermissions, "bookings");
     if (bookingActions.delete !== true) {
-      return res.status(403).json({
-        message: "Forbidden: You do not have permission to delete bookings",
-      });
+      return forbidden(res, "Forbidden: You do not have permission to delete bookings");
     }
 
-    const canManageBooking = canAccessBooking(
-      req.user?.role,
-      booking.user.role,
-      userId,
-      booking.user._id,
-    );
-
-    if (!canManageBooking) {
-      return res.status(403).json({
-        message: "Forbidden: You cannot delete this booking",
-      });
-    }
+    const canManageBooking = canAccessBooking(req.user?.role, booking.user.role, userId, booking.user._id);
+    if (!canManageBooking) return forbidden(res, "Forbidden: You cannot delete this booking");
 
     await deleteBooking(id);
     logger.info("Booking deleted successfully");
-    return res.status(200).json({ message: "Booking deleted successfully" });
+    return ok(res, "Booking deleted successfully");
   } catch (error) {
     logger.error("Failed to delete booking", error);
-    return res.status(error.statusCode || 500).json({
-      message: error.message || "Error deleting booking",
-    });
+    const statusCode = error.statusCode || 500;
+    if (statusCode === 400) return badRequest(res, error.message || "Error deleting booking");
+    if (statusCode === 404) return notFound(res, error.message || "Booking not found");
+    if (statusCode === 403) return forbidden(res, error.message || "Forbidden");
+    return internalServerError(res, error.message || "Error deleting booking");
   }
 };
 
