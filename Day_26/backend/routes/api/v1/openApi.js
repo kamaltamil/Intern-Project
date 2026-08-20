@@ -32,7 +32,11 @@ router.post("/refresh",
     #swagger.tags = ['OpenApi']
   */
   refresh);
-
-router.use("/subscriptions", rateLimiter, subscriptionPayload, validateRequest, subscribe);
+ 
+router.post("/subscriptions", 
+  /*
+    #swagger.tags = ['OpenApi']
+  */ 
+  rateLimiter, subscriptionPayload, validateRequest, subscribe);
 
 module.exports = router;

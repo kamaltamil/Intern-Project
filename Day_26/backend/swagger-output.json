@@ -59,8 +59,47 @@
     "application/json"
   ],
   "paths": {
+    "/users/signup": {
+      "post": {
+        "tags": [
+          "OpenApi"
+        ],
+        "description": "",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "recaptchaToken": {
+                  "example": "any"
+                },
+                "userData": {
+                  "example": "any"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Created"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
     "/users/login": {
       "post": {
+        "tags": [
+          "OpenApi"
+        ],
         "description": "",
         "parameters": [
           {
@@ -95,41 +134,11 @@
         }
       }
     },
-    "/users/signup": {
-      "post": {
-        "description": "",
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "recaptchaToken": {
-                  "example": "any"
-                },
-                "userData": {
-                  "example": "any"
-                }
-              }
-            }
-          }
-        ],
-        "responses": {
-          "201": {
-            "description": "Created"
-          },
-          "400": {
-            "description": "Bad Request"
-          },
-          "500": {
-            "description": "Internal Server Error"
-          }
-        }
-      }
-    },
     "/users/refresh": {
       "post": {
+        "tags": [
+          "OpenApi"
+        ],
         "description": "",
         "parameters": [
           {
@@ -154,6 +163,31 @@
           },
           "401": {
             "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/users/subscriptions": {
+      "post": {
+        "tags": [
+          "OpenApi"
+        ],
+        "description": "",
+        "responses": {
+          "201": {
+            "description": "Created"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "409": {
+            "description": "Conflict"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          },
+          "502": {
+            "description": "Bad Gateway"
           }
         }
       }

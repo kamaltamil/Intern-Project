@@ -5,9 +5,10 @@ import {
   LogoutOutlined,
   SunOutlined,
   MoonOutlined,
+  ApiFilled,
 } from "@ant-design/icons";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { logout, setTheme } from "../store/slices/authSlice";
@@ -25,6 +26,12 @@ function TopHeader() {
   const { user, theme } = useSelector((state) => state.auth);
 
   const isDark = theme === "dark";
+
+  const isAdmin = user?.role === "Admin";
+
+const API_url = process.env.REACT_APP_HOTEL_PRO_APP_API_DOCUMENT_URL;
+
+console.log("TopHeader Rendered: ", { isAdmin, API_url });
 
   // --------------------------------------------------
   // Complete Logout
@@ -82,7 +89,7 @@ function TopHeader() {
   const toggleTheme = () => {
     dispatch(setTheme(isDark ? "light" : "dark"));
   };
-
+  
   // --------------------------------------------------
   // Dropdown Items
   // --------------------------------------------------
@@ -193,6 +200,50 @@ function TopHeader() {
             }}
           />
         </Tooltip>
+        
+        {/* -------------------------------------------
+            Theme Toggle
+        ------------------------------------------- */}
+        { isAdmin && 
+          (<Tooltip
+            title="View API documentation"
+          >
+            <Link to={API_url} target="_blank" rel="noopener noreferrer">
+              <Button
+                type="primary"
+                shape="circle"
+                icon={
+                  isDark ? (
+                    <ApiFilled 
+                      style={{
+                        color: "#facc15",
+                        fontSize: 18,
+                      }}
+                    />
+                  ) : (
+                    <ApiFilled 
+                      style={{
+                        color: "#7c3aed",
+                        fontSize: 18,
+                      }}
+                    />
+                  )
+                }
+                style={{
+                  background: isDark
+                    ? "#2d2d44"
+                    : "#F8F4EE",
+                  border: "none",
+                  width: 36,
+                  height: 36,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              />
+            </Link>
+          </Tooltip>)
+        }
 
         {/* -------------------------------------------
             User Dropdown
